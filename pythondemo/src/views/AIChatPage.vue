@@ -1,253 +1,479 @@
 <template>
-<div>
-  <!-- AI问答内容 -->
-  <main class="container py-4">
-    <!-- 页面标题 -->
-    <div class="mb-4">
-      <h2 class="fw-bold text-dark mb-2">AI智能问答</h2>
-      <p class="text-muted mb-0">智能解答Python相关问题，助力学习进步</p>
+<div class="ai-chat-page">
+  <!-- 左侧历史 -->
+  <div class="chat-history">
+    <div class="history-title">历史记录</div>
+    <div class="history-toolbar">
+      <button class="toolbar-btn" @click="newChat">
+        <i class="fa fa-plus"></i> 新建对话
+      </button>
     </div>
-
-    <div class="row g-4">
-      <!-- 左侧边栏 -->
-      <div class="col-lg-3">
-        <!-- 常见问题 -->
-        <div class="bg-white rounded-3 shadow-sm border p-4 mb-4">
-          <h5 class="fw-bold text-dark mb-3">常见问题</h5>
-          <div class="space-y-2">
-            <button class="btn btn-light w-100 text-start mb-2" @click="sendQuickQuestion('如何安装Python')">
-              <i class="fa fa-question-circle me-2 text-primary"></i>
-              如何安装Python
-            </button>
-            <button class="btn btn-light w-100 text-start mb-2" @click="sendQuickQuestion('Python基础语法')">
-              <i class="fa fa-question-circle me-2 text-primary"></i>
-              Python基础语法
-            </button>
-            <button class="btn btn-light w-100 text-start mb-2" @click="sendQuickQuestion('Python和JavaScript的区别')">
-              <i class="fa fa-question-circle me-2 text-primary"></i>
-              Python和JavaScript的区别
-            </button>
-            <button class="btn btn-light w-100 text-start mb-2" @click="sendQuickQuestion('如何使用Django')">
-              <i class="fa fa-question-circle me-2 text-primary"></i>
-              如何使用Django
-            </button>
-            <button class="btn btn-light w-100 text-start mb-2" @click="sendQuickQuestion('Python数据分析库')">
-              <i class="fa fa-question-circle me-2 text-primary"></i>
-              Python数据分析库
-            </button>
-            <button class="btn btn-light w-100 text-start mb-2" @click="sendQuickQuestion('Python爬虫教程')">
-              <i class="fa fa-question-circle me-2 text-primary"></i>
-              Python爬虫教程
-            </button>
-          </div>
-        </div>
-
-        <!-- 聊天历史 -->
-        <div class="bg-white rounded-3 shadow-sm border p-4 mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold text-dark mb-0">聊天历史</h5>
-            <button class="btn btn-outline-primary btn-sm rounded-pill">清空</button>
-          </div>
-          <div class="space-y-2">
-            <div class="p-2 border rounded cursor-pointer hover-bg-light" v-for="(history, index) in chatHistory" :key="index" @click="loadHistory(history)">
-              <div class="fw-medium text-dark small">{{ history.title }}</div>
-              <div class="text-muted small">{{ history.time }}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI助手信息 -->
-        <div class="bg-white rounded-3 shadow-sm border p-4">
-          <h5 class="fw-bold text-dark mb-3">AI助手</h5>
-          <div class="text-center">
-            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;">
-              <i class="fa fa-robot text-primary fa-3x"></i>
-            </div>
-            <h6 class="fw-bold text-dark mb-2">Python学习助手</h6>
-            <p class="text-muted small mb-3">专业的Python编程问答助手，为您解答学习过程中的各种问题</p>
-            <div class="d-flex justify-content-center gap-2">
-              <span class="badge bg-success">在线</span>
-              <span class="badge bg-primary">响应快速</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧聊天区域 -->
-      <div class="col-lg-9">
-        <div class="bg-white rounded-3 shadow-sm border d-flex flex-column" style="height:600px;">
-          <!-- 聊天头部 -->
-          <div class="p-3 border-bottom bg-light">
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="d-flex align-items-center">
-                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" style="width:32px;height:32px;">
-                  <i class="fa fa-robot"></i>
-                </div>
-                <div>
-                  <div class="fw-bold text-dark">Python学习助手</div>
-                  <div class="text-muted small">在线 · 响应快速</div>
-                </div>
-              </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm rounded-pill">
-                  <i class="fa fa-download"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill">
-                  <i class="fa fa-share"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 聊天消息区域 -->
-          <div class="flex-grow-1 p-3 overflow-auto" ref="chatContainer">
-            <div class="space-y-3">
-              <!-- AI欢迎消息 -->
-              <div class="d-flex align-items-start">
-                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-2 mt-1" style="width:32px;height:32px;">
-                  <i class="fa fa-robot"></i>
-                </div>
-                <div class="bg-light border rounded-4 rounded-start-0 px-4 py-3" style="max-width:70%;">
-                  <div class="text-dark mb-2">你好！我是Python学习助手，很高兴为您服务！</div>
-                  <div class="text-muted small">我可以帮助您解答Python编程相关的问题，包括语法、框架、最佳实践等。请随时向我提问！</div>
-                </div>
-              </div>
-
-              <!-- 用户问题 -->
-              <div class="d-flex align-items-start justify-content-end">
-                <div class="bg-primary text-white rounded-4 rounded-end-0 px-4 py-3 me-2" style="max-width:70%;">
-                  <div>请问Python适合零基础学习吗？</div>
-                </div>
-                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-dark ms-2 mt-1" style="width:32px;height:32px;">
-                  <i class="fa fa-user"></i>
-                </div>
-              </div>
-
-              <!-- AI回答 -->
-              <div class="d-flex align-items-start">
-                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-2 mt-1" style="width:32px;height:32px;">
-                  <i class="fa fa-robot"></i>
-                </div>
-                <div class="bg-light border rounded-4 rounded-start-0 px-4 py-3" style="max-width:70%;">
-                  <div class="text-dark mb-2">当然适合！Python是公认的最适合初学者的编程语言之一：</div>
-                  <ul class="text-dark mb-2">
-                    <li>语法简洁明了，接近自然语言</li>
-                    <li>丰富的学习资源和社区支持</li>
-                    <li>应用领域广泛，就业前景好</li>
-                    <li>有大量适合初学者的教程和项目</li>
-                  </ul>
-                  <div class="text-muted small">建议从基础语法开始，逐步学习面向对象编程、Web开发等进阶内容。</div>
-                </div>
-              </div>
-
-              <!-- 代码示例 -->
-              <div class="d-flex align-items-start">
-                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-2 mt-1" style="width:32px;height:32px;">
-                  <i class="fa fa-robot"></i>
-                </div>
-                <div class="bg-light border rounded-4 rounded-start-0 px-4 py-3" style="max-width:70%;">
-                  <div class="text-dark mb-2">这里是一个简单的Python示例：</div>
-                  <div class="bg-dark text-light rounded p-3 mb-2" style="font-family: 'Courier New', monospace; font-size: 0.9rem;">
-                    <div class="text-success"># 这是一个简单的Python程序</div>
-                    <div class="text-primary">print</div><span class="text-warning">(</span><span class="text-info">"Hello, Python!"</span><span class="text-warning">)</span>
-                    <br>
-                    <div class="text-primary">name</div> <span class="text-warning">=</span> <span class="text-info">"初学者"</span>
-                    <br>
-                    <div class="text-primary">print</div><span class="text-warning">(</span><span class="text-info">f"欢迎 {name} 学习Python!"</span><span class="text-warning">)</span>
-                  </div>
-                  <div class="text-muted small">运行结果：Hello, Python! 欢迎 初学者 学习Python!</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 输入区域 -->
-          <div class="p-3 border-top bg-light">
-            <div class="d-flex align-items-end gap-2">
-              <div class="flex-grow-1">
-                <textarea 
-                  v-model="userMessage" 
-                  @keydown.enter.prevent="sendMessage"
-                  class="form-control rounded-pill" 
-                  placeholder="输入您的问题..." 
-                  rows="2"
-                  style="resize: none;"
-                ></textarea>
-              </div>
-              <div class="d-flex flex-column gap-2">
-                <button class="btn btn-outline-secondary btn-sm rounded-pill" title="上传文件">
-                  <i class="fa fa-paperclip"></i>
-                </button>
-                <button @click="sendMessage" class="btn btn-primary rounded-pill px-4">
-                  <i class="fa fa-paper-plane me-1"></i>发送
-                </button>
-              </div>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-2">
-              <div class="text-muted small">
-                <i class="fa fa-lightbulb-o me-1"></i>
-                提示：可以问语法、框架、调试等问题
-              </div>
-              <div class="text-muted small">
-                <i class="fa fa-keyboard-o me-1"></i>
-                Enter发送，Shift+Enter换行
-              </div>
-            </div>
-          </div>
+    <ul>
+      <li
+        v-for="(item, idx) in historyList"
+        :key="idx"
+        :class="{active: idx === currentHistoryIndex}"
+        @click="switchHistory(idx)"
+      >
+        <div class="history-title-text">{{ item.title || '新会话' }}</div>
+        <div class="history-time">{{ item.time }}</div>
+      </li>
+    </ul>
+    <button class="clear-btn" @click="clearHistory">清空历史</button>
+  </div>
+  <!-- 右侧主对话区 -->
+  <div class="chat-main">
+    <div class="chat-header">
+      <span class="ai-title"><i class="fa fa-robot"></i> Python学习助手</span>
+    </div>
+    <div class="chat-messages" ref="msgList">
+      <div
+        v-for="msg in currentHistory.messages"
+        :key="msg.id"
+        :class="['msg', msg.from]"
+      >
+        <img
+          :src="msg.from === 'user' ? userAvatar : aiAvatar"
+          class="avatar"
+        />
+        <!-- 普通文本 -->
+        <div
+          v-if="!msg.file && !msg.markdown"
+          class="bubble"
+        >{{ msg.content }}</div>
+        <!-- Markdown渲染 -->
+        <div
+          v-if="msg.markdown"
+          class="bubble"
+          v-html="renderMarkdown(msg.content)"
+        ></div>
+        <!-- 文件气泡 -->
+        <div class="bubble file-bubble" v-if="msg.file">
+          <i class="fa fa-file-code-o"></i>
+          <a :href="msg.file.url" target="_blank">{{ msg.file.name }}</a>
         </div>
       </div>
     </div>
-  </main>
+    <div class="chat-input">
+      <textarea
+        v-model="input"
+        class="chat-textarea"
+        placeholder="请输入问题..."
+        rows="2"
+        @keydown.enter.exact.prevent="send"
+        @keydown.shift.enter.stop
+      ></textarea>
+      <input
+        type="file"
+        ref="fileInput"
+        @change="upload"
+        class="upload-btn"
+        accept=".py,.txt,.js,.java,.cpp,.c"
+      />
+      <button @click="triggerUpload" title="上传代码">
+        <i class="fa fa-paperclip"></i>
+      </button>
+      <button @click="send">发送</button>
+    </div>
+    <div class="chat-input-tip">
+      <span class="tip-left"><i class="fa fa-lightbulb-o"></i> Enter发送，Shift+Enter换行</span>
+    </div>
+  </div>
 </div>
 </template>
 
 <script>
+import axios from "axios";
+import { marked } from "marked";
+import hljs from "highlight.js";
+import "highlight.js/styles/github.css";
+
+marked.setOptions({
+  highlight: function (code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value;
+    }
+    return hljs.highlightAuto(code).value;
+  },
+  breaks: true,
+  gfm: true,
+});
+
 export default {
-  name: 'AIChatPage',
+  name: "AIChatPage",
   data() {
     return {
-      userMessage: '',
-      chatHistory: [
-        { title: 'Python基础语法问题', time: '2小时前' },
-        { title: 'Django框架使用', time: '昨天' },
-        { title: '数据分析库介绍', time: '3天前' },
-        { title: 'Python环境配置', time: '1周前' }
-      ]
-    }
+      input: "",
+      userAvatar: "https://picsum.photos/seed/user/40/40",
+      aiAvatar: "https://picsum.photos/seed/ai/40/40",
+      historyList: [
+        {
+          title: "Python基础语法问题",
+          time: "2小时前",
+          messages: [
+            {
+              id: 1,
+              from: "user",
+              content: "Python的变量怎么定义？",
+            },
+            {
+              id: 2,
+              from: "ai",
+              content:
+                "Python变量无需声明类型，直接赋值即可，如：\n```python\nx = 10\n```",
+              markdown: true,
+            },
+          ],
+        },
+      ],
+      currentHistoryIndex: 0,
+    };
+  },
+  computed: {
+    currentHistory() {
+      return this.historyList[this.currentHistoryIndex];
+    },
   },
   methods: {
-    sendMessage() {
-      if (this.userMessage.trim()) {
-        // 这里可以添加发送消息的逻辑
-        console.log('发送消息:', this.userMessage);
-        this.userMessage = '';
+    async send() {
+      if (!this.input.trim()) return;
+      // 用户消息
+      this.currentHistory.messages.push({
+        id: Date.now(),
+        from: "user",
+        content: this.input,
+      });
+      const question = this.input;
+      this.input = "";
+      this.$nextTick(this.scrollToBottom);
+      // 向后端发送问题
+      try {
+        const res = await axios.post("/api/ai/ask", { question });
+        // 假设后端返回 { answer: "markdown内容" }
+        this.currentHistory.messages.push({
+          id: Date.now() + 1,
+          from: "ai",
+          content: res.data.answer,
+          markdown: true,
+        });
+      } catch (e) {
+        this.currentHistory.messages.push({
+          id: Date.now() + 2,
+          from: "ai",
+          content: "AI服务暂时不可用，请稍后再试。",
+        });
       }
+      this.$nextTick(this.scrollToBottom);
     },
-    sendQuickQuestion(question) {
-      this.userMessage = question;
-      this.sendMessage();
+    async upload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      // 上传到后端
+      const formData = new FormData();
+      formData.append("file", file);
+      this.currentHistory.messages.push({
+        id: Date.now(),
+        from: "user",
+        content: "",
+        file: { name: file.name, url: "" },
+      });
+      this.$nextTick(this.scrollToBottom);
+      try {
+        const res = await axios.post("/api/ai/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        // 假设后端返回 { answer: "markdown内容", fileUrl: "..." }
+        this.currentHistory.messages.push({
+          id: Date.now() + 1,
+          from: "ai",
+          content: res.data.answer,
+          markdown: true,
+        });
+        // 更新文件url
+        this.currentHistory.messages[
+          this.currentHistory.messages.length - 2
+        ].file.url = res.data.fileUrl || "";
+      } catch (e) {
+        this.currentHistory.messages.push({
+          id: Date.now() + 2,
+          from: "ai",
+          content: "文件上传失败，请重试。",
+        });
+      }
+      this.$refs.fileInput.value = "";
+      this.$nextTick(this.scrollToBottom);
     },
-    loadHistory(history) {
-      console.log('加载历史记录:', history);
-    }
-  }
-}
+    triggerUpload() {
+      this.$refs.fileInput.click();
+    },
+    switchHistory(idx) {
+      this.currentHistoryIndex = idx;
+      this.$nextTick(this.scrollToBottom);
+    },
+    clearHistory() {
+      this.historyList = [
+        {
+          title: "新会话",
+          time: new Date().toLocaleString(),
+          messages: [],
+        },
+      ];
+      this.currentHistoryIndex = 0;
+    },
+    newChat() {
+      this.historyList.unshift({
+        title: '新会话',
+        time: new Date().toLocaleString(),
+        messages: [],
+      });
+      this.currentHistoryIndex = 0;
+    },
+    scrollToBottom() {
+      const el = this.$refs.msgList;
+      if (el) el.scrollTop = el.scrollHeight;
+    },
+    renderMarkdown(md) {
+      return marked(md || "");
+    },
+  },
+};
 </script>
 
 <style scoped>
-.cursor-pointer {
+.ai-chat-page {
+  display: flex;
+  height: 100vh;
+  background: #f7f8fa;
+}
+.chat-history {
+  width: 260px;
+  background: #fff;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 12px 0;
+  position: fixed;
+  left: 0;
+  top: 60px; /* 假设顶部导航栏高度为60px */
+  bottom: 0;
+  z-index: 10;
+  height: auto;
+  max-height: calc(100vh - 60px);
+}
+.history-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 18px 18px 10px 18px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.history-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 18px 0 18px;
+  background: #fff;
+}
+.toolbar-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 0.98rem;
   cursor: pointer;
+  transition: background 0.2s;
 }
-
-.hover-bg-light:hover {
-  background-color: #f8f9fa;
+.toolbar-btn:hover {
+  background: #1746a2;
 }
-
-.space-y-2 > * + * {
-  margin-top: 0.5rem;
+.chat-history ul {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 0;
+  overflow-y: auto;
 }
-
-.space-y-3 > * + * {
-  margin-top: 1rem;
+.chat-history li {
+  padding: 12px 18px 8px 18px;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-history li.active,
+.chat-history li:hover {
+  background: #f0f6ff;
+}
+.history-title-text {
+  font-weight: 500;
+  color: #2563eb;
+}
+.history-time {
+  font-size: 0.85rem;
+  color: #999;
+}
+.clear-btn {
+  margin: 10px 18px 0 18px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 0;
+  color: #888;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.clear-btn:hover {
+  background: #e0e7ef;
+}
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f7f8fa;
+  margin-left: 260px;
+  min-width: 0;
+}
+.chat-header {
+  padding: 18px 24px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+.ai-title {
+  color: #2563eb;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px 24px 24px;
+  background: #f7f8fa;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 110px; /* 留出输入栏高度，避免被遮挡 */
+}
+.msg {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 18px;
+}
+.msg.user {
+  flex-direction: row-reverse;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin: 0 10px;
+}
+.bubble {
+  max-width: 60%;
+  padding: 12px 18px;
+  border-radius: 18px;
+  background: #e6f0ff;
+  color: #222;
+  font-size: 1rem;
+  word-break: break-all;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.04);
+}
+.msg.user .bubble {
+  background: #2563eb;
+  color: #fff;
+}
+.file-bubble {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbe6;
+  color: #b8860b;
+  border: 1px solid #ffe066;
+}
+.chat-input {
+  position: fixed;
+  left: 260px;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  padding: 18px 24px 10px 24px;
+  background: #fff;
+  border-top: 1px solid #eee;
+  gap: 10px;
+}
+.chat-textarea {
+  flex: 1;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 24px;
+  padding: 16px 20px;
+  font-size: 1.15rem;
+  min-height: 48px;
+  max-height: 120px;
+  resize: none;
+  background: #f8fafc;
+  transition: border 0.2s;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+.chat-textarea:focus {
+  border: 1.5px solid #2563eb;
+  background: #fff;
+}
+.upload-btn {
+  display: none;
+}
+.chat-input button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 12px 22px;
+  font-size: 1.08rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 4px;
+}
+.chat-input button:hover {
+  background: #1746a2;
+}
+.chat-input button[title] {
+  background: #f5f5f5;
+  color: #2563eb;
+  border: 1px solid #e0e7ef;
+  margin-right: 0;
+  padding: 12px 12px;
+}
+.chat-input button[title]:hover {
+  background: #e0e7ef;
+}
+.chat-input-tip {
+  position: fixed;
+  left: 260px;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  padding: 0 24px 8px 24px;
+  background: transparent;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  font-size: 0.98rem;
+  color: #b0b3b8;
+}
+.tip-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 900px) {
+  .chat-history {
+    width: 180px;
+    left: 0;
+  }
+  .chat-main {
+    margin-left: 180px;
+  }
+  .chat-input, .chat-input-tip {
+    left: 180px;
+  }
 }
 </style> 
