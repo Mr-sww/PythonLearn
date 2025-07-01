@@ -3,7 +3,7 @@
     <!-- 课程封面 -->
     <div class="relative">
       <img 
-        :src="course.imageUrl || course.ImageURL" 
+        :src="getImageUrl(course.imageUrl || course.ImageURL)" 
         :alt="course.title"
         class="w-full h-48 object-cover"
         @error="handleImageError"
@@ -103,6 +103,15 @@ export default {
     }
   },
   methods: {
+    // 统一图片路径处理
+    getImageUrl(url) {
+      if (!url) return 'https://picsum.photos/600/300?random=1';
+      if (typeof url === 'string' && url.startsWith('/course_images/')) {
+        return 'http://localhost:8080' + url;
+      }
+      return url;
+    },
+    
     // 获取难度样式类
     getDifficultyClass(difficulty) {
       const classes = {

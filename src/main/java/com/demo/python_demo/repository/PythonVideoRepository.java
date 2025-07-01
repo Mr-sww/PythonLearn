@@ -7,6 +7,6 @@ import java.util.List;
 
 @Mapper
 public interface PythonVideoRepository {
-    @Select("SELECT ID, Title, URL, ImageURL, PlayCount, PublishDate, Category FROM PythonVideos")
+    @Select("SELECT ID, Title, URL, ImageURL, PlayCount, PublishDate FROM PythonVideos")
     List<PythonVideo> findAll();
 } 
