@@ -36,6 +36,9 @@
         <router-link to="/favorites" class="w-full px-8 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:from-red-600 hover:to-pink-600 transition-all text-lg flex items-center justify-center gap-2">
           <i class="fa fa-heart"></i> 我的收藏课程
         </router-link>
+        <router-link to="/favorite-problems" class="w-full px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-blue-500 transition-all text-lg flex items-center justify-center gap-2">
+          <i class="fa fa-star"></i> 我收藏的题目
+        </router-link>
       </div>
 
       <!-- 编辑资料弹窗 -->

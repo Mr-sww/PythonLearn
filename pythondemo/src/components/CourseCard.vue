@@ -1,7 +1,7 @@
 <template>
   <div class="course-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
     <!-- 课程封面 -->
-    <div class="relative">
+    <div class="relative cursor-pointer" @click="handleViewCourse">
       <img 
         :src="getImageUrl(course.imageUrl || course.ImageURL)" 
         :alt="course.title"
@@ -73,21 +73,7 @@
           </div>
         </div>
         
-        <!-- 操作按钮 -->
-        <div class="flex gap-2">
-          <button 
-            @click="handleViewCourse"
-            class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            <i class="fa fa-eye mr-1"></i>查看详情
-          </button>
-          <button 
-            @click="handleStartLearning"
-            class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors"
-          >
-            <i class="fa fa-play mr-1"></i>{{ course.price === 0 || course.price === null ? '立即学习' : '立即购买' }}
-          </button>
-        </div>
+        <!-- 操作按钮已删除 -->
       </div>
     </div>
   </div>

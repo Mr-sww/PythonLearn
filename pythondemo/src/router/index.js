@@ -17,6 +17,7 @@ const routes = [
   { path: '/practice', component: PracticeCenter },
   { path: '/problems', component: ProblemList },
   { path: '/code-practice', component: CodePractice },
+  { path: '/problem/:id', component: CodePractice },
   { path: '/course/:id', component: CourseDetailPage },
   { path: '/profile', component: ProfilePage },
   { path: '/exercise/:id', component: ExerciseDetailPage },
@@ -25,6 +26,16 @@ const routes = [
     path: '/favorites',
     name: 'FavoriteCourses',
     component: () => import('@/views/FavoriteCourses.vue')
+  },
+  {
+    path: '/learn-detail',
+    name: 'LearnDetial',
+    component: () => import('@/views/LearnDetial.vue')
+  },
+  {
+    path: '/favorite-problems',
+    name: 'FavoriteProblems',
+    component: () => import('@/views/FavoriteProblems.vue')
   }
 ]
 

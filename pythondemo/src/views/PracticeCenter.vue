@@ -192,6 +192,20 @@
             </div>
           </div>
         </div>
+
+        <!-- 我的收藏题目 -->
+        <div class="bg-white rounded-3 shadow-sm border p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3">我的收藏题目</h5>
+          <div v-if="favoriteProblems.length === 0" class="text-muted">暂无收藏题目</div>
+          <div v-else class="row g-2">
+            <div class="col-md-6 col-lg-4" v-for="problem in favoriteProblems" :key="problem.problemId">
+              <div class="problem-card" @click="$router.push('/problem/' + problem.problemId)">
+                <h6 class="fw-bold mb-1">{{ problem.Title }}</h6>
+                <div class="text-muted small">收藏于：{{ problem.createdAt }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 右侧题目列表 -->
@@ -211,43 +225,15 @@
         </div>
 
         <!-- 题目网格 -->
-        <div class="row g-4">
-          <div class="col-md-6" v-for="n in 8" :key="n">
-            <div class="card rounded-3 shadow-sm border-0 h-100 practice-card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <h6 class="fw-bold text-dark mb-1">练习题{{ n }}</h6>
-                    <p class="text-muted small mb-2">编写一个Python函数，实现{{ n === 1 ? '计算斐波那契数列' : n === 2 ? '字符串反转' : n === 3 ? '列表去重' : n === 4 ? '字典排序' : '数组排序' }}功能。</p>
-                  </div>
-                  <span :class="['badge rounded-pill px-3 py-2', n % 3 === 0 ? 'bg-success' : n % 3 === 1 ? 'bg-warning text-dark' : 'bg-danger']">
-                    {{ n % 3 === 0 ? '简单' : n % 3 === 1 ? '中等' : '困难' }}
-                  </span>
-                </div>
-                
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between text-muted small mb-1">
-                    <span>完成率</span>
-                    <span>{{ 60 + n * 5 }}%</span>
-                  </div>
-                  <div class="progress" style="height:4px;">
-                    <div class="progress-bar" :class="n % 3 === 0 ? 'bg-success' : n % 3 === 1 ? 'bg-warning' : 'bg-danger'" :style="`width:${60 + n * 5}%`"></div>
-                  </div>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="text-muted small">
-                    <i class="fa fa-users me-1"></i>{{ 100 + n * 20 }}人已做
-                  </div>
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-sm rounded-pill">
-                      {{ n % 2 === 0 ? '开始练习' : '继续练习' }}
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm rounded-pill">
-                      <i class="fa fa-eye"></i>
-                    </button>
-                  </div>
-                </div>
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4" v-for="problem in problems" :key="problem.id">
+            <div class="problem-card" @click="goToProblem(problem.id)">
+              <h5 class="fw-bold mb-2">{{ problem.title }}</h5>
+              <div class="text-muted small mb-1">{{ problem.background }}</div>
+              <div class="text-truncate">{{ problem.description }}</div>
+              <div class="mt-2">
+                <span class="badge bg-secondary me-2">{{ problem.id }}</span>
+                <span class="badge bg-info">{{ problem.createTime }}</span>
               </div>
             </div>
           </div>
@@ -274,8 +260,33 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
-  name: 'PracticeCenter'
+  name: 'PracticeCenter',
+  data() {
+    return {
+      problems: [],
+      favoriteProblems: [],
+      userId: 1, // 实际应取当前登录用户
+    }
+  },
+  async mounted() {
+    await this.fetchProblems();
+    await this.loadFavoriteProblems();
+  },
+  methods: {
+    async fetchProblems() {
+      const res = await axios.get('/api/practice/problems');
+      this.problems = res.data;
+    },
+    goToProblem(id) {
+      this.$router.push('/problem/' + id);
+    },
+    async loadFavoriteProblems() {
+      const res = await axios.get('/api/practice/favorites', { params: { userId: this.userId } });
+      this.favoriteProblems = res.data;
+    }
+  }
 }
 </script>
 
@@ -299,5 +310,18 @@ export default {
 
 .bg-gradient-success {
   background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.problem-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px #e0e0e0;
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.problem-card:hover {
+  box-shadow: 0 4px 16px #d0d7e2;
+  background: #f5faff;
 }
 </style> 

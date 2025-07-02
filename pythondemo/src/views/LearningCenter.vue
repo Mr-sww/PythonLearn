@@ -61,7 +61,7 @@
           <div class="learning-tree">
             <!-- Python基础 -->
             <div class="learning-node completed mb-3">
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
+              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3" style="cursor:pointer" @click="goToDetail(1)">
                 <div class="d-flex align-items-center">
                   <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:40px;height:40px;">
                     <i class="fa fa-check"></i>
@@ -79,21 +79,21 @@
               
               <!-- 子节点 -->
               <div class="ms-5 mt-2">
-                <div class="d-flex align-items-center mb-2">
+                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(11)">
                   <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
                     <i class="fa fa-check"></i>
                   </div>
                   <span class="text-dark">变量与数据类型</span>
                   <span class="badge bg-success ms-auto">已完成</span>
                 </div>
-                <div class="d-flex align-items-center mb-2">
+                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(12)">
                   <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
                     <i class="fa fa-check"></i>
                   </div>
                   <span class="text-dark">条件语句与循环</span>
                   <span class="badge bg-success ms-auto">已完成</span>
                 </div>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center" style="cursor:pointer" @click.stop="goToDetail(13)">
                   <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
                     <i class="fa fa-check"></i>
                   </div>
@@ -105,7 +105,7 @@
 
             <!-- Python进阶 -->
             <div class="learning-node in-progress mb-3">
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
+              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3" style="cursor:pointer" @click="goToDetail(2)">
                 <div class="d-flex align-items-center">
                   <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-white me-3" style="width:40px;height:40px;">
                     <i class="fa fa-spinner"></i>
@@ -123,21 +123,21 @@
               
               <!-- 子节点 -->
               <div class="ms-5 mt-2">
-                <div class="d-flex align-items-center mb-2">
+                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(21)">
                   <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
                     <i class="fa fa-check"></i>
                   </div>
                   <span class="text-dark">异常处理</span>
                   <span class="badge bg-success ms-auto">已完成</span>
                 </div>
-                <div class="d-flex align-items-center mb-2">
+                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(22)">
                   <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
                     <i class="fa fa-spinner"></i>
                   </div>
                   <span class="text-dark">文件操作</span>
                   <span class="badge bg-warning text-dark ms-auto">进行中</span>
                 </div>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center" style="cursor:pointer" @click.stop="goToDetail(23)">
                   <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
                     <i class="fa fa-lock"></i>
                   </div>
@@ -149,7 +149,7 @@
 
             <!-- Web开发 -->
             <div class="learning-node locked">
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
+              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3" style="cursor:pointer" @click="goToDetail(3)">
                 <div class="d-flex align-items-center">
                   <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width:40px;height:40px;">
                     <i class="fa fa-lock"></i>
@@ -318,7 +318,12 @@
 
 <script>
 export default {
-  name: 'LearningCenter'
+  name: 'LearningCenter',
+  methods: {
+    goToDetail(id) {
+      this.$router.push({ name: 'LearnDetial', query: { id } });
+    }
+  }
 }
 </script>
 

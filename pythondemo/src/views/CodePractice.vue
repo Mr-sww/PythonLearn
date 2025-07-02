@@ -20,8 +20,23 @@
             </div>
           </div>
           <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm rounded-pill">
-              <i class="fa fa-star-o me-1"></i>收藏
+            <button
+              class="collect-btn"
+              :class="{ collected: isFavorite, animating: animating }"
+              @click="handleFavoriteClick"
+              :disabled="favoriteLoading"
+            >
+              <span class="star-icon">
+                <svg v-if="!isFavorite" width="24" height="24" viewBox="0 0 40 40">
+                  <polygon points="20,4 25,16 38,16 28,24 32,36 20,28 8,36 12,24 2,16 15,16"
+                    fill="none" stroke="#2563eb" stroke-width="2"/>
+                </svg>
+                <svg v-else width="24" height="24" viewBox="0 0 40 40">
+                  <polygon points="20,4 25,16 38,16 28,24 32,36 20,28 8,36 12,24 2,16 15,16"
+                    fill="#FFD600" stroke="#2563eb" stroke-width="2"/>
+                </svg>
+              </span>
+              <span class="collect-text">{{ isFavorite ? '已收藏' : '收藏' }}</span>
             </button>
             <button class="btn btn-outline-secondary btn-sm rounded-pill">
               <i class="fa fa-share me-1"></i>分享
@@ -53,39 +68,25 @@
 
       <!-- 评论区 -->
       <div class="comments-section">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold text-dark mb-0">讨论区</h5>
-          <button class="btn btn-primary btn-sm rounded-pill">
-            <i class="fa fa-plus me-1"></i>发表评论
-          </button>
-        </div>
-        
+        <textarea v-model="newComment" class="form-control mb-2" placeholder="写下你的评论..."></textarea>
+        <button class="btn btn-primary btn-sm rounded-pill mb-3" @click="addComment">
+          <i class="fa fa-plus me-1"></i>发表评论
+        </button>
         <div class="comments-list">
-          <div class="comment-item" v-for="comment in comments" :key="comment.id">
-            <div class="d-flex">
-              <img :src="comment.avatar" class="rounded-circle me-3" width="40" height="40" alt="用户头像">
-              <div class="flex-grow-1">
-                <div class="d-flex align-items-center mb-1">
-                  <span class="fw-medium text-dark">{{ comment.author }}</span>
-                  <span class="text-muted small ms-2">{{ comment.time }}</span>
-                  <span class="badge bg-primary ms-2" v-if="comment.isAuthor">题主</span>
-                </div>
-                <div class="comment-content mb-2">{{ comment.content }}</div>
-                <div class="comment-actions">
-                  <button class="btn btn-link btn-sm p-0 me-3">
-                    <i class="fa fa-thumbs-up me-1"></i>{{ comment.likes }}
-                  </button>
-                  <button class="btn btn-link btn-sm p-0 me-3">
-                    <i class="fa fa-comment me-1"></i>回复
-                  </button>
-                  <button class="btn btn-link btn-sm p-0">
-                    <i class="fa fa-flag me-1"></i>举报
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CommentItem
+            v-for="comment in comments"
+            :key="comment.commentId"
+            :comment="comment"
+            @reply="replyComment"
+            @like="likeComment"
+          />
         </div>
+        <BasePagination
+          :total="totalComments"
+          :page-size="pageSize"
+          :current-page="page"
+          @change="changePage"
+        />
       </div>
     </div>
 
@@ -210,12 +211,16 @@
 
 <script>
 import CodeRunner from '../services/codeRunner.js';
+import axios from 'axios';
+import CommentItem from './components/CommentItem.vue';
+import BasePagination from './components/BasePagination.vue';
 
 export default {
   name: 'CodePractice',
+  components: { CommentItem, BasePagination },
   data() {
     return {
-      problemId: 1,
+      problemId: '',
       problem: null,
       code: '',
       showResult: false,
@@ -224,48 +229,28 @@ export default {
         output: '',
         testCases: []
       },
-      comments: [
-        {
-          id: 1,
-          author: '张三',
-          avatar: 'https://picsum.photos/40/40?random=1',
-          content: '这道题用哈希表解法很经典，时间复杂度O(n)，空间复杂度O(n)。',
-          time: '2小时前',
-          likes: 15,
-          isAuthor: true
-        },
-        {
-          id: 2,
-          author: '李四',
-          avatar: 'https://picsum.photos/40/40?random=2',
-          content: '暴力解法虽然简单，但时间复杂度是O(n²)，面试时建议用哈希表。',
-          time: '1天前',
-          likes: 8,
-          isAuthor: false
-        },
-        {
-          id: 3,
-          author: '王五',
-          avatar: 'https://picsum.photos/40/40?random=3',
-          content: '有没有人用双指针解法？虽然这道题不太适合，但想看看思路。',
-          time: '3天前',
-          likes: 3,
-          isAuthor: false
-        }
-      ],
-      isRunning: false
+      comments: [],
+      totalComments: 0,
+      page: 1,
+      pageSize: 10,
+      newComment: '',
+      isRunning: false,
+      isFavorite: false,
+      userId: null, // 初始为 null，登录后赋值
+      animating: false,
+      favoriteCount: 0,
+      favoriteLoading: false
     }
   },
   async mounted() {
-    // 从URL参数获取题目ID
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    if (id) {
-      this.problemId = parseInt(id);
-    }
-    
-    // 加载题目信息
+    // 从路由参数获取题目ID
+    this.problemId = this.$route.params.id || this.$route.query.id;
+    // 获取当前登录用户id
+    this.userId = localStorage.getItem('userId');
     await this.loadProblem();
+    await this.loadComments();
+    await this.checkFavorite();
+    await this.loadFavoriteCount();
   },
   methods: {
     goBackToList() {
@@ -273,9 +258,24 @@ export default {
     },
  
     async loadProblem() {
-      this.problem = CodeRunner.getProblem(this.problemId);
+      // 从后端获取题目信息
+      if (!this.problemId) return;
+      const res = await axios.get(`/api/practice/problems`);
+      const list = res.data;
+      this.problem = list.find(p => p.id == this.problemId);
       if (this.problem) {
-        this.code = this.problem.template;
+        // 解析samples为示例
+        try {
+          const samples = JSON.parse(this.problem.samples || '[]');
+          this.problem.examples = samples.map(s => ({
+            input: s.input,
+            output: s.output,
+            explanation: s.explanation || ''
+          }));
+        } catch {
+          this.problem.examples = [];
+        }
+        this.code = '';
       }
     },
     
@@ -442,6 +442,109 @@ if __name__ == "__main__":
     print(f"结果: {result3}")
     print(f"验证: {nums3[result3[0]]} + {nums3[result3[1]]} = {nums3[result3[0]] + nums3[result3[1]]}")`;
       }
+    },
+    async loadComments() {
+      const res = await axios.get(`/api/practice/problem/${this.problemId}/comments`, {
+        params: { page: this.page, pageSize: this.pageSize }
+      });
+      this.comments = this.buildCommentTree(res.data.comments);
+      this.totalComments = res.data.total;
+    },
+    buildCommentTree(list) {
+      const map = {};
+      list.forEach(c => { c.children = []; map[c.commentId] = c; });
+      const tree = [];
+      list.forEach(c => {
+        if (c.parentId) {
+          map[c.parentId]?.children.push(c);
+        } else {
+          tree.push(c);
+        }
+      });
+      return tree;
+    },
+    async addComment() {
+      if (!this.userId) {
+        alert('请先登录后再评论！');
+        this.$router.push('/login');
+        return;
+      }
+      if (!this.newComment.trim()) return;
+      await axios.post(`/api/practice/problem/${this.problemId}/comments`, {
+        userId: this.userId,
+        content: this.newComment,
+        parentId: null
+      });
+      this.newComment = '';
+      await this.loadComments();
+    },
+    async replyComment(parentId, content) {
+      if (!this.userId) {
+        alert('请先登录后再回复！');
+        this.$router.push('/login');
+        return;
+      }
+      await axios.post(`/api/practice/problem/${this.problemId}/comments`, {
+        userId: this.userId,
+        content,
+        parentId
+      });
+      await this.loadComments();
+    },
+    async likeComment(commentId) {
+      await axios.post(`/api/practice/comment/${commentId}/like`);
+      await this.loadComments();
+    },
+    changePage(page) {
+      this.page = page;
+      this.loadComments();
+    },
+    async checkFavorite() {
+      if (!this.userId) {
+        this.isFavorite = false;
+        return;
+      }
+      const res = await axios.get(`/api/practice/problem/${this.problemId}/favorite`, { params: { userId: this.userId } });
+      console.log('收藏状态接口返回', res.data);
+      this.isFavorite = res.data;
+    },
+    async loadFavoriteCount() {
+      // 假设后端有接口 /api/practice/problem/{id}/favorite/count 返回数字
+      try {
+        const res = await axios.get(`/api/practice/problem/${this.problemId}/favorite/count`);
+        this.favoriteCount = res.data;
+      } catch {
+        this.favoriteCount = 0;
+      }
+    },
+    async handleFavoriteClick() {
+      if (this.favoriteLoading) return;
+      if (!this.userId) {
+        alert('请先登录后再收藏题目！');
+        this.$router.push('/login');
+        return;
+      }
+      this.favoriteLoading = true;
+      await this.toggleFavorite();
+      await this.checkFavorite(); // 每次操作后都刷新收藏状态
+      this.favoriteLoading = false;
+      this.animating = true;
+      setTimeout(() => { this.animating = false; }, 350);
+    },
+    async toggleFavorite() {
+      if (this.isFavorite) {
+        await axios.delete(`/api/practice/problem/${this.problemId}/favorite`, { params: { userId: this.userId } });
+        this.favoriteCount = Math.max(0, this.favoriteCount - 1);
+      } else {
+        await axios.post(`/api/practice/problem/${this.problemId}/favorite`, null, { params: { userId: this.userId } });
+        this.favoriteCount = this.favoriteCount + 1;
+      }
+      await this.checkFavorite();
+      await this.loadFavoriteCount();
+    },
+    formatCount(val) {
+      if (val >= 10000) return (val / 10000).toFixed(1) + '万';
+      return val;
     }
   }
 }
@@ -637,5 +740,128 @@ if __name__ == "__main__":
   .code-panel {
     height: 60%;
   }
+}
+
+/* 大号星星收藏按钮 */
+.star-favorite-btn {
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  font-size: 1.6rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+  outline: none;
+}
+.star-favorite-btn .fa-star {
+  font-size: 2.2rem;
+  margin-right: 0.2em;
+  transition: color 0.2s;
+}
+.star-favorite-btn .star-count {
+  font-size: 1.3rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.star-favorite-btn.active,
+.star-favorite-btn.active .fa-star,
+.star-favorite-btn.active .star-count {
+  color: #00b4ff;
+}
+.star-favorite-btn:active {
+  transform: scale(0.96);
+}
+
+.favorite-btn-style {
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.13rem;
+  font-weight: 500;
+  gap: 2px;
+  transition: background 0.18s, color 0.18s, border 0.18s, box-shadow 0.18s, transform 0.12s;
+  user-select: none;
+}
+.favorite-btn-style:active {
+  transform: scale(0.96);
+}
+.favorite-btn-solid {
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+}
+.favorite-btn-solid:hover {
+  background: #1746a2 !important;
+  color: #ffe066 !important;
+}
+.favorite-btn-outline {
+  background: #fff !important;
+  color: #2563eb !important;
+  border: 1.5px solid #2563eb !important;
+}
+.favorite-btn-outline:hover {
+  background: #f4f8ff !important;
+  color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+.star-icon {
+  font-size: 1.35em;
+  transition: color 0.18s;
+  margin-right: 0.18em;
+}
+
+.collect-btn {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #2563eb;
+  background: #fff;
+  color: #2563eb;
+  border-radius: 18px;
+  padding: 6px 18px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, border 0.25s;
+  outline: none;
+  min-width: 80px;
+  min-height: 38px;
+  box-shadow: 0 1px 4px #e0e0e0;
+  position: relative;
+  overflow: hidden;
+}
+.collect-btn .star-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  transition: transform 0.25s;
+}
+.collect-btn .collect-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  transition: color 0.25s;
+}
+.collect-btn.collected {
+  background: #2563eb;
+  color: #fff;
+  border: 1.5px solid #2563eb;
+}
+.collect-btn.collected .collect-text {
+  color: #fff;
+}
+.collect-btn:active {
+  transform: scale(0.97);
+}
+.collect-btn.animating {
+  animation: btn-collect-ani 0.35s;
+}
+@keyframes btn-collect-ani {
+  0% { transform: scale(1);}
+  30% { transform: scale(1.15);}
+  60% { transform: scale(0.95);}
+  100% { transform: scale(1);}
 }
 </style> 
