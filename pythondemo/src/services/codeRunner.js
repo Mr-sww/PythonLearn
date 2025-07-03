@@ -1,4 +1,6 @@
 // 代码运行服务 - 模拟在线OJ功能
+import axios from 'axios';
+
 class CodeRunner {
   constructor() {
     this.problems = {
@@ -25,6 +27,15 @@ class CodeRunner {
 
   getProblem(problemId) {
     return this.problems[problemId] || null;
+  }
+
+  async runCode(problemId, code, language = 'python', input = '') {
+    const res = await axios.post('/api/judge/run', {
+      code,
+      language,
+      input
+    });
+    return res.data;
   }
 }
 

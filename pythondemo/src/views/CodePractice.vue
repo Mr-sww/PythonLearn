@@ -91,462 +91,285 @@
     </div>
 
     <!-- 右侧代码编辑区域 -->
-    <div class="code-panel">
-      <!-- 代码编辑器头部 -->
-      <div class="editor-header">
-        <div class="d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-3">
-            <span class="fw-medium text-dark">Python3</span>
-            <div class="dropdown">
-              <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                主题
-              </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">默认主题</a></li>
-                <li><a class="dropdown-item" href="#">暗色主题</a></li>
-                <li><a class="dropdown-item" href="#">高对比度</a></li>
-              </ul>
-            </div>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill">
-              <i class="fa fa-cog me-1"></i>设置
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill">
-              <i class="fa fa-expand me-1"></i>全屏
-            </button>
-          </div>
+    <div class="code-panel leetcode-style-panel" :class="{ fullscreen: isFullScreen }">
+      <!-- 工具栏 -->
+      <div class="editor-toolbar leetcode-toolbar">
+        <div class="toolbar-left">
+          <span class="lang-label">Python3</span>
+          <select v-model="theme" class="theme-select">
+            <option value="vs-dark">暗色主题</option>
+            <option value="vs">明亮主题</option>
+            <option value="hc-black">高对比度</option>
+          </select>
+          <select v-model="fontSize" class="font-select">
+            <option v-for="size in [14,16,18,20,22]" :key="size" :value="size">{{ size }}px</option>
+          </select>
+        </div>
+        <div class="toolbar-right">
+          <button class="toolbar-btn" @click="formatCode" :disabled="isRunning"><i class="fa fa-magic"></i> 格式化</button>
+          <button class="toolbar-btn" @click="resetCode" :disabled="isRunning"><i class="fa fa-refresh"></i> 重置</button>
+          <button class="toolbar-btn" @click="insertTemplate" :disabled="isRunning"><i class="fa fa-code"></i> 模板</button>
+          <button v-if="!isFullScreen" class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-expand"></i> 全屏</button>
+          <button v-else class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-compress"></i> 退出全屏</button>
         </div>
       </div>
-
-      <!-- 代码编辑器 -->
-      <div class="code-editor">
-        <div class="editor-toolbar">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-primary btn-sm" @click="runCode" :disabled="isRunning">
-                <i v-if="isRunning" class="fa fa-spinner fa-spin me-1"></i>
-                <i v-else class="fa fa-play me-1"></i>
-                {{ isRunning ? '运行中...' : '运行' }}
-              </button>
-              <button class="btn btn-outline-success btn-sm" @click="submitCode" :disabled="isRunning">
-                <i v-if="isRunning" class="fa fa-spinner fa-spin me-1"></i>
-                <i v-else class="fa fa-check me-1"></i>
-                {{ isRunning ? '提交中...' : '提交' }}
-              </button>
-            </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-secondary btn-sm" @click="resetCode" :disabled="isRunning">
-                <i class="fa fa-refresh me-1"></i>重置
-              </button>
-              <button class="btn btn-outline-secondary btn-sm" @click="formatCode" :disabled="isRunning">
-                <i class="fa fa-magic me-1"></i>格式化
-              </button>
-              <button class="btn btn-outline-info btn-sm" @click="insertTemplate" :disabled="isRunning">
-                <i class="fa fa-code me-1"></i>模板
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 代码编辑区域 -->
-        <div class="editor-content">
-          <textarea 
-            v-model="code" 
-            class="form-control code-textarea"
-            placeholder="在这里编写你的代码..."
-            @keydown.tab.prevent="handleTab"
-          ></textarea>
-        </div>
+      <!-- 编辑器区 -->
+      <div class="editor-content leetcode-editor-content" :class="{ fullscreen: isFullScreen }">
+        <MonacoEditor
+          v-model="code"
+          language="python"
+          :theme="theme"
+          :font-size="fontSize"
+        />
       </div>
-
-      <!-- 运行结果 -->
-      <div class="result-panel" v-if="showResult">
-        <div class="result-header">
-          <div class="d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold text-dark mb-0">运行结果</h6>
-            <button class="btn btn-outline-secondary btn-sm" @click="clearResult">
-              <i class="fa fa-times"></i>
-            </button>
+      <!-- 折叠弹出结果区 -->
+      <transition name="slide-fade">
+        <div v-show="showResultPanel" class="result-panel leetcode-result-panel">
+          <div class="result-header">
+            <span class="result-title">输入/输出</span>
+            <button class="collapse-btn" @click="showResultPanel = false"><i class="fa fa-angle-down"></i></button>
           </div>
-        </div>
-        
-        <div class="result-content">
-          <div v-if="result.status === 'success'" class="alert alert-success">
-            <i class="fa fa-check-circle me-2"></i>
-            执行成功
-          </div>
-          <div v-else-if="result.status === 'error'" class="alert alert-danger">
-            <i class="fa fa-exclamation-circle me-2"></i>
-            执行错误
-          </div>
-          
-          <div class="result-output">
-            <h6 class="fw-bold text-dark mb-2">输出：</h6>
-            <pre class="output-text">{{ result.output }}</pre>
-          </div>
-          
-          <div v-if="result.testCases" class="test-cases">
-            <h6 class="fw-bold text-dark mb-2">测试用例：</h6>
-            <div v-for="(testCase, index) in result.testCases" :key="index" class="test-case">
-              <div class="d-flex align-items-center mb-1">
-                <span class="fw-medium">测试用例 {{ index + 1 }}：</span>
-                <span :class="['badge ms-2', testCase.passed ? 'bg-success' : 'bg-danger']">
-                  {{ testCase.passed ? '通过' : '失败' }}
-                </span>
+          <div class="result-body">
+            <div class="io-flex-row">
+              <div class="input-area io-half">
+                <label>自定义输入：</label>
+                <textarea v-model="input" class="input-textarea" placeholder="请输入自定义输入..." :disabled="isRunning"></textarea>
               </div>
-              <div class="test-details">
-                <div><strong>输入：</strong>{{ testCase.input }}</div>
-                <div><strong>期望输出：</strong>{{ testCase.expected }}</div>
-                <div><strong>实际输出：</strong>{{ testCase.actual }}</div>
+              <div class="output-area io-half">
+                <label>输出结果：</label>
+                <pre class="output-text">{{ result.output }}</pre>
               </div>
             </div>
+            <div class="io-btn-row-bottom">
+              <button class="run-btn" @click="runCode" :disabled="isRunning">
+                <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
+                <i v-else class="fa fa-play"></i> 运行
+              </button>
+              <button class="submit-btn" @click="submitCode" :disabled="isRunning">
+                <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
+                <i v-else class="fa fa-check"></i> 提交
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </transition>
+      <!-- 展开按钮 -->
+      <button v-show="!showResultPanel" class="expand-btn" @click="showResultPanel = true"><i class="fa fa-angle-up"></i> 输入/输出</button>
     </div>
   </div>
 </div>
 </template>
 
-<script>
-import CodeRunner from '../services/codeRunner.js';
-import axios from 'axios';
-import CommentItem from './components/CommentItem.vue';
-import BasePagination from './components/BasePagination.vue';
+<script setup>
+import MonacoEditor from '../components/MonacoEditor.vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import CommentItem from './components/CommentItem.vue'
+import BasePagination from './components/BasePagination.vue'
 
-export default {
-  name: 'CodePractice',
-  components: { CommentItem, BasePagination },
-  data() {
-    return {
-      problemId: '',
-      problem: null,
-      code: '',
-      showResult: false,
-      result: {
-        status: '',
-        output: '',
-        testCases: []
-      },
-      comments: [],
-      totalComments: 0,
-      page: 1,
-      pageSize: 10,
-      newComment: '',
-      isRunning: false,
-      isFavorite: false,
-      userId: null, // 初始为 null，登录后赋值
-      animating: false,
-      favoriteCount: 0,
-      favoriteLoading: false
-    }
-  },
-  async mounted() {
-    // 从路由参数获取题目ID
-    this.problemId = this.$route.params.id || this.$route.query.id;
-    // 获取当前登录用户id
-    this.userId = localStorage.getItem('userId');
-    await this.loadProblem();
-    await this.loadComments();
-    await this.checkFavorite();
-    await this.loadFavoriteCount();
-  },
-  methods: {
-    goBackToList() {
-    this.$router.push({ path: '/problems', query: { highlight: this.problemId } });
-    },
- 
-    async loadProblem() {
-      // 从后端获取题目信息
-      if (!this.problemId) return;
-      const res = await axios.get(`/api/practice/problems`);
-      const list = res.data;
-      this.problem = list.find(p => p.id == this.problemId);
-      if (this.problem) {
-        // 解析samples为示例
-        try {
-          const samples = JSON.parse(this.problem.samples || '[]');
-          this.problem.examples = samples.map(s => ({
-            input: s.input,
-            output: s.output,
-            explanation: s.explanation || ''
-          }));
-        } catch {
-          this.problem.examples = [];
-        }
-        this.code = '';
-      }
-    },
-    
-    async runCode() {
-      if (!this.code.trim()) {
-        alert('请先编写代码');
-        return;
-      }
-      
-      this.isRunning = true;
-      this.showResult = true;
-      
-      try {
-        const response = await CodeRunner.runCode(this.problemId, this.code);
-        
-        if (response.success) {
-          this.result = response.result;
-        } else {
-          this.result = {
-            status: 'error',
-            output: `执行错误: ${response.error}`,
-            testCases: []
-          };
-        }
-      } catch (error) {
-        this.result = {
-          status: 'error',
-          output: `系统错误: ${error.message}`,
-          testCases: []
-        };
-      } finally {
-        this.isRunning = false;
-      }
-    },
-    
-    async submitCode() {
-      if (!this.code.trim()) {
-        alert('请先编写代码');
-        return;
-      }
-      
-      this.isRunning = true;
-      this.showResult = true;
-      
-      try {
-        const response = await CodeRunner.runCode(this.problemId, this.code);
-        
-        if (response.success) {
-          const result = response.result;
-          const allPassed = result.testCases.every(test => test.passed);
-          
-          if (allPassed) {
-            this.result = {
-              ...result,
-              status: 'success',
-              output: result.output + '\n\n🎉 恭喜！所有测试用例都通过了！'
-            };
-            // 这里可以添加提交成功的逻辑，比如更新用户进度
-          } else {
-            this.result = {
-              ...result,
-              status: 'error',
-              output: result.output + '\n\n❌ 部分测试用例未通过，请检查代码逻辑。'
-            };
-          }
-        } else {
-          this.result = {
-            status: 'error',
-            output: `提交失败: ${response.error}`,
-            testCases: []
-          };
-        }
-      } catch (error) {
-        this.result = {
-          status: 'error',
-          output: `系统错误: ${error.message}`,
-          testCases: []
-        };
-      } finally {
-        this.isRunning = false;
-      }
-    },
-    
-    resetCode() {
-      if (this.problem) {
-        this.code = this.problem.template;
-      } else {
-        this.code = `class Solution:
-    def twoSum(self, nums: List[int], target: int) -> List[int]:
-        # 在这里编写你的代码
-        pass`;
-      }
-      this.showResult = false;
-    },
-    
-    formatCode() {
-      const validation = CodeRunner.validateCode(this.code);
-      if (!validation.valid) {
-        alert('代码有语法错误:\n' + validation.errors.join('\n'));
-        return;
-      }
-      
-      this.code = CodeRunner.formatCode(this.code);
-    },
-    
-    clearResult() {
-      this.showResult = false;
-    },
-    
-    handleTab(e) {
-      // 处理Tab键缩进
-      e.preventDefault();
-      const start = e.target.selectionStart;
-      const end = e.target.selectionEnd;
-      this.code = this.code.substring(0, start) + '    ' + this.code.substring(end);
-      this.$nextTick(() => {
-        e.target.selectionStart = e.target.selectionEnd = start + 4;
-      });
-    },
-    
-    // 快捷操作
-    insertTemplate() {
-      if (this.problemId === 1) {
-        this.code = `class Solution:
-    def twoSum(self, nums: List[int], target: int) -> List[int]:
-        # 使用哈希表存储数字和索引
-        num_map = {}
-        
-        for i, num in enumerate(nums):
-            complement = target - num
-            if complement in num_map:
-                return [num_map[complement], i]
-            num_map[num] = i
-        
-        return []  # 如果没有找到解
+const code = ref('')
+const input = ref('')
+const theme = ref('vs-dark')
+const fontSize = ref(16)
+const isFullScreen = ref(false)
+const isRunning = ref(false)
+const showResult = ref(false)
+const result = ref({ output: '', testCases: [] })
+const problemId = ref('')
+const problem = ref(null)
+const comments = ref([])
+const totalComments = ref(0)
+const page = ref(1)
+const pageSize = ref(10)
+const newComment = ref('')
+const isFavorite = ref(false)
+const userId = ref(null)
+const animating = ref(false)
+const favoriteCount = ref(0)
+const favoriteLoading = ref(false)
+const showResultPanel = ref(false)
 
-# 测试代码
-if __name__ == "__main__":
-    solution = Solution()
-    
-    # 测试用例1
-    nums1 = [2, 7, 11, 15]
-    target1 = 9
-    result1 = solution.twoSum(nums1, target1)
-    print(f"测试用例1: nums={nums1}, target={target1}")
-    print(f"结果: {result1}")
-    print(f"验证: {nums1[result1[0]]} + {nums1[result1[1]]} = {nums1[result1[0]] + nums1[result1[1]]}")
-    print()
-    
-    # 测试用例2
-    nums2 = [3, 2, 4]
-    target2 = 6
-    result2 = solution.twoSum(nums2, target2)
-    print(f"测试用例2: nums={nums2}, target={target2}")
-    print(f"结果: {result2}")
-    print(f"验证: {nums2[result2[0]]} + {nums2[result2[1]]} = {nums2[result2[0]] + nums2[result2[1]]}")
-    print()
-    
-    # 测试用例3
-    nums3 = [3, 3]
-    target3 = 6
-    result3 = solution.twoSum(nums3, target3)
-    print(f"测试用例3: nums={nums3}, target={target3}")
-    print(f"结果: {result3}")
-    print(f"验证: {nums3[result3[0]]} + {nums3[result3[1]]} = {nums3[result3[0]] + nums3[result3[1]]}")`;
-      }
-    },
-    async loadComments() {
-      const res = await axios.get(`/api/practice/problem/${this.problemId}/comments`, {
-        params: { page: this.page, pageSize: this.pageSize }
-      });
-      this.comments = this.buildCommentTree(res.data.comments);
-      this.totalComments = res.data.total;
-    },
-    buildCommentTree(list) {
-      const map = {};
-      list.forEach(c => { c.children = []; map[c.commentId] = c; });
-      const tree = [];
-      list.forEach(c => {
-        if (c.parentId) {
-          map[c.parentId]?.children.push(c);
-        } else {
-          tree.push(c);
-        }
-      });
-      return tree;
-    },
-    async addComment() {
-      if (!this.userId) {
-        alert('请先登录后再评论！');
-        this.$router.push('/login');
-        return;
-      }
-      if (!this.newComment.trim()) return;
-      await axios.post(`/api/practice/problem/${this.problemId}/comments`, {
-        userId: this.userId,
-        content: this.newComment,
-        parentId: null
-      });
-      this.newComment = '';
-      await this.loadComments();
-    },
-    async replyComment(parentId, content) {
-      if (!this.userId) {
-        alert('请先登录后再回复！');
-        this.$router.push('/login');
-        return;
-      }
-      await axios.post(`/api/practice/problem/${this.problemId}/comments`, {
-        userId: this.userId,
-        content,
-        parentId
-      });
-      await this.loadComments();
-    },
-    async likeComment(commentId) {
-      await axios.post(`/api/practice/comment/${commentId}/like`);
-      await this.loadComments();
-    },
-    changePage(page) {
-      this.page = page;
-      this.loadComments();
-    },
-    async checkFavorite() {
-      if (!this.userId) {
-        this.isFavorite = false;
-        return;
-      }
-      const res = await axios.get(`/api/practice/problem/${this.problemId}/favorite`, { params: { userId: this.userId } });
-      console.log('收藏状态接口返回', res.data);
-      this.isFavorite = res.data;
-    },
-    async loadFavoriteCount() {
-      // 假设后端有接口 /api/practice/problem/{id}/favorite/count 返回数字
-      try {
-        const res = await axios.get(`/api/practice/problem/${this.problemId}/favorite/count`);
-        this.favoriteCount = res.data;
-      } catch {
-        this.favoriteCount = 0;
-      }
-    },
-    async handleFavoriteClick() {
-      if (this.favoriteLoading) return;
-      if (!this.userId) {
-        alert('请先登录后再收藏题目！');
-        this.$router.push('/login');
-        return;
-      }
-      this.favoriteLoading = true;
-      await this.toggleFavorite();
-      await this.checkFavorite(); // 每次操作后都刷新收藏状态
-      this.favoriteLoading = false;
-      this.animating = true;
-      setTimeout(() => { this.animating = false; }, 350);
-    },
-    async toggleFavorite() {
-      if (this.isFavorite) {
-        await axios.delete(`/api/practice/problem/${this.problemId}/favorite`, { params: { userId: this.userId } });
-        this.favoriteCount = Math.max(0, this.favoriteCount - 1);
-      } else {
-        await axios.post(`/api/practice/problem/${this.problemId}/favorite`, null, { params: { userId: this.userId } });
-        this.favoriteCount = this.favoriteCount + 1;
-      }
-      await this.checkFavorite();
-      await this.loadFavoriteCount();
-    },
-    formatCount(val) {
-      if (val >= 10000) return (val / 10000).toFixed(1) + '万';
-      return val;
+onMounted(async () => {
+  problemId.value = window.location.pathname.split('/').pop() || ''
+  userId.value = localStorage.getItem('userId')
+  await loadProblem()
+  await loadComments()
+  await checkFavorite()
+  await loadFavoriteCount()
+})
+
+async function loadProblem() {
+  if (!problemId.value) return
+  const res = await axios.get(`/api/practice/problems`)
+  const list = res.data
+  problem.value = list.find(p => p.id == problemId.value)
+  if (problem.value) {
+    try {
+      const samples = JSON.parse(problem.value.samples || '[]')
+      problem.value.examples = samples.map(s => ({
+        input: s.input,
+        output: s.output,
+        explanation: s.explanation || ''
+      }))
+    } catch {
+      problem.value.examples = []
     }
+    code.value = problem.value.template || ''
   }
+}
+
+function formatCode() {
+  const editor = document.querySelector('.editor-container')?.__editorInstance
+  if (editor) {
+    editor.getAction('editor.action.formatDocument').run()
+  }
+}
+
+function resetCode() {
+  if (problem.value && problem.value.template) {
+    code.value = problem.value.template
+  } else {
+    code.value = ''
+  }
+}
+
+function insertTemplate() {
+  if (problem.value && problem.value.template) {
+    code.value = problem.value.template
+  } else {
+    code.value = '# 在这里编写你的代码\n'
+  }
+}
+
+function toggleFullScreen() {
+  isFullScreen.value = !isFullScreen.value
+}
+
+function runCode() {
+  isRunning.value = true
+  showResult.value = true
+  showResultPanel.value = true
+  setTimeout(() => {
+    result.value.output = '模拟运行结果：' + code.value + (input.value ? ('\n输入：' + input.value) : '')
+    isRunning.value = false
+  }, 1200)
+}
+
+function submitCode() {
+  isRunning.value = true
+  showResult.value = true
+  showResultPanel.value = true
+  setTimeout(() => {
+    result.value.output = '模拟提交结果：' + code.value + (input.value ? ('\n输入：' + input.value) : '')
+    isRunning.value = false
+  }, 1500)
+}
+
+async function loadComments() {
+  const res = await axios.get(`/api/practice/problem/${problemId.value}/comments`, {
+    params: { page: page.value, pageSize: pageSize.value }
+  })
+  comments.value = buildCommentTree(res.data.comments)
+  totalComments.value = res.data.total
+}
+
+function buildCommentTree(list) {
+  const map = {}
+  list.forEach(c => { c.children = []; map[c.commentId] = c })
+  const tree = []
+  list.forEach(c => {
+    if (c.parentId) {
+      map[c.parentId]?.children.push(c)
+    } else {
+      tree.push(c)
+    }
+  })
+  return tree
+}
+
+async function addComment() {
+  if (!userId.value) {
+    alert('请先登录后再评论！')
+    window.location.href = '/login'
+    return
+  }
+  if (!newComment.value.trim()) return
+  await axios.post(`/api/practice/problem/${problemId.value}/comments`, {
+    userId: userId.value,
+    content: newComment.value,
+    parentId: null
+  })
+  newComment.value = ''
+  await loadComments()
+}
+
+async function replyComment(parentId, content) {
+  if (!userId.value) {
+    alert('请先登录后再回复！')
+    window.location.href = '/login'
+    return
+  }
+  await axios.post(`/api/practice/problem/${problemId.value}/comments`, {
+    userId: userId.value,
+    content,
+    parentId
+  })
+  await loadComments()
+}
+
+async function likeComment(commentId) {
+  await axios.post(`/api/practice/comment/${commentId}/like`)
+  await loadComments()
+}
+
+function changePage(p) {
+  page.value = p
+  loadComments()
+}
+
+async function checkFavorite() {
+  if (!userId.value) {
+    isFavorite.value = false
+    return
+  }
+  const res = await axios.get(`/api/practice/problem/${problemId.value}/favorite`, { params: { userId: userId.value } })
+  isFavorite.value = res.data
+}
+
+async function loadFavoriteCount() {
+  try {
+    const res = await axios.get(`/api/practice/problem/${problemId.value}/favorite/count`)
+    favoriteCount.value = res.data
+  } catch {
+    favoriteCount.value = 0
+  }
+}
+
+async function handleFavoriteClick() {
+  if (favoriteLoading.value) return
+  if (!userId.value) {
+    alert('请先登录后再收藏题目！')
+    window.location.href = '/login'
+    return
+  }
+  favoriteLoading.value = true
+  await toggleFavorite()
+  await checkFavorite()
+  favoriteLoading.value = false
+  animating.value = true
+  setTimeout(() => { animating.value = false }, 350)
+}
+
+async function toggleFavorite() {
+  if (isFavorite.value) {
+    await axios.delete(`/api/practice/problem/${problemId.value}/favorite`, { params: { userId: userId.value } })
+    favoriteCount.value = Math.max(0, favoriteCount.value - 1)
+  } else {
+    await axios.post(`/api/practice/problem/${problemId.value}/favorite`, null, { params: { userId: userId.value } })
+    favoriteCount.value = favoriteCount.value + 1
+  }
+  await checkFavorite()
+  await loadFavoriteCount()
 }
 </script>
 
@@ -863,5 +686,299 @@ if __name__ == "__main__":
   30% { transform: scale(1.15);}
   60% { transform: scale(0.95);}
   100% { transform: scale(1);}
+}
+
+.leetcode-style-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.leetcode-toolbar {
+  padding: 10px 20px;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.lang-label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.theme-select,
+.font-select {
+  margin-left: 10px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-btn {
+  margin-left: 10px;
+  padding: 5px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.leetcode-editor-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.io-panel {
+  padding: 20px;
+  border-top: 1px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+.input-area {
+  margin-bottom: 20px;
+}
+
+.input-textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  resize: none;
+}
+
+.output-area {
+  margin-bottom: 20px;
+}
+
+.output-text {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.leetcode-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.run-btn,
+.submit-btn {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.run-btn {
+  margin-right: 10px;
+}
+
+.run-btn:hover,
+.submit-btn:hover {
+  color: #00b4ff;
+}
+
+.run-btn:disabled,
+.submit-btn:disabled {
+  color: #6c757d;
+}
+
+.run-btn i,
+.submit-btn i {
+  margin-right: 5px;
+}
+
+.run-btn:disabled i,
+.submit-btn:disabled i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 0 0 0 100vw rgba(0,0,0,0.12);
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.io-flex-row {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+}
+.io-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.io-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 16px 0 0 0;
+  gap: 12px;
+}
+.input-textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border: 1.5px solid #dee2e6;
+  border-radius: 8px;
+  resize: none;
+  font-size: 15px;
+  background: #fff;
+  margin-top: 8px;
+  transition: border 0.2s;
+}
+.input-textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+.output-area {
+  margin-left: 0;
+}
+.output-text {
+  background: #fff;
+  border: 1.5px solid #dee2e6;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  margin: 8px 0 0 0;
+  min-height: 100px;
+}
+.run-btn, .submit-btn {
+  padding: 10px 24px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.12s;
+  box-shadow: 0 1px 4px #e0e0e0;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.run-btn:active, .submit-btn:active {
+  transform: scale(0.96);
+}
+.run-btn:disabled, .submit-btn:disabled {
+  background: #bfc8e2;
+  color: #fff;
+  cursor: not-allowed;
+}
+.run-btn:hover:not(:disabled), .submit-btn:hover:not(:disabled) {
+  background: #1746a2;
+  color: #ffe066;
+}
+
+.io-btn-row-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.leetcode-result-panel {
+  margin-top: 0;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1.5px solid #e0e7ef;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+  max-height: 500px;
+  opacity: 1;
+}
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px 8px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e7ef;
+}
+.result-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+.collapse-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #2563eb;
+  transition: color 0.18s;
+}
+.collapse-btn:hover {
+  color: #1746a2;
+}
+.result-body {
+  padding: 20px;
+}
+.io-btn-row-bottom {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+.expand-btn {
+  margin: 16px auto 0 auto;
+  display: flex;
+  align-items: center;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px #e0e0e0;
+  transition: background 0.18s, color 0.18s;
+}
+.expand-btn:hover {
+  background: #1746a2;
+  color: #ffe066;
+}
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: max-height 0.3s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+}
+.slide-fade-enter-from, .slide-fade-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 </style> 
