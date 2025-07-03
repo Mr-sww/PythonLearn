@@ -115,4 +115,20 @@ public interface LearningProgressRepository {
      */
     @Select("SELECT COUNT(*) FROM learning_progress WHERE CourseID = #{courseId} AND Status = 'completed'")
     int countCompletedByCourseId(Integer courseId);
+
+    // 用户已完成题数
+    @Select("SELECT COUNT(DISTINCT CourseID) FROM learning_progress WHERE UserID = #{userId} AND Status = 'completed'")
+    int countFinishedProblems(Integer userId);
+
+    // 用户正确率（以Progress=100为正确）
+    @Select("SELECT IFNULL(SUM(CASE WHEN Progress = 100 THEN 1 ELSE 0 END),0) * 1.0 / COUNT(DISTINCT CourseID) FROM learning_progress WHERE UserID = #{userId}")
+    Double getAccuracy(Integer userId);
+
+    // 用户练习时长（小时）
+    @Select("SELECT IFNULL(SUM(TimeSpent),0)/3600 FROM learning_progress WHERE UserID = #{userId}")
+    int getPracticeHours(Integer userId);
+
+    // 总题数（假设python_problem表存在）
+    @Select("SELECT COUNT(*) FROM python_problem")
+    int countTotalProblems();
 } 

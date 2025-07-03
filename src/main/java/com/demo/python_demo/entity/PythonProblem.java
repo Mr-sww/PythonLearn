@@ -1,32 +1,35 @@
 package com.demo.python_demo.entity;
 
 public class PythonProblem {
-    private String id;
-    private String title;
-    private String description;
-    private String inputFormat;
-    private String outputFormat;
-    private String note;
-    private String samples;
-    private String background;
-    private String createTime;
+    private String Id;
+    private String Title;
+    private String Description;
+    private String InputFormat;
+    private String OutputFormat;
+    private String Note;
+    private String Samples;
+    private String Background;
+    private java.util.Date CreateTime;
+    private Integer dif;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getInputFormat() { return inputFormat; }
-    public void setInputFormat(String inputFormat) { this.inputFormat = inputFormat; }
-    public String getOutputFormat() { return outputFormat; }
-    public void setOutputFormat(String outputFormat) { this.outputFormat = outputFormat; }
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
-    public String getSamples() { return samples; }
-    public void setSamples(String samples) { this.samples = samples; }
-    public String getBackground() { return background; }
-    public void setBackground(String background) { this.background = background; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
+    public String getId() { return Id; }
+    public void setId(String Id) { this.Id = Id; }
+    public String getTitle() { return Title; }
+    public void setTitle(String Title) { this.Title = Title; }
+    public String getDescription() { return Description; }
+    public void setDescription(String Description) { this.Description = Description; }
+    public String getInputFormat() { return InputFormat; }
+    public void setInputFormat(String InputFormat) { this.InputFormat = InputFormat; }
+    public String getOutputFormat() { return OutputFormat; }
+    public void setOutputFormat(String OutputFormat) { this.OutputFormat = OutputFormat; }
+    public String getNote() { return Note; }
+    public void setNote(String Note) { this.Note = Note; }
+    public String getSamples() { return Samples; }
+    public void setSamples(String Samples) { this.Samples = Samples; }
+    public String getBackground() { return Background; }
+    public void setBackground(String Background) { this.Background = Background; }
+    public java.util.Date getCreateTime() { return CreateTime; }
+    public void setCreateTime(java.util.Date CreateTime) { this.CreateTime = CreateTime; }
+    public Integer getDif() { return dif; }
+    public void setDif(Integer dif) { this.dif = dif; }
 } 

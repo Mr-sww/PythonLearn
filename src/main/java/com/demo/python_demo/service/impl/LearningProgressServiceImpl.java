@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 /**
  * 学习进度服务实现类
@@ -108,8 +110,17 @@ public class LearningProgressServiceImpl implements LearningProgressService {
     }
 
     @Override
-    public Object getUserStatistics(Integer userId) {
-        return progressRepository.getUserStatistics(userId);
+    public Map<String, Object> getUserStatistics(Integer userId) {
+        Map<String, Object> map = new HashMap<>();
+        int finishedCount = progressRepository.countFinishedProblems(userId);
+        Double accuracy = progressRepository.getAccuracy(userId);
+        int practiceHours = progressRepository.getPracticeHours(userId);
+        int totalCount = progressRepository.countTotalProblems();
+        map.put("finishedCount", finishedCount);
+        map.put("accuracy", accuracy != null ? accuracy : 0.0);
+        map.put("practiceHours", practiceHours);
+        map.put("totalCount", totalCount);
+        return map;
     }
 
     @Override

@@ -61,7 +61,7 @@
           <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-check-circle text-primary fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">24题</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ finishedCount }}题</h4>
           <p class="text-muted mb-0">已完成</p>
         </div>
       </div>
@@ -70,7 +70,7 @@
           <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-trophy text-success fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">85%</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ (accuracy * 100).toFixed(0) }}%</h4>
           <p class="text-muted mb-0">正确率</p>
         </div>
       </div>
@@ -79,7 +79,7 @@
           <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-clock text-warning fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">12小时</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ practiceHours }}小时</h4>
           <p class="text-muted mb-0">练习时长</p>
         </div>
       </div>
@@ -88,7 +88,7 @@
           <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-star text-info fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">156</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ totalCount }}</h4>
           <p class="text-muted mb-0">总题数</p>
         </div>
       </div>
@@ -212,7 +212,7 @@
       <div class="col-lg-9">
         <!-- 排序和统计 -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="text-muted">共找到 <strong>156</strong> 道练习题</span>
+          <!-- <span class="text-muted">共找到 <strong>156</strong> 道练习题</span> -->
           <div class="d-flex align-items-center gap-2">
             <span class="text-muted">排序：</span>
             <select class="form-select form-select-sm" style="width:auto;">
@@ -227,13 +227,13 @@
         <!-- 题目网格 -->
         <div class="row g-3">
           <div class="col-md-6 col-lg-4" v-for="problem in problems" :key="problem.id">
-            <div class="problem-card" @click="goToProblem(problem.id)">
-              <h5 class="fw-bold mb-2">{{ problem.title }}</h5>
-              <div class="text-muted small mb-1">{{ problem.background }}</div>
-              <div class="text-truncate">{{ problem.description }}</div>
-              <div class="mt-2">
-                <span class="badge bg-secondary me-2">{{ problem.id }}</span>
-                <span class="badge bg-info">{{ problem.createTime }}</span>
+            <div class="problem-card h-100 d-flex flex-column" @click="goToProblem(problem.id)">
+              <h5 class="fw-bold mb-2 text-truncate" :title="problem.title" style="font-size: 1.18rem;">{{ problem.title }}</h5>
+              <div class="text-muted small mb-1">{{ problem.background || '无' }}</div>
+              <div class="text-truncate-2 mb-2">{{ problem.description }}</div>
+              <div class="mt-auto d-flex justify-content-between align-items-end pt-2">
+                <span class="badge bg-secondary">{{ problem.id }}</span>
+                <span class="text-muted small">{{ formatDate(problem.createTime) }}</span>
               </div>
             </div>
           </div>
@@ -259,35 +259,58 @@
 </div>
 </template>
 
-<script>
-import axios from 'axios';
-export default {
-  name: 'PracticeCenter',
-  data() {
-    return {
-      problems: [],
-      favoriteProblems: [],
-      userId: 1, // 实际应取当前登录用户
-    }
-  },
-  async mounted() {
-    await this.fetchProblems();
-    await this.loadFavoriteProblems();
-  },
-  methods: {
-    async fetchProblems() {
-      const res = await axios.get('/api/practice/problems');
-      this.problems = res.data;
-    },
-    goToProblem(id) {
-      this.$router.push('/problem/' + id);
-    },
-    async loadFavoriteProblems() {
-      const res = await axios.get('/api/practice/favorites', { params: { userId: this.userId } });
-      this.favoriteProblems = res.data;
-    }
-  }
+<script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const finishedCount = ref(0)
+const accuracy = ref(0)
+const practiceHours = ref(0)
+const totalCount = ref(0)
+
+// 新增：所有数组变量初始化为 []
+const favoriteProblems = ref([])
+const problems = ref([])
+
+const router = useRouter()
+
+function goToProblem(id) {
+  router.push(`/problem/${id}`)
 }
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return dateStr.split('T')[0];
+}
+
+onMounted(async () => {
+  const userId = localStorage.getItem('userId')
+  if (!userId) {
+    alert('请先登录！')
+    throw new Error('未登录，userId 为空')
+  }
+  try {
+    const res = await axios.get('/api/progress/user/statistics', { params: { userId } })
+    finishedCount.value = res.data.finishedCount
+    accuracy.value = res.data.accuracy
+    practiceHours.value = res.data.practiceHours
+    totalCount.value = res.data.totalCount
+  } catch (e) {
+    finishedCount.value = 0
+    accuracy.value = 0
+    practiceHours.value = 0
+    totalCount.value = 0
+  }
+
+  // 获取完整题库
+  try {
+    const resProblems = await axios.get('/api/practice/problems')
+    problems.value = Array.isArray(resProblems.data) ? resProblems.data : []
+  } catch (e) {
+    problems.value = []
+  }
+})
 </script>
 
 <style scoped>
@@ -314,14 +337,28 @@ export default {
 
 .problem-card {
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px #e0e0e0;
-  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px #e0e0e0;
+  padding: 22px 20px 16px 20px;
   cursor: pointer;
-  transition: box-shadow 0.2s, background 0.2s;
+  transition: box-shadow 0.2s, background 0.2s, transform 0.2s;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
 }
 .problem-card:hover {
-  box-shadow: 0 4px 16px #d0d7e2;
-  background: #f5faff;
+  box-shadow: 0 8px 24px #b3c0d1;
+  background: #f7faff;
+  transform: translateY(-4px) scale(1.02);
+}
+
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.6em;
 }
 </style> 

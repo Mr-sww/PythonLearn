@@ -18,6 +18,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
+import com.demo.python_demo.entity.UserProblemRecord;
+import com.demo.python_demo.service.UserProblemRecordService;
 
 /**
  * 用户控制器
@@ -32,6 +34,9 @@ public class UserController {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserProblemRecordService userProblemRecordService;
 
     /**
      * 获取所有用户
@@ -62,6 +67,19 @@ public class UserController {
         boolean success = userService.register(user);
         if (success) {
             User newUser = userService.getUserByAccount(user.getAccount()).orElse(null);
+            // 注册成功后插入 user_problem_record 默认记录
+            if (newUser != null) {
+                UserProblemRecord record = new UserProblemRecord();
+                record.setUserId(newUser.getUserId());
+                record.setProblemId(0);
+                record.setCode("");
+                record.setResult("");
+                record.setPassRate(0.0);
+                record.setUsedTime(0);
+                record.setUsedMemory(0);
+                record.setLanguage("");
+                userProblemRecordService.saveRecord(record);
+            }
             return ResponseEntity.ok(newUser);
         }
         return ResponseEntity.status(400).body("账号或手机号已存在");
