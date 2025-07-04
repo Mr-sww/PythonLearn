@@ -18,8 +18,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
-import com.demo.python_demo.entity.UserProblemRecord;
 import com.demo.python_demo.service.UserProblemRecordService;
+import com.demo.python_demo.repository.PythonProblemRepository;
+import com.demo.python_demo.service.LearningProgressService;
 
 /**
  * 用户控制器
@@ -37,6 +38,12 @@ public class UserController {
 
     @Autowired
     private UserProblemRecordService userProblemRecordService;
+
+    @Autowired
+    private PythonProblemRepository pythonProblemRepository;
+
+    @Autowired
+    private LearningProgressService learningProgressService;
 
     /**
      * 获取所有用户
@@ -67,19 +74,6 @@ public class UserController {
         boolean success = userService.register(user);
         if (success) {
             User newUser = userService.getUserByAccount(user.getAccount()).orElse(null);
-            // 注册成功后插入 user_problem_record 默认记录
-            if (newUser != null) {
-                UserProblemRecord record = new UserProblemRecord();
-                record.setUserId(newUser.getUserId());
-                record.setProblemId(0);
-                record.setCode("");
-                record.setResult("");
-                record.setPassRate(0.0);
-                record.setUsedTime(0);
-                record.setUsedMemory(0);
-                record.setLanguage("");
-                userProblemRecordService.saveRecord(record);
-            }
             return ResponseEntity.ok(newUser);
         }
         return ResponseEntity.status(400).body("账号或手机号已存在");
@@ -277,5 +271,75 @@ public class UserController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 获取当前用户做题统计信息（动态卡片数据）
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getUserStatistics(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        int totalProblems = pythonProblemRepository.findAll().size();
+        if (user == null) {
+            // 未登录
+            return ResponseEntity.ok(Map.of(
+                "completed", 0,
+                "accuracy", 0,
+                "practiceTime", 0,
+                "totalProblems", totalProblems,
+                "continuousDays", 0
+            ));
+        }
+        Integer userId = user.getUserId();
+        // 统计做题数（去重）、正确率、练习时长
+        int completed = userProblemRecordService.getPassedProblems(userId); // 已完成题数
+        double accuracy = userProblemRecordService.getAccuracy(userId) * 100; // 百分比
+        int practiceTime = userProblemRecordService.getUserStatistics(userId).getOrDefault("sumUsedTime", 0) instanceof Integer ?
+            (Integer)userProblemRecordService.getUserStatistics(userId).getOrDefault("sumUsedTime", 0) : 0;
+        int continuousDays = userProblemRecordService.getContinuousDays(userId);
+        // 若无记录则插入一条默认记录（service已实现）
+        return ResponseEntity.ok(Map.of(
+            "completed", completed,
+            "accuracy", (int)accuracy,
+            "practiceTime", practiceTime,
+            "totalProblems", totalProblems,
+            "continuousDays", continuousDays
+        ));
+    }
+
+    /**
+     * 获取当前用户学习统计信息（学习中心卡片数据）
+     */
+    @GetMapping("/learning-statistics")
+    public ResponseEntity<?> getLearningStatistics(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.ok(Map.of(
+                "totalStudyHours", 0,
+                "completedCourses", 0,
+                "continuousDays", 0,
+                "login", false
+            ));
+        }
+        Integer userId = user.getUserId();
+        // 统计总学习时长、已完成课程数
+        Object statsObj = learningProgressService.getUserStatistics(userId);
+        int totalStudySeconds = 0;
+        int completedCourses = 0;
+        if (statsObj instanceof Map) {
+            Map map = (Map) statsObj;
+            totalStudySeconds = map.getOrDefault("totalTimeSpent", 0) instanceof Integer ? (Integer) map.getOrDefault("totalTimeSpent", 0) : 0;
+            completedCourses = map.getOrDefault("completedCourses", 0) instanceof Integer ? (Integer) map.getOrDefault("completedCourses", 0) : 0;
+        }
+        double totalStudyHours = Math.round((totalStudySeconds / 3600.0) * 10) / 10.0;
+        // 连续学习天数（可根据学习进度表的lastStudyTime实现，这里简单返回0或1，后续可扩展）
+        int continuousDays = 0;
+        // TODO: 可扩展为真实连续天数统计
+        return ResponseEntity.ok(Map.of(
+            "totalStudyHours", totalStudyHours,
+            "completedCourses", completedCourses,
+            "continuousDays", continuousDays,
+            "login", true
+        ));
     }
 }

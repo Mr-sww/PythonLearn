@@ -14,7 +14,7 @@
         <div v-if="loading" class="loading">加载中...</div>
         <div v-else-if="selectedKnowledge">
           <h4>{{ selectedKnowledge.title }}</h4>
-          <p>{{ selectedKnowledge.content }}</p>
+          <div v-html="selectedKnowledge.content"></div>
         </div>
         <div v-else>
           <p>请选择左侧知识点</p>
@@ -22,11 +22,9 @@
       </div>
       <div class="problem-list-section">
         <h3>题目列表</h3>
-        <ul>
-          <li v-for="problem in problems" :key="problem.id">
-            {{ problem.title }}
-          </li>
-        </ul>
+        <div v-for="prob in problems" :key="prob.Id">
+          <button @click="$router.push(`/problem/${prob.Id}`)">去做题：{{ prob.Title }}</button>
+        </div>
       </div>
     </div>
   </div>
@@ -41,11 +39,26 @@ export default {
       catalog: [],
       selectedKnowledge: null,
       problems: [],
-      loading: false
+      loading: false,
+      point: {}
     }
   },
   mounted() {
     this.fetchCatalog();
+    const title = this.$route.query.id;
+    if (title) {
+      this.selectKnowledgeByTitle(title);
+    }
+  },
+  watch: {
+    '$route.query.id': {
+      immediate: true,
+      handler(newId) {
+        if (newId) {
+          this.selectKnowledgeByTitle(newId);
+        }
+      }
+    }
   },
   methods: {
     async fetchCatalog() {
@@ -60,9 +73,32 @@ export default {
     async selectKnowledge(item) {
       this.loading = true;
       try {
-        const res = await axios.get('/api/knowledge/detail', { params: { id: item.id } });
+        const res = await axios.get(`/api/knowledge/${item.id}/detail`);
         this.selectedKnowledge = res.data.knowledge;
         this.problems = res.data.problems;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async selectKnowledgeByTitle(title) {
+      if (!this.catalog.length) {
+        await this.fetchCatalog();
+      }
+      let item = this.catalog.find(k => k.title === title);
+      if (item) {
+        await this.selectKnowledge(item);
+      }
+    },
+    async fetchKnowledgePoint(title) {
+      this.loading = true;
+      try {
+        const res = await axios.get(`/api/knowledge/point?title=${encodeURIComponent(title)}`);
+        this.point = res.data;
+        if (this.point.question) {
+          const ids = this.point.question.split(',').map(q => q.trim());
+          const probRes = await axios.get(`/api/problems?ids=${ids.join(',')}`);
+          this.problems = probRes.data;
+        }
       } finally {
         this.loading = false;
       }

@@ -41,4 +41,26 @@ public interface UserProblemRecordRepository {
     // 每日做题趋势
     @Select("SELECT CONVERT(varchar(10), submit_time, 120) as date, COUNT(*) as count FROM user_problem_record WHERE user_id = #{userId} AND problem_id != 0 GROUP BY CONVERT(varchar(10), submit_time, 120) ORDER BY date")
     List<java.util.Map<String, Object>> dailySubmissionTrend(Integer userId);
+
+    // 统计用户连续刷题天数（SQL Server实现，假设submit_time为datetime类型）
+    @Select("""
+        WITH dates AS (
+            SELECT DISTINCT CONVERT(date, submit_time) AS d
+            FROM user_problem_record
+            WHERE user_id = #{userId}
+        ),
+        ranked AS (
+            SELECT d, ROW_NUMBER() OVER (ORDER BY d DESC) AS rn
+            FROM dates
+        ),
+        groups AS (
+            SELECT d, DATEADD(day, rn, d) AS grp
+            FROM ranked
+        )
+        SELECT TOP 1 COUNT(*)
+        FROM groups
+        GROUP BY grp
+        ORDER BY COUNT(*) DESC
+    """)
+    int getContinuousDays(Integer userId);
 } 

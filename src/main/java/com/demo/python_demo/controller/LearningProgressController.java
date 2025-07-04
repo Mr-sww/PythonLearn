@@ -2,7 +2,6 @@ package com.demo.python_demo.controller;
 
 import com.demo.python_demo.entity.LearningProgress;
 import com.demo.python_demo.service.LearningProgressService;
-import com.demo.python_demo.service.UserProblemRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,13 +21,10 @@ public class LearningProgressController {
     @Autowired
     private LearningProgressService progressService;
 
-    @Autowired
-    private UserProblemRecordService userProblemRecordService;
-
     /**
      * 根据用户ID和课程ID获取学习进度
      */
-    @GetMapping("/user/info/{userId}/course/{courseId}")
+    @GetMapping("/user/{userId}/course/{courseId}")
     public ResponseEntity<LearningProgress> getProgressByUserAndCourse(@PathVariable Integer userId, @PathVariable Integer courseId) {
         Optional<LearningProgress> progress = progressService.getProgressByUserAndCourse(userId, courseId);
         if (progress.isPresent()) {
@@ -40,7 +36,7 @@ public class LearningProgressController {
     /**
      * 根据用户ID获取所有学习进度
      */
-    @GetMapping("/user/info/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<List<LearningProgress>> getProgressByUserId(@PathVariable Integer userId) {
         List<LearningProgress> progressList = progressService.getProgressByUserId(userId);
         return ResponseEntity.ok(progressList);
@@ -85,7 +81,7 @@ public class LearningProgressController {
     /**
      * 获取用户最近学习的课程
      */
-    @GetMapping("/user/info/{userId}/recent")
+    @GetMapping("/user/{userId}/recent")
     public ResponseEntity<List<LearningProgress>> getRecentCourses(@PathVariable Integer userId, @RequestParam(defaultValue = "5") Integer limit) {
         List<LearningProgress> recentCourses = progressService.getRecentCourses(userId, limit);
         return ResponseEntity.ok(recentCourses);
@@ -94,23 +90,10 @@ public class LearningProgressController {
     /**
      * 获取用户学习统计
      */
-    @GetMapping("/user/statistics")
-    public Map<String, Object> getUserStatistics(@RequestParam Integer userId) {
-        try {
-            return userProblemRecordService.getUserStatistics(userId);
-        } catch (Exception e) {
-            // 返回默认空数据，避免前端报错
-            Map<String, Object> empty = new java.util.HashMap<>();
-            empty.put("totalSubmissions", 0);
-            empty.put("passedProblems", 0);
-            empty.put("accuracy", 0.0);
-            empty.put("distinctProblems", 0);
-            empty.put("sumUsedTime", 0);
-            empty.put("avgUsedTime", 0.0);
-            empty.put("resultDistribution", java.util.Collections.emptyList());
-            empty.put("dailyTrend", java.util.Collections.emptyList());
-            return empty;
-        }
+    @GetMapping("/user/{userId}/statistics")
+    public ResponseEntity<Object> getUserStatistics(@PathVariable Integer userId) {
+        Object statistics = progressService.getUserStatistics(userId);
+        return ResponseEntity.ok(statistics);
     }
 
     /**

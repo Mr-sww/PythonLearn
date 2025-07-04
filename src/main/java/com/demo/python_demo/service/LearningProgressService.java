@@ -3,7 +3,6 @@ package com.demo.python_demo.service;
 import com.demo.python_demo.entity.LearningProgress;
 import java.util.List;
 import java.util.Optional;
-import java.util.Map;
 
 public interface LearningProgressService {
     Optional<LearningProgress> getProgressByUserAndCourse(Integer userId, Integer courseId);
@@ -12,7 +11,7 @@ public interface LearningProgressService {
     Optional<LearningProgress> updateProgress(Integer progressId, LearningProgress progress);
     boolean deleteProgress(Integer progressId);
     List<LearningProgress> getRecentCourses(Integer userId, Integer limit);
-    Map<String, Object> getUserStatistics(Integer userId);
+    Object getUserStatistics(Integer userId);
     int getCourseStudentCount(Integer courseId);
     int getCourseCompletedCount(Integer courseId);
     boolean updateLessonProgress(Integer userId, Integer courseId, Integer lessonId, Double progress, Integer timeSpent);

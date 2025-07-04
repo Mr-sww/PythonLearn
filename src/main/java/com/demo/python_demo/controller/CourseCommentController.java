@@ -123,7 +123,7 @@ public class CourseCommentController {
     /**
      * 根据用户ID获取评论列表
      */
-    @GetMapping("/user/info/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<List<CourseComment>> getCommentsByUserId(@PathVariable Integer userId) {
         List<CourseComment> comments = commentService.getCommentsByUserId(userId);
         return ResponseEntity.ok(comments);

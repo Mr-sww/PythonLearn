@@ -11,4 +11,6 @@ public interface UserProblemRecordService {
 
     // 统计卡片一站式接口
     java.util.Map<String, Object> getUserStatistics(Integer userId);
+
+    int getContinuousDays(Integer userId);
 } 

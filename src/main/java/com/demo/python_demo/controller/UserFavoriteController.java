@@ -25,7 +25,7 @@ public class UserFavoriteController {
      * @param userId 用户ID
      * @return 收藏课程列表
      */
-    @GetMapping("/user/info/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<List<UserFavorite>> getUserFavorites(@PathVariable Integer userId) {
         List<UserFavorite> favorites = userFavoriteService.getUserFavorites(userId);
         return ResponseEntity.ok(favorites);

@@ -90,4 +90,9 @@ public class UserProblemRecordServiceImpl implements UserProblemRecordService {
         stats.put("dailyTrend", repository.dailySubmissionTrend(userId));
         return stats;
     }
+
+    @Override
+    public int getContinuousDays(Integer userId) {
+        return repository.getContinuousDays(userId);
+    }
 } 

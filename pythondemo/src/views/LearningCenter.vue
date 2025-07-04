@@ -15,7 +15,9 @@
           <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-clock text-primary fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">18.5小时</h4>
+          <h4 class="fw-bold text-dark mb-1">
+            {{ learningStats.login ? (learningStats.totalStudyHours + '小时') : '请登录后查看' }}
+          </h4>
           <p class="text-muted mb-0">总学习时长</p>
         </div>
       </div>
@@ -24,7 +26,9 @@
           <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-check-circle text-success fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">3门</h4>
+          <h4 class="fw-bold text-dark mb-1">
+            {{ learningStats.login ? (learningStats.completedCourses + '门') : '请登录后查看' }}
+          </h4>
           <p class="text-muted mb-0">完成课程</p>
         </div>
       </div>
@@ -33,8 +37,10 @@
           <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-tasks text-warning fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">24题</h4>
-          <p class="text-muted mb-0">练习题目</p>
+          <h4 class="fw-bold text-dark mb-1">
+            {{ learningStats.login ? (learningStats.continuousDays + '天') : '请登录后查看' }}
+          </h4>
+          <p class="text-muted mb-0">连续学习</p>
         </div>
       </div>
       <div class="col-md-3">
@@ -51,119 +57,27 @@
     <div class="row g-4">
       <!-- 学习进度树 -->
       <div class="col-lg-8">
-        <div class="bg-white rounded-3 shadow-sm border p-4 mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold text-dark mb-0">学习进度树</h3>
-            <button class="btn btn-outline-primary btn-sm rounded-pill">查看完整进度</button>
-          </div>
-          
-          <!-- 进度树内容 -->
-          <div class="learning-tree">
-            <!-- Python基础 -->
-            <div class="learning-node completed mb-3">
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3" style="cursor:pointer" @click="goToDetail(1)">
-                <div class="d-flex align-items-center">
-                  <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:40px;height:40px;">
-                    <i class="fa fa-check"></i>
-                  </div>
-                  <div>
-                    <h5 class="fw-bold text-dark mb-1">Python基础</h5>
-                    <p class="text-muted mb-0 small">变量、数据类型、控制流、函数</p>
-                  </div>
-                </div>
-                <div class="text-end">
-                  <span class="badge bg-success">已完成</span>
-                  <div class="text-muted small mt-1">100%</div>
-                </div>
-              </div>
-              
-              <!-- 子节点 -->
-              <div class="ms-5 mt-2">
-                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(11)">
-                  <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
-                    <i class="fa fa-check"></i>
-                  </div>
-                  <span class="text-dark">变量与数据类型</span>
-                  <span class="badge bg-success ms-auto">已完成</span>
-                </div>
-                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(12)">
-                  <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
-                    <i class="fa fa-check"></i>
-                  </div>
-                  <span class="text-dark">条件语句与循环</span>
-                  <span class="badge bg-success ms-auto">已完成</span>
-                </div>
-                <div class="d-flex align-items-center" style="cursor:pointer" @click.stop="goToDetail(13)">
-                  <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
-                    <i class="fa fa-check"></i>
-                  </div>
-                  <span class="text-dark">函数与模块</span>
-                  <span class="badge bg-success ms-auto">已完成</span>
-                </div>
-              </div>
+        <div class="learning-tree-cards">
+          <div v-for="(group, groupName) in groupedPoints" :key="groupName" class="tree-card">
+            <div class="tree-card-header">
+              <span class="tree-card-title">
+                <i class="fa" :class="groupName === '基础' ? 'fa-check-circle text-success' : 'fa-dot-circle-o text-warning'"></i>
+                <span class="ms-2">{{ groupName === '基础' ? 'Python基础' : 'Python进阶' }}</span>
+              </span>
+              <!-- 状态标签可选 -->
+              <!-- <span class="tree-status" :class="groupName === '基础' ? 'done' : 'doing'">{{ groupName === '基础' ? '已完成' : '进行中' }}</span> -->
             </div>
-
-            <!-- Python进阶 -->
-            <div class="learning-node in-progress mb-3">
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3" style="cursor:pointer" @click="goToDetail(2)">
-                <div class="d-flex align-items-center">
-                  <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-white me-3" style="width:40px;height:40px;">
-                    <i class="fa fa-spinner"></i>
-                  </div>
-                  <div>
-                    <h5 class="fw-bold text-dark mb-1">Python进阶</h5>
-                    <p class="text-muted mb-0 small">异常处理、文件操作、装饰器</p>
-                  </div>
-                </div>
-                <div class="text-end">
-                  <span class="badge bg-warning text-dark">进行中</span>
-                  <div class="text-muted small mt-1">65%</div>
-                </div>
-              </div>
-              
-              <!-- 子节点 -->
-              <div class="ms-5 mt-2">
-                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(21)">
-                  <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
-                    <i class="fa fa-check"></i>
-                  </div>
-                  <span class="text-dark">异常处理</span>
-                  <span class="badge bg-success ms-auto">已完成</span>
-                </div>
-                <div class="d-flex align-items-center mb-2" style="cursor:pointer" @click.stop="goToDetail(22)">
-                  <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
-                    <i class="fa fa-spinner"></i>
-                  </div>
-                  <span class="text-dark">文件操作</span>
-                  <span class="badge bg-warning text-dark ms-auto">进行中</span>
-                </div>
-                <div class="d-flex align-items-center" style="cursor:pointer" @click.stop="goToDetail(23)">
-                  <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-2" style="width:24px;height:24px;font-size:0.8rem;">
-                    <i class="fa fa-lock"></i>
-                  </div>
-                  <span class="text-muted">装饰器</span>
-                  <span class="badge bg-secondary ms-auto">未解锁</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Web开发 -->
-            <div class="learning-node locked">
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3" style="cursor:pointer" @click="goToDetail(3)">
-                <div class="d-flex align-items-center">
-                  <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width:40px;height:40px;">
-                    <i class="fa fa-lock"></i>
-                  </div>
-                  <div>
-                    <h5 class="fw-bold text-dark mb-1">Web开发</h5>
-                    <p class="text-muted mb-0 small">Django、Flask、前端集成</p>
-                  </div>
-                </div>
-                <div class="text-end">
-                  <span class="badge bg-secondary">未解锁</span>
-                  <div class="text-muted small mt-1">0%</div>
-                </div>
-              </div>
+            <div class="tree-card-body">
+              <ul class="tree-card-list">
+                <li v-for="point in group" :key="point.title" class="tree-card-list-item">
+                  <span class="tree-point-icon">
+                    <i class="fa fa-check-circle"></i>
+                  </span>
+                  <a class="tree-card-link" @click="$router.push(`/learn-detail?id=${encodeURIComponent(point.title)}`)">
+                    {{ point.title }}
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -319,7 +233,36 @@
 <script>
 export default {
   name: 'LearningCenter',
+  data() {
+    return {
+      learningStats: {
+        totalStudyHours: 0,
+        completedCourses: 0,
+        continuousDays: 0,
+        login: false
+      },
+      points: [],
+      groupedPoints: { 基础: [], 进阶: [] }
+    }
+  },
+  async mounted() {
+    const res = await this.$axios.get('/api/knowledge/points');
+    this.points = res.data;
+    this.groupedPoints = {
+      基础: this.points.filter(p => p.stage && p.stage.startsWith('1.')),
+      进阶: this.points.filter(p => p.stage && p.stage.startsWith('2.'))
+    };
+  },
   methods: {
+    async fetchLearningStatistics() {
+      try {
+        const res = await this.$axios.get('/api/user/learning-statistics', { withCredentials: true });
+        this.learningStats = res.data;
+      } catch (e) {
+        // 失败时全部为0
+        this.learningStats = { totalStudyHours: 0, completedCourses: 0, continuousDays: 0, login: false };
+      }
+    },
     goToDetail(id) {
       this.$router.push({ name: 'LearnDetial', query: { id } });
     }
@@ -349,5 +292,125 @@ export default {
 
 .learning-node.completed::after {
   background: #28a745;
+}
+
+.learning-tree-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tree-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(37,99,235,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+  border: none;
+  padding: 0;
+  min-height: 180px;
+  width: 100%;
+  margin-bottom: 0;
+  transition: box-shadow 0.2s;
+}
+
+.tree-card:hover {
+  box-shadow: 0 8px 32px rgba(37,99,235,0.13), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.tree-card-header {
+  padding: 26px 32px 12px 32px;
+  border-bottom: 1px solid #f3f6fd;
+  font-size: 1.35rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #f8fafc;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.tree-card-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  color: #22223b;
+}
+
+.tree-card-title .fa {
+  font-size: 2rem;
+  margin-right: 10px;
+}
+
+.tree-status {
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 2px 14px;
+  margin-left: 18px;
+}
+
+.tree-status.done {
+  background: #e6f4ea;
+  color: #22c55e;
+}
+
+.tree-status.doing {
+  background: #fff7e6;
+  color: #f59e42;
+}
+
+.tree-card-body {
+  padding: 0 32px 24px 32px;
+  max-height: 320px;
+  min-height: 180px;
+  overflow-y: auto;
+  background: #f8fafc;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.tree-card-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.tree-card-list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 1.08rem;
+  border-bottom: 1px solid #e9ecef;
+  padding: 10px 0;
+  transition: background 0.18s;
+}
+
+.tree-card-list-item:last-child {
+  border-bottom: none;
+}
+
+.tree-card-list-item:hover {
+  background: #e8f0fe;
+  border-radius: 8px;
+}
+
+.tree-point-icon {
+  color: #22c55e;
+  font-size: 1.2rem;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.tree-card-link {
+  color: #22223b;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.tree-card-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 </style> 
