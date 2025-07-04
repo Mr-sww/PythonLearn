@@ -9,21 +9,26 @@
       </ul>
     </div>
     <div class="main-content">
-      <div class="knowledge-section">
-        <h3>知识点</h3>
+      <div class="knowledge-section card">
+        <h2 class="knowledge-title">{{ selectedKnowledge ? selectedKnowledge.title : '知识点' }}</h2>
         <div v-if="loading" class="loading">加载中...</div>
         <div v-else-if="selectedKnowledge">
-          <h4>{{ selectedKnowledge.title }}</h4>
-          <div v-html="selectedKnowledge.content"></div>
+          <div class="knowledge-content" v-html="selectedKnowledge.content"></div>
         </div>
         <div v-else>
-          <p>请选择左侧知识点</p>
+          <p class="text-muted">请选择左侧知识点</p>
         </div>
       </div>
-      <div class="problem-list-section">
+      <div class="problem-list-section card">
         <h3>题目列表</h3>
-        <div v-for="prob in problems" :key="prob.Id">
-          <button @click="$router.push(`/problem/${prob.Id}`)">去做题：{{ prob.Title }}</button>
+        <div v-if="problems.length === 0" class="text-muted">暂无题目</div>
+        <div v-else class="problem-card-list">
+          <div v-for="prob in problems" :key="prob.id" class="problem-card">
+            <div class="problem-title">{{ prob.title }}</div>
+            <button class="go-btn" @click="$router.push(`/problem/${prob.id}`)">
+              去做题
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -110,79 +115,163 @@ export default {
 <style scoped>
 .learning-center {
   display: flex;
-  min-height: 600px;
+  justify-content: center;
+  background: #f6f8fa;
+  min-height: 100vh;
+  padding: 32px 0;
 }
+
 .sidebar {
-  width: 250px;
-  border: 1px solid #ccc;
-  margin-right: 20px;
-  padding: 20px;
-  background: #fafafa;
-  border-radius: 8px;
+  width: 260px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(37,99,235,0.06);
+  margin-right: 32px;
+  padding: 28px 18px 18px 18px;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
+
+.sidebar h3 {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 18px;
+  color: #2563eb;
+}
+
 .sidebar ul {
   list-style: none;
   padding: 0;
+  width: 100%;
 }
+
 .sidebar li {
-  padding: 12px 0;
+  padding: 12px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
   transition: background 0.2s, color 0.2s;
+  font-size: 16px;
+  color: #22223b;
 }
+
 .sidebar li:hover {
-  background: #f0f7ff;
-  color: #1976d2;
+  background: #e3eafe;
+  color: #2563eb;
 }
+
 .sidebar li.active {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
   color: #fff;
-  background: #1976d2;
   font-weight: bold;
 }
+
 .main-content {
   flex: 1;
+  max-width: 900px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  border: 1px solid #ccc;
-  background: #fff;
-  border-radius: 8px;
+  gap: 28px;
 }
-.knowledge-section {
-  flex: 2;
-  padding: 24px;
-  border-bottom: 1px solid #eee;
-  background: #f9f9fb;
-  border-radius: 8px 8px 0 0;
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(37,99,235,0.06);
+  padding: 32px 36px;
   margin-bottom: 0;
-  box-shadow: 0 2px 8px #f0f1f2;
-  min-height: 180px;
 }
-.loading {
-  color: #1976d2;
+
+.knowledge-section {
+  margin-bottom: 0;
+}
+
+.knowledge-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2563eb;
+  margin-bottom: 18px;
+}
+
+.knowledge-content {
   font-size: 16px;
-  padding: 20px 0;
-}
-.problem-list-section {
-  flex: 1;
-  padding: 24px;
-  background: #f6fafd;
-  border-radius: 0 0 8px 8px;
-}
-.problem-list-section ul {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-.problem-list-section li {
-  background: #fff;
-  margin-bottom: 12px;
-  padding: 16px;
-  border-radius: 6px;
+  color: #22223b;
+  line-height: 1.8;
+  word-break: break-all;
+  background: #f8fafd;
+  border-radius: 8px;
+  padding: 18px 20px;
+  min-height: 120px;
   box-shadow: 0 1px 4px #e0e0e0;
+}
+
+.problem-list-section {
+  margin-top: 0;
+}
+
+.problem-card-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.problem-card {
+  background: #f8fafd;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px #e0e0e0;
+  padding: 18px 24px;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   transition: box-shadow 0.2s, background 0.2s;
 }
-.problem-list-section li:hover {
-  box-shadow: 0 4px 12px #d0d7e2;
-  background: #f5faff;
+
+.problem-card:hover {
+  box-shadow: 0 6px 18px #d0d7e2;
+  background: #e3eafe;
+}
+
+.problem-title {
+  font-weight: bold;
+  color: #2563eb;
+  font-size: 16px;
+  flex: 1;
+  margin-right: 12px;
+  text-align: left;
+}
+
+.go-btn {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+}
+
+.go-btn:hover {
+  background: linear-gradient(90deg, #1746a0 0%, #2563eb 100%);
+}
+
+.text-muted {
+  color: #6b7280;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+.loading {
+  color: #2563eb;
+  font-size: 16px;
+  padding: 20px 0;
+  text-align: center;
 }
 </style> 

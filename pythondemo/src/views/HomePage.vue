@@ -996,7 +996,15 @@ export default {
                 { title: '列表去重', desc: '编写函数去除列表重复元素，保持顺序。', level: '中等', status: '进行中', btn: '继续解答' },
                 { title: '字典排序', desc: '根据值对字典进行排序，并返回排序后的字典。', level: '中等', status: '未开始', btn: '开始解答' }
             ],
-            defaultAvatar: 'https://picsum.photos/200/200'
+            defaultAvatar: 'https://picsum.photos/200/200',
+            recommendCourses: [],
+            allCourses: [],
+            userStats: {},
+            learningProgress: [],
+            practiceProgress: [],
+            recommendProblems: [],
+            aiFaq: [],
+            myLearning: []
         }
     },
     computed: {
@@ -1010,6 +1018,13 @@ export default {
         }
     },
     mounted() {
+        this.fetchRecommendCourses();
+        this.fetchAllCourses();
+        this.fetchUserStats();
+        this.fetchLearningProgress();
+        this.fetchPracticeProgress();
+        this.fetchRecommendProblems();
+        this.fetchAiFaq();
         axios.get('http://localhost:8080/api/user/me')
             .then(res => {
                 this.isLoggedIn = true;
@@ -1466,6 +1481,38 @@ export default {
                 return 'http://localhost:8080' + url;
             }
             return url;
+        },
+        async fetchRecommendCourses() {
+            const res = await axios.get('/api/courses/recommend');
+            this.recommendCourses = res.data;
+        },
+        async fetchAllCourses() {
+            const res = await axios.get('/api/courses');
+            this.allCourses = res.data;
+        },
+        async fetchUserStats() {
+            const res = await axios.get('/api/user/statistics');
+            this.userStats = res.data;
+        },
+        async fetchLearningProgress() {
+            const res = await axios.get('/api/user/learning-progress');
+            this.learningProgress = res.data;
+        },
+        async fetchPracticeProgress() {
+            const res = await axios.get('/api/practice/progress');
+            this.practiceProgress = res.data;
+        },
+        async fetchRecommendProblems() {
+            const res = await axios.get('/api/practice/recommend');
+            this.recommendProblems = res.data;
+        },
+        async fetchAiFaq() {
+            const res = await axios.get('/api/ai/faq');
+            this.aiFaq = res.data;
+        },
+        async fetchMyLearning() {
+            const res = await axios.get('/api/knowledge/catalog');
+            this.myLearning = res.data;
         }
     }
 }

@@ -39,7 +39,7 @@ public class KnowledgeController {
         // 2. 解析 question 字段
         List<String> questionIds = new ArrayList<>();
         if (kp.getQuestion() != null && !kp.getQuestion().isEmpty()) {
-            for (String qid : kp.getQuestion().split(",")) {
+            for (String qid : kp.getQuestion().split("[,，\\s]+")) {
                 if (!qid.trim().isEmpty()) questionIds.add(qid.trim());
             }
         }
