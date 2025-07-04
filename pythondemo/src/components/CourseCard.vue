@@ -31,49 +31,25 @@
     
     <!-- 课程内容 -->
     <div class="p-5">
-      <!-- 讲师信息 -->
-      <div class="flex items-center mb-3">
-        <img 
-          :src="course.authorAvatar || `https://picsum.photos/100/100?random=${course.id || Math.random()}`" 
-          :alt="course.author"
-          class="w-8 h-8 rounded-full mr-2 border"
-          @error="handleAvatarError"
-        >
-        <span class="text-sm text-gray-600">{{ course.author || '未知讲师' }}</span>
-        
-        <!-- 评分 -->
-        <div class="ml-auto flex items-center">
-          <div class="flex text-yellow-400 text-sm">
-            <i class="fa fa-star" v-for="i in 5" :key="i"></i>
-          </div>
-          <span class="text-sm text-gray-500 ml-1">{{ course.rating || '4.5' }}</span>
+      <!-- 讲师信息和评分（已删除头像和未知讲师，仅保留评分，字体更大） -->
+      <div class="flex items-center mb-3 justify-end">
+        <div class="flex text-yellow-400 text-xl">
+          <i class="fa fa-star" v-for="i in 5" :key="i"></i>
         </div>
+        <span class="text-lg text-gray-500 ml-2 font-bold">{{ course.rating || '4.5' }}</span>
       </div>
       
       <!-- 课程标题 -->
       <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">{{ course.title }}</h3>
       
       <!-- 课程描述 -->
-      <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ course.content || course.description || '暂无描述' }}</p>
+      <div class="mb-4 flex flex-wrap gap-2">
+        <span v-for="tag in getTags(course.tags)" :key="tag" class="bg-blue-100 text-blue-600 rounded-full px-2 py-0.5 text-xs font-semibold mr-1 mb-1">{{ tag }}</span>
+      </div>
       
-      <!-- 底部信息 -->
+      <!-- 底部信息（已删除标签和文件夹图标） -->
       <div class="mt-auto">
-        <div class="flex justify-between items-center mb-3">
-          <div class="flex items-center text-sm text-gray-500">
-            <i class="fa fa-folder mr-1"></i>
-            <span>{{ (course.tags ? course.tags.split(',')[0] : '标签') }}</span>
-          </div>
-          <div class="text-right">
-            <div class="text-lg font-bold text-blue-600" v-if="course.price === 0 || course.price === null">
-              免费
-            </div>
-            <div class="text-lg font-bold text-red-600" v-else>
-              ¥{{ course.price }}
-            </div>
-          </div>
-        </div>
-        
-        <!-- 操作按钮已删除 -->
+        <!-- 价格信息已删除 -->
       </div>
     </div>
   </div>
@@ -137,11 +113,6 @@ export default {
     // 处理图片加载错误
     handleImageError(event) {
       event.target.src = 'https://picsum.photos/600/300?random=1';
-    },
-    
-    // 处理头像加载错误
-    handleAvatarError(event) {
-      event.target.src = 'https://picsum.photos/100/100?random=1';
     },
     
     // 查看课程详情

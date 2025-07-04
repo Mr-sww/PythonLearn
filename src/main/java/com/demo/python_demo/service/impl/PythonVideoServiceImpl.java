@@ -6,6 +6,7 @@ import com.demo.python_demo.service.PythonVideoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class PythonVideoServiceImpl implements PythonVideoService {
@@ -15,5 +16,13 @@ public class PythonVideoServiceImpl implements PythonVideoService {
     @Override
     public List<PythonVideo> getAllVideos() {
         return pythonVideoRepository.findAll();
+    }
+
+    @Override
+    public List<PythonVideo> findByCategories(List<String> categories, List<String> excluded) {
+        if ((categories == null || categories.isEmpty()) && (excluded == null || excluded.isEmpty())) {
+            return pythonVideoRepository.findAll();
+        }
+        return pythonVideoRepository.findByCategories(categories, excluded);
     }
 } 

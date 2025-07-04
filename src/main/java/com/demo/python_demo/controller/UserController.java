@@ -22,6 +22,8 @@ import com.demo.python_demo.service.UserProblemRecordService;
 import com.demo.python_demo.repository.PythonProblemRepository;
 import com.demo.python_demo.service.LearningProgressService;
 
+import java.util.HashMap;
+
 /**
  * 用户控制器
  */
@@ -341,5 +343,14 @@ public class UserController {
             "continuousDays", continuousDays,
             "login", true
         ));
+    }
+
+    @GetMapping("/learning-progress")
+    public Map<String, Object> getLearningProgress() {
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("progress", 80);
+        progress.put("days", 12);
+        progress.put("coursesCompleted", 5);
+        return progress;
     }
 }

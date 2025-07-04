@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/practice")
@@ -132,5 +133,28 @@ public class PracticeController {
     @GetMapping("/problem/{id}/favorite/count")
     public int getFavoriteCount(@PathVariable String id) {
         return favoriteRepo.countByProblemId(id);
+    }
+
+    @GetMapping("/progress")
+    public Map<String, Object> practiceProgress() {
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("completed", 23);
+        progress.put("accuracy", 92);
+        progress.put("practiceTime", 8);
+        progress.put("continuousDays", 4);
+        return progress;
+    }
+
+    @GetMapping("/recommend")
+    public List<Map<String, Object>> recommendProblems() {
+        List<Map<String, Object>> problems = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            Map<String, Object> p = new HashMap<>();
+            p.put("id", "task" + i);
+            p.put("title", "推荐练习题" + i);
+            p.put("difficulty", "中等");
+            problems.add(p);
+        }
+        return problems;
     }
 } 

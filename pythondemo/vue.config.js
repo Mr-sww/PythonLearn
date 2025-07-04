@@ -7,6 +7,10 @@ module.exports = defineConfig({
       '/api': {
         target: 'http://localhost:8080', // 你的Spring Boot后端端口
         changeOrigin: true
+      },
+      '/course_images': {
+        target: 'http://localhost:8080', // 静态图片资源代理到后端
+        changeOrigin: true
       }
     }
   }

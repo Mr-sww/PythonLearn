@@ -381,69 +381,28 @@
                     <a href="/courses" class="btn btn-link text-primary p-0" style="font-size:1rem;">查看更多</a>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- 课程卡片 1 -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                    <div v-for="course in recommendCourses.slice(0, 3)" :key="course.id || course.ID" class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
                         <div class="relative">
-                            <img src="https://picsum.photos/600/300?random=10" alt="Python基础入门" class="w-full h-48 object-cover">
-                            <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">入门</div>
+                            <a :href="course.url || course.URL" target="_blank">
+                                <img :src="course.imageUrl || course.ImageURL" :alt="course.title || course.Title" class="w-full h-48 object-cover">
+                            </a>
+                            <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
+                                推荐
+                            </div>
                         </div>
                         <div class="p-5">
                             <div class="flex items-center mb-3">
                                 <img src="https://picsum.photos/100/100?random=101" alt="讲师头像" class="w-8 h-8 rounded-full mr-2">
-                                <span class="text-sm text-muted">张教授</span>
+                                <span class="text-sm text-muted">{{ course.author || '平台推荐' }}</span>
                             </div>
-                            <h3 class="text-xl font-bold text-dark mb-2">Python基础入门到精通</h3>
-                            <p class="text-muted text-sm mb-4">从环境搭建到项目实战，全面系统地学习Python编程基础</p>
+                            <h3 class="text-xl font-bold text-dark mb-2">{{ course.title || course.Title }}</h3>
+                            <p class="text-muted text-sm mb-4">{{ course.description || course.Tags }}</p>
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
                                     <i class="fa fa-users text-muted mr-1"></i>
-                                    <span class="text-sm text-muted">12,458人学习</span>
+                                    <span class="text-sm text-muted">{{ course.playCount || course.PlayCount }}人学习</span>
                                 </div>
-                                <a href="/courses" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 课程卡片 2 -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
-                        <div class="relative">
-                            <img src="https://picsum.photos/600/300?random=11" alt="数据分析与可视化" class="w-full h-48 object-cover">
-                            <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">中级</div>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center mb-3">
-                                <img src="https://picsum.photos/100/100?random=102" alt="讲师头像" class="w-8 h-8 rounded-full mr-2">
-                                <span class="text-sm text-muted">李博士</span>
-                            </div>
-                            <h3 class="text-xl font-bold text-dark mb-2">Python数据分析与可视化</h3>
-                            <p class="text-muted text-sm mb-4">掌握Pandas、Numpy、Matplotlib等库，成为专业数据分析师</p>
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center">
-                                    <i class="fa fa-users text-muted mr-1"></i>
-                                    <span class="text-sm text-muted">8,756人学习</span>
-                                </div>
-                                <a href="/courses" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 课程卡片 3 -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
-                        <div class="relative">
-                            <img src="https://picsum.photos/600/300?random=12" alt="Web开发实战" class="w-full h-48 object-cover">
-                            <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">高级</div>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center mb-3">
-                                <img src="https://picsum.photos/100/100?random=103" alt="讲师头像" class="w-8 h-8 rounded-full mr-2">
-                                <span class="text-sm text-muted">王工程师</span>
-                            </div>
-                            <h3 class="text-xl font-bold text-dark mb-2">Python Web开发实战</h3>
-                            <p class="text-muted text-sm mb-4">使用Django和Flask框架开发企业级Web应用，包含完整项目实战</p>
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center">
-                                    <i class="fa fa-users text-muted mr-1"></i>
-                                    <span class="text-sm text-muted">6,342人学习</span>
-                                </div>
-                                <a href="/courses" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
+                                <a :href="course.url || course.URL" target="_blank" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
                             </div>
                         </div>
                     </div>
@@ -452,115 +411,7 @@
         </section>
 
         <!-- 合并后的课程中心大模块 -->
-        <section id="courses" class="mb-16">
-          <div class="bg-white rounded-3 shadow-sm border p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-bold text-dark">课程中心</h2>
-              <a href="/courses" class="text-primary font-medium hover:underline">查看更多课程</a>
-            </div>
-            <!-- 精选课程卡片（为你推荐内容，移到课程中心顶部） -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <!-- 课程卡片 1 -->
-              <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
-                <div class="relative">
-                  <img src="https://picsum.photos/600/300?random=10" alt="Python基础入门" class="w-full h-48 object-cover">
-                  <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">入门</div>
-                </div>
-                <div class="p-5">
-                  <div class="flex items-center mb-3">
-                    <img src="https://picsum.photos/100/100?random=101" alt="讲师头像" class="w-8 h-8 rounded-full mr-2">
-                    <span class="text-sm text-muted">张教授</span>
-                  </div>
-                  <h3 class="text-xl font-bold text-dark mb-2">Python基础入门到精通</h3>
-                  <p class="text-muted text-sm mb-4">从环境搭建到项目实战，全面系统地学习Python编程基础</p>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center">
-                      <i class="fa fa-users text-muted mr-1"></i>
-                      <span class="text-sm text-muted">12,458人学习</span>
-                    </div>
-                    <a href="/courses" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
-                  </div>
-                </div>
-              </div>
-              <!-- 课程卡片 2 -->
-              <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
-                <div class="relative">
-                  <img src="https://picsum.photos/600/300?random=11" alt="数据分析与可视化" class="w-full h-48 object-cover">
-                  <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">中级</div>
-                </div>
-                <div class="p-5">
-                  <div class="flex items-center mb-3">
-                    <img src="https://picsum.photos/100/100?random=102" alt="讲师头像" class="w-8 h-8 rounded-full mr-2">
-                    <span class="text-sm text-muted">李博士</span>
-                  </div>
-                  <h3 class="text-xl font-bold text-dark mb-2">Python数据分析与可视化</h3>
-                  <p class="text-muted text-sm mb-4">掌握Pandas、Numpy、Matplotlib等库，成为专业数据分析师</p>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center">
-                      <i class="fa fa-users text-muted mr-1"></i>
-                      <span class="text-sm text-muted">8,756人学习</span>
-                    </div>
-                    <a href="/courses" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
-                  </div>
-                </div>
-              </div>
-              <!-- 课程卡片 3 -->
-              <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
-                <div class="relative">
-                  <img src="https://picsum.photos/600/300?random=12" alt="Web开发实战" class="w-full h-48 object-cover">
-                  <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">高级</div>
-                </div>
-                <div class="p-5">
-                  <div class="flex items-center mb-3">
-                    <img src="https://picsum.photos/100/100?random=103" alt="讲师头像" class="w-8 h-8 rounded-full mr-2">
-                    <span class="text-sm text-muted">王工程师</span>
-                  </div>
-                  <h3 class="text-xl font-bold text-dark mb-2">Python Web开发实战</h3>
-                  <p class="text-muted text-sm mb-4">使用Django和Flask框架开发企业级Web应用，包含完整项目实战</p>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center">
-                      <i class="fa fa-users text-muted mr-1"></i>
-                      <span class="text-sm text-muted">6,342人学习</span>
-                    </div>
-                    <a href="/courses" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 分类/统计/精选入口色块 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- 课程分类 -->
-              <div class="bg-blue-50 rounded-xl p-5 flex flex-col items-center">
-                <i class="fa fa-list-alt text-3xl text-blue-500 mb-3"></i>
-                <h4 class="font-bold text-blue-700 mb-2">课程分类</h4>
-                <ul class="space-y-1 text-blue-600 text-base">
-                  <li>Python基础</li>
-                  <li>Web开发</li>
-                  <li>数据分析</li>
-                  <li>机器学习</li>
-                  <li>自动化脚本</li>
-                </ul>
-              </div>
-              <!-- 课程统计 -->
-              <div class="bg-green-50 rounded-xl p-5 flex flex-col items-center">
-                <i class="fa fa-bar-chart text-3xl text-green-500 mb-3"></i>
-                <h4 class="font-bold text-green-700 mb-2">课程统计</h4>
-                <ul class="space-y-1 text-green-600 text-base">
-                  <li>总课程数：<span class="font-bold">35</span></li>
-                  <li>学习人数：<span class="font-bold">32,000+</span></li>
-                  <li>五星好评：<span class="font-bold">98%</span></li>
-                </ul>
-              </div>
-              <!-- 精选课程入口 -->
-              <div class="bg-yellow-50 rounded-xl p-5 flex flex-col items-center">
-                <i class="fa fa-star text-3xl text-yellow-500 mb-3"></i>
-                <h4 class="font-bold text-yellow-700 mb-2">精选课程</h4>
-                <p class="text-yellow-700 mb-3">发现更多优质课程，助你高效提升</p>
-                <a href="/courses" class="px-5 py-2 bg-yellow-400 text-white rounded-lg font-bold shadow hover:bg-yellow-500 transition">进入课程中心</a>
-              </div>
-            </div>
-          </div>
-        </section>
+        <!-- <section id="courses" class="mb-16"> ... </section> -->
 
         <!-- 学习模块 -->
         <section id="learning" class="mb-16">
@@ -568,77 +419,37 @@
                 <h2 class="fw-bold text-dark" style="font-size:2rem;">我的学习</h2>
                 <router-link to="/learning" class="btn btn-link text-primary p-0" style="font-size:1rem;">学习中心</router-link>
             </div>
-            <div class="row g-4">
-                <!-- 学习进度树（分层结构还原） -->
-                <div class="col-lg-8">
-                    <div class="bg-white rounded-3 shadow-sm border p-4 mb-3">
+            <div class="row g-4" style="display:flex;align-items:stretch;">
+                <!-- 学习进度树 -->
+                <div class="col-lg-7" style="display:flex;flex-direction:column;">
+                    <div class="bg-white rounded-3 shadow-sm border p-4 mb-3" style="flex:1 1 auto;min-height:420px;">
                         <h3 class="fw-bold text-dark mb-4" style="font-size:1.3rem;">学习进度树</h3>
                         <div class="space-y-4">
-                            <!-- 学习节点 1 -->
-                            <div class="p-4 border border-gray-200 rounded-lg mb-3">
+                            <div v-for="(node, idx) in knowledgeTree" :key="idx" class="p-4 border border-gray-200 rounded-lg mb-3">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:28px;height:28px;"><i class="fa fa-check"></i></div>
-                                        <h4 class="fw-medium text-dark mb-0">Python基础</h4>
+                                        <div :class="statusIconClass(node.status)" class="rounded-circle d-flex align-items-center justify-content-center text-white me-3" style="width:28px;height:28px;">
+                                            <i :class="statusIcon(node.status)"></i>
+                                        </div>
+                                        <h4 class="fw-medium text-dark mb-0">{{ node.title }}</h4>
                                     </div>
-                                    <span class="badge bg-success">已完成</span>
+                                    <span :class="badgeClass(node.status)">{{ node.status }}</span>
                                 </div>
-                                <div class="ms-5">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-check"></i></div>
-                                        <span class="text-dark">变量与数据类型</span>
-                                    </div>
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-check"></i></div>
-                                        <span class="text-dark">条件语句与循环</span>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-check"></i></div>
-                                        <span class="text-dark">函数与模块</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- 学习节点 2 -->
-                            <div class="p-4 border border-gray-200 rounded-lg mb-3">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-white me-3" style="width:28px;height:28px;"><i class="fa fa-spinner"></i></div>
-                                        <h4 class="fw-medium text-dark mb-0">Python进阶</h4>
-                                    </div>
-                                    <span class="badge bg-warning text-white">进行中</span>
-                                </div>
-                                <div class="ms-5">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-check"></i></div>
-                                        <span class="text-dark">异常处理</span>
-                                    </div>
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-spinner"></i></div>
-                                        <span class="text-dark">文件操作</span>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-lock"></i></div>
-                                        <span class="text-muted">装饰器</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- 学习节点 3 -->
-                            <div class="p-4 border border-gray-200 rounded-lg">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width:28px;height:28px;"><i class="fa fa-lock"></i></div>
-                                        <h4 class="fw-medium text-dark mb-0">Web开发</h4>
-                                    </div>
-                                    <span class="badge bg-secondary">未解锁</span>
-                                </div>
-                                <div class="ms-5">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-lock"></i></div>
-                                        <span class="text-muted">Django框架</span>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;"><i class="fa fa-lock"></i></div>
-                                        <span class="text-muted">Flask框架</span>
+                                <!-- 内嵌滚动框 -->
+                                <div class="progress-list-scroll ms-5">
+                                    <div v-for="(child, cidx) in node.children" :key="cidx" class="d-flex align-items-center mb-2">
+                                        <div :class="statusIconClass(child.status)" class="rounded-circle d-flex align-items-center justify-content-center text-white me-3" style="width:20px;height:20px;font-size:0.9rem;">
+                                            <i :class="statusIcon(child.status)"></i>
+                                        </div>
+                                        <span :class="child.status==='未解锁' ? 'text-muted' : 'text-dark'">
+                                            <span
+                                              v-if="child.status!=='未解锁'"
+                                              class="knowledge-btn"
+                                              @click="goToKnowledgeDetail(child.title)"
+                                              tabindex="0"
+                                            >{{ child.title }}</span>
+                                            <span v-else>{{ child.title }}</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -646,8 +457,8 @@
                     </div>
                 </div>
                 <!-- 学习统计 -->
-                <div class="col-lg-4">
-                    <div class="bg-white rounded-3 shadow-sm border p-4 mb-3">
+                <div class="col-lg-5" style="display:flex;flex-direction:column;">
+                    <div class="bg-white rounded-3 shadow-sm border p-4 mb-3" style="flex:1 1 auto;min-height:420px;">
                         <h3 class="fw-bold text-dark mb-4" style="font-size:1.3rem;">学习统计</h3>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-1"><span class="text-muted">总学习时长</span><span class="fw-medium">18.5小时</span></div>
@@ -661,6 +472,39 @@
                                 <canvas id="learningChart"></canvas>
                             </div>
                         </div>
+                    </div>
+                    <!-- 新增内容卡片：学习成就和最近学习 -->
+                    <div class="bg-white rounded-3 shadow-sm border p-4 mt-3">
+                        <h4 class="fw-bold text-dark mb-3" style="font-size:1.1rem;">学习成就</h4>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <div class="text-center p-2 border rounded">
+                                    <i class="fa fa-trophy text-warning fa-lg mb-1"></i>
+                                    <div class="fw-medium">连续学习7天</div>
+                                    <div class="text-muted small">坚持不懈</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-2 border rounded">
+                                    <i class="fa fa-star text-warning fa-lg mb-1"></i>
+                                    <div class="fw-medium">完成3门课程</div>
+                                    <div class="text-muted small">学习达人</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-3 mt-4" style="font-size:1.1rem;">最近学习</h4>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2 d-flex align-items-center">
+                                <i class="fa fa-book text-primary me-2"></i>
+                                <span class="text-dark">Python3 基础语法</span>
+                                <span class="badge bg-success ms-auto">已完成</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-center">
+                                <i class="fa fa-book text-primary me-2"></i>
+                                <span class="text-dark">Python3 字典</span>
+                                <span class="badge bg-warning ms-auto">进行中</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -1004,7 +848,8 @@ export default {
             practiceProgress: [],
             recommendProblems: [],
             aiFaq: [],
-            myLearning: []
+            myLearning: [],
+            knowledgeTree: []
         }
     },
     computed: {
@@ -1078,6 +923,7 @@ export default {
         });
         EventBus.on('open-login-modal', this.openLoginModal);
         EventBus.on('open-register-modal', this.openRegisterModal);
+        this.fetchKnowledgeTree();
     },
     beforeUnmount() {
         // 停止轮播图自动播放
@@ -1513,6 +1359,79 @@ export default {
         async fetchMyLearning() {
             const res = await axios.get('/api/knowledge/catalog');
             this.myLearning = res.data;
+        },
+        fetchKnowledgeTree() {
+            this.$axios.get('/api/knowledge/points').then(res => {
+                const points = res.data;
+                // 分组
+                const group = {
+                    'Python基础': [],
+                    'Python进阶': [],
+                    'Web开发': []
+                };
+                points.forEach(p => {
+                    if (p.stage && p.stage.startsWith('1.')) {
+                        group['Python基础'].push({ title: p.title, status: '已完成' });
+                    } else if (p.stage && p.stage.startsWith('2.')) {
+                        group['Python进阶'].push({ title: p.title, status: '进行中' });
+                    } else if (p.stage && p.stage.startsWith('3.')) {
+                        group['Web开发'].push({ title: p.title, status: '未解锁' });
+                    }
+                });
+                this.knowledgeTree = [
+                    { title: 'Python基础', status: '已完成', children: group['Python基础'] },
+                    { title: 'Python进阶', status: '进行中', children: group['Python进阶'] },
+                    { title: 'Web开发', status: '未解锁', children: group['Web开发'] }
+                ];
+            }).catch(() => {
+                // mock数据
+                this.knowledgeTree = [
+                  {
+                    title: 'Python基础',
+                    status: '已完成',
+                    children: [
+                      { title: '变量与数据类型', status: '已完成' },
+                      { title: '条件语句与循环', status: '已完成' },
+                      { title: '函数与模块', status: '已完成' }
+                    ]
+                  },
+                  {
+                    title: 'Python进阶',
+                    status: '进行中',
+                    children: [
+                      { title: '异常处理', status: '已完成' },
+                      { title: '文件操作', status: '进行中' },
+                      { title: '装饰器', status: '未解锁' }
+                    ]
+                  },
+                  {
+                    title: 'Web开发',
+                    status: '未解锁',
+                    children: [
+                      { title: 'Django框架', status: '未解锁' },
+                      { title: 'Flask框架', status: '未解锁' }
+                    ]
+                  }
+                ];
+            });
+        },
+        badgeClass(status) {
+            if(status==='已完成') return 'badge bg-success';
+            if(status==='进行中') return 'badge bg-warning text-white';
+            return 'badge bg-secondary';
+        },
+        statusIcon(status) {
+            if(status==='已完成') return 'fa fa-check';
+            if(status==='进行中') return 'fa fa-spinner';
+            return 'fa fa-lock';
+        },
+        statusIconClass(status) {
+            if(status==='已完成') return 'bg-success';
+            if(status==='进行中') return 'bg-warning';
+            return 'bg-secondary';
+        },
+        goToKnowledgeDetail(title) {
+            this.$router.push({ path: '/learn-detail', query: { id: title } });
         }
     }
 }
@@ -1617,5 +1536,44 @@ export default {
   bottom: 0;
   transition: left 0.3s cubic-bezier(.4,0,.2,1), width 0.3s cubic-bezier(.4,0,.2,1);
   z-index: 10;
+}
+.knowledge-btn {
+  display: inline-block;
+  background: #f3f6fd;
+  color: #2563eb;
+  border-radius: 16px;
+  padding: 4px 16px;
+  margin: 2px 0;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 1px 2px rgba(37,99,235,0.04);
+  outline: none;
+  border: none;
+  text-decoration: none;
+}
+.knowledge-btn:hover, .knowledge-btn:focus {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.13);
+  text-decoration: none;
+}
+.progress-list-scroll {
+  background: #f8fafc;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(37,99,235,0.04);
+  padding: 12px 18px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 0;
+}
+.progress-list-scroll::-webkit-scrollbar {
+  width: 6px;
+  background: #f3f6fd;
+  border-radius: 8px;
+}
+.progress-list-scroll::-webkit-scrollbar-thumb {
+  background: #dbeafe;
+  border-radius: 8px;
 }
 </style>

@@ -8,6 +8,7 @@ public class PythonVideo {
     private String playCount;
     private String publishDate;
     private String category;
+    private String tags;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -23,4 +24,6 @@ public class PythonVideo {
     public void setPublishDate(String publishDate) { this.publishDate = publishDate; }
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+    public String getTags() { return tags; }
+    public void setTags(String tags) { this.tags = tags; }
 } 

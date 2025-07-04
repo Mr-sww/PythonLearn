@@ -31,19 +31,19 @@
           <div class="mb-4">
             <div 
               v-for="category in categories" 
-              :key="category.name"
+              :key="category"
               class="form-check mb-2"
             >
               <input 
                 class="form-check-input" 
                 type="checkbox" 
-                :id="'category-' + category.name"
-                :value="category.name"
+                :id="'cat-' + category"
+                :value="category"
                 v-model="selectedCategories"
                 @change="handleFilterChange"
               >
-              <label class="form-check-label" :for="'category-' + category.name">
-                {{ category.name }} ({{ category.count }})
+              <label class="form-check-label" :for="'cat-' + category">
+                {{ category }}
               </label>
             </div>
           </div>
@@ -124,8 +124,8 @@
         </div>
 
         <!-- 课程网格 -->
-        <div v-else-if="courses.length > 0" class="row g-4">
-          <div class="col-md-6 col-lg-4" v-for="course in courses" :key="course.articleId">
+        <div v-else-if="filteredCourses.length > 0" class="row g-4">
+          <div class="col-md-6 col-lg-4" v-for="course in filteredCourses" :key="course.articleId">
             <CourseCard 
               :course="course"
               @view-course="handleViewCourse"
@@ -181,7 +181,10 @@ export default {
       courses: [],
       loading: false,
       searchKeyword: '',
-      selectedCategories: [],
+      selectedCategories: [
+        'Python综合教学', '爬虫', '人工智能', '设计', '历史', '体育',
+        '数据分析', '数学建模', 'Web开发'
+      ],
       selectedLevels: [],
       selectedPriceRange: 'all',
       sortBy: 'latest',
@@ -189,7 +192,10 @@ export default {
       pageSize: 9,
       totalCourses: 0,
       totalPages: 0,
-      categories: [], // 分类统计可后续从后端获取
+      categories: [
+        'Python综合教学', '爬虫', '人工智能', '设计', '历史', '体育',
+        '数据分析', '数学建模', 'Web开发'
+      ],
       difficultyLevels: [
         { value: 'beginner', name: '初级', label: '入门', count: 0, badgeClass: 'bg-success' },
         { value: 'intermediate', name: '进阶', label: '中级', count: 0, badgeClass: 'bg-warning text-dark' },
@@ -212,6 +218,21 @@ export default {
         pages.push(i)
       }
       return pages
+    },
+    filteredCourses() {
+      if (!this.selectedCategories.length) return this.courses;
+      return this.courses.filter(course => {
+        const tags = (course.tags || '').split(',');
+        return this.selectedCategories.some(cat => tags.includes(cat));
+      });
+    }
+  },
+  watch: {
+    selectedCategories: {
+      handler(newVal) {
+        this.fetchCoursesByCategories(newVal);
+      },
+      immediate: true
     }
   },
   mounted() {
@@ -265,7 +286,10 @@ export default {
     
     // 重置筛选
     resetFilters() {
-      this.selectedCategories = []
+      this.selectedCategories = [
+        'Python综合教学', '爬虫', '人工智能', '设计', '历史', '体育',
+        '数据分析', '数学建模', 'Web开发'
+      ]
       this.selectedLevels = []
       this.selectedPriceRange = 'all'
       this.searchKeyword = ''
@@ -296,6 +320,12 @@ export default {
       console.log('购买课程:', course)
       // 这里可以实现支付逻辑
       alert(`准备购买课程：${course.title}`)
+    },
+
+    async fetchCoursesByCategories(categories) {
+      const excluded = this.categories.filter(cat => !categories.includes(cat));
+      const res = await this.$axios.post('/api/python-videos/filter', { categories, excluded });
+      this.courses = res.data;
     }
   }
 }

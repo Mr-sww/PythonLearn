@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface PythonVideoService {
     List<PythonVideo> getAllVideos();
+    List<PythonVideo> findByCategories(List<String> categories, List<String> excluded);
 } 
