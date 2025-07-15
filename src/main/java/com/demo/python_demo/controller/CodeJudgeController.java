@@ -4,55 +4,47 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 import java.util.*;
+import java.io.*;
 
 @RestController
 @RequestMapping("/api/judge")
 public class CodeJudgeController {
-
-    // 推荐用配置文件注入
-    private static final String JUDGE0_URL = "https://judge0-ce.p.sulu.sh/submissions?base64_encoded=false&wait=true";
-    private static final String JUDGE0_TOKEN = "sk_live_TL3e2S3vHYcrUtG5xPrUqTSIPzlsxf2l"; // Sulu Bearer Token
 
     @PostMapping("/run")
     public Map<String, Object> runCode(@RequestBody Map<String, Object> payload) {
         String code = (String) payload.get("code");
         String language = (String) payload.getOrDefault("language", "python");
         String input = (String) payload.getOrDefault("input", "");
-
-        // 语言映射
-        int languageId = getLanguageId(language);
-
-        // 调用Judge0
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + JUDGE0_TOKEN);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("source_code", code);
-        body.put("language_id", languageId);
-        body.put("stdin", input);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(JUDGE0_URL, entity, Map.class);
-            Map<String, Object> result = response.getBody();
-
-            // 结构优化：只返回关键信息
-            Map<String, Object> ret = new HashMap<>();
-            ret.put("stdout", result.get("stdout"));
-            ret.put("stderr", result.get("stderr"));
-            ret.put("status", ((Map)result.get("status")).get("description"));
-            ret.put("time", result.get("time"));
-            ret.put("memory", result.get("memory"));
+        Map<String, Object> ret = new HashMap<>();
+        if (!"python".equalsIgnoreCase(language) && !"python3".equalsIgnoreCase(language)) {
+            ret.put("status", "error");
+            ret.put("stderr", "仅支持Python判题");
             return ret;
-        } catch (Exception e) {
-            Map<String, Object> err = new HashMap<>();
-            err.put("status", "error");
-            err.put("stderr", e.getMessage());
-            return err;
         }
+        try {
+            // 调用本地 judge.py
+            ProcessBuilder pb = new ProcessBuilder("python", "judge.py");
+            Process process = pb.start();
+            // 传递参数
+            String json = String.format("{\"code\":%s,\"input\":%s}",
+                toJsonString(code), toJsonString(input));
+            OutputStream os = process.getOutputStream();
+            os.write(json.getBytes("UTF-8"));
+            os.close();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+            process.waitFor();
+            // 解析Python返回的JSON
+            ret = parseJsonToMap(sb.toString());
+            ret.putIfAbsent("status", "success");
+        } catch (Exception e) {
+            ret.put("status", "error");
+            ret.put("stderr", e.getMessage());
+        }
+        return ret;
     }
 
     @PostMapping("/batch-judge")
@@ -60,61 +52,75 @@ public class CodeJudgeController {
         String code = (String) payload.get("code");
         String language = (String) payload.getOrDefault("language", "python");
         List<Map<String, String>> testCases = (List<Map<String, String>>) payload.get("testCases");
-
-        int languageId = getLanguageId(language);
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + JUDGE0_TOKEN);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
         List<Map<String, Object>> results = new ArrayList<>();
+        if (!"python".equalsIgnoreCase(language) && !"python3".equalsIgnoreCase(language)) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("status", "error");
+            err.put("stderr", "仅支持Python判题");
+            results.add(err);
+            return results;
+        }
         for (Map<String, String> testCase : testCases) {
-            Map<String, Object> body = new HashMap<>();
-            body.put("source_code", code);
-            body.put("language_id", languageId);
-            body.put("stdin", testCase.get("input"));
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            String input = testCase.get("input");
+            String expected = testCase.get("expected");
+            Map<String, Object> result = new HashMap<>();
             try {
-                ResponseEntity<Map> response = restTemplate.postForEntity(JUDGE0_URL, entity, Map.class);
-                Map<String, Object> result = response.getBody();
-                String actual = result.get("stdout") != null ? result.get("stdout").toString().trim() : "";
-                String expected = testCase.get("expected") != null ? testCase.get("expected").trim() : "";
-                boolean passed = actual.equals(expected);
-                Map<String, Object> caseResult = new HashMap<>();
-                caseResult.put("input", testCase.get("input"));
-                caseResult.put("expected", expected);
-                caseResult.put("actual", actual);
-                caseResult.put("passed", passed);
-                caseResult.put("stderr", result.get("stderr"));
-                caseResult.put("status", ((Map)result.get("status")).get("description"));
-                results.add(caseResult);
+                ProcessBuilder pb = new ProcessBuilder("python", "judge.py");
+                Process process = pb.start();
+                String json = String.format("{\"code\":%s,\"input\":%s}",
+                    toJsonString(code), toJsonString(input));
+                OutputStream os = process.getOutputStream();
+                os.write(json.getBytes("UTF-8"));
+                os.close();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                process.waitFor();
+                result = parseJsonToMap(sb.toString());
+                String actual = result.get("output") != null ? result.get("output").toString().trim() : "";
+                boolean passed = actual.equals(expected != null ? expected.trim() : "");
+                result.put("input", input);
+                result.put("expected", expected);
+                result.put("actual", actual);
+                result.put("passed", passed);
             } catch (Exception e) {
-                Map<String, Object> err = new HashMap<>();
-                err.put("input", testCase.get("input"));
-                err.put("expected", testCase.get("expected"));
-                err.put("actual", "");
-                err.put("passed", false);
-                err.put("error", e.getMessage());
-                results.add(err);
+                result.put("status", "error");
+                result.put("stderr", e.getMessage());
+                result.put("input", input);
+                result.put("expected", expected);
+                result.put("actual", "");
+                result.put("passed", false);
             }
+            results.add(result);
         }
         return results;
     }
 
-    private int getLanguageId(String language) {
-        switch (language.toLowerCase()) {
-            case "python":
-            case "python3":
-                return 71;
-            case "cpp":
-            case "c++":
-                return 54;
-            case "java":
-                return 62;
-            // 可扩展更多语言
-            default:
-                return 71;
+    // 工具方法：字符串转JSON安全转义
+    private String toJsonString(String s) {
+        if (s == null) return "null";
+        return '"' + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + '"';
+    }
+    // 工具方法：简单JSON转Map（可用更强的库如Jackson）
+    private Map<String, Object> parseJsonToMap(String json) {
+        // 这里只做简单处理，建议生产用Jackson/Gson
+        Map<String, Object> map = new HashMap<>();
+        if (json == null || json.isEmpty()) return map;
+        json = json.trim();
+        if (json.startsWith("{") && json.endsWith("}")) {
+            json = json.substring(1, json.length() - 1);
+            String[] pairs = json.split(",");
+            for (String pair : pairs) {
+                int idx = pair.indexOf(":");
+                if (idx > 0) {
+                    String key = pair.substring(0, idx).replaceAll("[\"{}]", "").trim();
+                    String value = pair.substring(idx + 1).replaceAll("[\"{}]", "").trim();
+                    map.put(key, value);
+                }
+            }
         }
+        return map;
     }
 } 

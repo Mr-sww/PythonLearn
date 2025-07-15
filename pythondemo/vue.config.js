@@ -2,6 +2,7 @@ const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true,
   devServer: {
+    host: '0.0.0.0', // 新增这一行，支持局域网访问
     port: 8081,
     proxy: {
       '/api': {

@@ -114,33 +114,34 @@
         </div>
       </div>
       <!-- 编辑器区 -->
-      <div class="editor-content leetcode-editor-content" :class="{ fullscreen: isFullScreen }">
+      <div class="editor-content leetcode-editor-content" :class="{ fullscreen: isFullScreen }" style="flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative;">
         <MonacoEditor
           v-model="code"
           language="python"
           :theme="theme"
           :font-size="fontSize"
+          style="flex: 1; min-height: 300px; width: 100%; height: 100%;"
         />
-      </div>
-      <!-- 折叠弹出结果区 -->
-      <transition name="slide-fade">
-        <div v-show="showResultPanel" class="result-panel leetcode-result-panel">
-          <div class="result-header">
-            <span class="result-title">输入/输出</span>
-            <button class="collapse-btn" @click="showResultPanel = false"><i class="fa fa-angle-down"></i></button>
-          </div>
-          <div class="result-body">
-            <div class="io-flex-row">
-              <div class="input-area io-half">
-                <label>自定义输入：</label>
-                <textarea v-model="input" class="input-textarea" placeholder="请输入自定义输入..." :disabled="isRunning"></textarea>
-              </div>
-              <div class="output-area io-half">
-                <label>输出结果：</label>
-                <pre class="output-text">{{ result.output }}</pre>
+        <!-- 浮层输入输出区+按钮 -->
+        <transition name="fade">
+          <div v-show="showResultPanel" class="io-float-panel">
+            <div class="result-header" style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="result-title">输入/输出</span>
+              <button class="collapse-btn" @click="showResultPanel = false"><i class="fa fa-angle-down"></i></button>
+            </div>
+            <div class="result-body" style="flex: 1;">
+              <div class="io-flex-row">
+                <div class="input-area io-half">
+                  <label>自定义输入：</label>
+                  <textarea v-model="input" class="input-textarea" placeholder="请输入自定义输入..." :disabled="isRunning" style="height: 40px;"></textarea>
+                </div>
+                <div class="output-area io-half">
+                  <label>输出结果：</label>
+                  <pre class="output-text" style="min-height: 40px;">{{ result.output }}</pre>
+                </div>
               </div>
             </div>
-            <div class="io-btn-row-bottom">
+            <div class="io-btn-row-bottom" style="margin-top: 8px; display: flex; justify-content: flex-end; gap: 12px;">
               <button class="run-btn" @click="runCode" :disabled="isRunning">
                 <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
                 <i v-else class="fa fa-play"></i> 运行
@@ -151,10 +152,10 @@
               </button>
             </div>
           </div>
-        </div>
-      </transition>
-      <!-- 展开按钮 -->
-      <button v-show="!showResultPanel" class="expand-btn" @click="showResultPanel = true"><i class="fa fa-angle-up"></i> 输入/输出</button>
+        </transition>
+        <!-- 右下角悬浮展开按钮 -->
+        <button v-show="!showResultPanel" class="expand-btn-float" @click="showResultPanel = true"><i class="fa fa-angle-up"></i> 输入/输出</button>
+      </div>
     </div>
   </div>
 </div>
@@ -162,7 +163,8 @@
 
 <script setup>
 import MonacoEditor from '../components/MonacoEditor.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
 import CommentItem from './components/CommentItem.vue'
 import BasePagination from './components/BasePagination.vue'
@@ -189,13 +191,25 @@ const favoriteCount = ref(0)
 const favoriteLoading = ref(false)
 const showResultPanel = ref(true)
 
+const route = useRoute()
+
 onMounted(async () => {
-  problemId.value = window.location.pathname.split('/').pop() || ''
+  problemId.value = route.params.id || window.location.pathname.split('/').pop() || ''
   userId.value = localStorage.getItem('userId')
   await loadProblem()
   await loadComments()
   await checkFavorite()
   await loadFavoriteCount()
+})
+
+watch(() => route.params.id, async (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    problemId.value = newId
+    await loadProblem()
+    await loadComments()
+    await checkFavorite()
+    await loadFavoriteCount()
+  }
 })
 
 async function loadProblem() {
@@ -256,7 +270,10 @@ function runCode() {
     input: input.value
   }).then(res => {
     const data = res.data
-    result.value.output = (data.stdout || '') + (data.stderr ? ('\n错误信息：' + data.stderr) : '')
+    // 兼容 output 字段和 stdout 字段
+    let output = data.output || data.stdout || ''
+    if (data.stderr) output += (output ? '\n' : '') + '错误信息：' + data.stderr
+    result.value.output = output
   }).catch(err => {
     result.value.output = '运行失败：' + (err.response?.data?.message || err.message)
   }).finally(() => {
@@ -282,9 +299,11 @@ function submitCode() {
     const cases = res.data
     let output = ''
     cases.forEach((c, idx) => {
-      output += `用例${idx + 1}: 输入：${c.input}\n期望输出：${c.expected}\n实际输出：${c.actual}\n${c.passed ? '✅通过' : '❌未通过'}\n`;
-      if (c.stderr) output += '错误信息：' + c.stderr + '\n';
-      output += '\n';
+      // 兼容 output/actual/stdout 字段
+      let actual = c.output || c.actual || c.stdout || ''
+      output += `用例${idx + 1}: 输入：${c.input}\n期望输出：${c.expected}\n实际输出：${actual}\n${c.passed ? '✅通过' : '❌未通过'}\n`
+      if (c.stderr) output += '错误信息：' + c.stderr + '\n'
+      output += '\n'
     })
     result.value.output = output
   }).catch(err => {
@@ -404,22 +423,24 @@ async function toggleFavorite() {
 
 <style scoped>
 .code-practice-container {
-  height: 100vh;
+  height: calc(100vh - 60px); /* 顶部导航栏高度60px */
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .practice-main {
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-height: 0;
 }
 
 .problem-panel {
   width: 45%;
   background: #f8f9fa;
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   border-right: 1px solid #dee2e6;
 }
 
@@ -428,6 +449,7 @@ async function toggleFavorite() {
   display: flex;
   flex-direction: column;
   background: #fff;
+  min-height: 0;
 }
 
 .problem-header {
@@ -511,7 +533,10 @@ async function toggleFavorite() {
 
 .editor-content {
   flex: 1;
-  padding: 20px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
 }
 
 .code-textarea {
@@ -902,7 +927,10 @@ async function toggleFavorite() {
 
 .leetcode-editor-content {
   flex: 1;
-  padding: 20px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
 }
 
 .io-panel {
@@ -1097,7 +1125,7 @@ async function toggleFavorite() {
   border: 1.5px solid #e0e7ef;
   overflow: hidden;
   transition: max-height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s;
-  max-height: 300px;
+  max-height: 180px;
   opacity: 1;
 }
 
@@ -1189,5 +1217,38 @@ async function toggleFavorite() {
 .slide-fade-enter-from, .slide-fade-leave-to {
   max-height: 0;
   opacity: 0;
+}
+
+.io-float-panel {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: #fff;
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+  border-radius: 12px 12px 0 0;
+  z-index: 10;
+  padding: 16px;
+  transition: box-shadow 0.2s;
+}
+.expand-btn-float {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 11;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  box-shadow: 0 1px 4px #e0e0e0;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.expand-btn-float:hover {
+  background: #1746a2;
+  color: #ffe066;
 }
 </style> 
