@@ -7,10 +7,19 @@
       </div>
       <!-- 导航栏 -->
       <nav class="flex-1 flex justify-center relative">
-        <div class="flex space-x-8" ref="navBar">
-          <router-link v-for="item in navItems" :key="item.id" :to="item.to" class="global-nav-link" :class="{ 'router-link-exact-active': isActive(item) }" exact>{{ item.label }}</router-link>
+        <div class="flex space-x-8 navbar-menu" ref="navBar">
+          <router-link v-for="(item, idx) in navItems" :key="item.id" :to="item.to"
+            class="global-nav-link nav-item"
+            :class="{ active: isActive(item) }"
+            exact
+            ref="navLinks"
+            @click="moveHighlight(idx)"
+          >
+            <span v-if="isActive(item)" class="nav-symbol" :key="$route.path">{{ item.symbol }}</span>
+            {{ item.label }}
+          </router-link>
+          <div class="nav-highlight" :style="highlightStyle"></div>
         </div>
-        <div v-if="navIndicatorStyle" class="nav-indicator-white" :style="navIndicatorStyle"></div>
       </nav>
       <!-- 用户区 -->
       <div class="flex items-center ml-4 relative">
@@ -49,11 +58,11 @@ export default {
       },
       showUserMenu: false,
       navItems: [
-        { id: 'home', label: '首页', to: '/' },
-        { id: 'courses', label: '课程中心', to: '/courses' },
-        { id: 'learning', label: '学习中心', to: '/learning' },
-        { id: 'practice', label: '实践中心', to: '/practice' },
-        { id: 'ai', label: 'AI问答', to: '/ai' }
+        { id: 'home', label: '首页', to: '/', symbol: '🏠' },
+        { id: 'courses', label: '课程中心', to: '/courses', symbol: '📚' },
+        { id: 'learning', label: '学习中心', to: '/learning', symbol: '🧑‍🎓' },
+        { id: 'practice', label: '实践中心', to: '/practice', symbol: '🛠️' },
+        { id: 'ai', label: 'AI问答', to: '/ai', symbol: '🤖' }
       ],
       navIndicatorStyle: null,
       userMenuStyle: {
@@ -61,15 +70,21 @@ export default {
         right: '32px',
         left: 'auto',
         zIndex: 10000
-      }
+      },
+      highlightStyle: {
+        left: '0px',
+        width: '0px',
+        opacity: 0
+      },
+      activeIdx: 0
     }
   },
   mounted() {
     this.fetchUser();
     EventBus.on('user-logged-in', this.fetchUser);
     this.$nextTick(() => {
-      this.updateNavIndicator();
-      window.addEventListener('resize', this.updateNavIndicator);
+      this.updateHighlight();
+      window.addEventListener('resize', this.updateHighlight);
       window.addEventListener('scroll', this.updateUserMenuPosition);
       window.addEventListener('resize', this.updateUserMenuPosition);
       document.addEventListener('click', this.handleClickOutside);
@@ -77,7 +92,7 @@ export default {
   },
   beforeUnmount() {
     EventBus.off('user-logged-in', this.fetchUser);
-    window.removeEventListener('resize', this.updateNavIndicator);
+    window.removeEventListener('resize', this.updateHighlight);
     window.removeEventListener('scroll', this.updateUserMenuPosition);
     window.removeEventListener('resize', this.updateUserMenuPosition);
     document.removeEventListener('click', this.handleClickOutside);
@@ -139,32 +154,30 @@ export default {
     isActive(item) {
       return this.$route.path === item.to;
     },
-    updateNavIndicator() {
+    moveHighlight(idx) {
+      this.activeIdx = idx;
+      this.updateHighlight();
+    },
+    updateHighlight() {
       this.$nextTick(() => {
-        const navBar = this.$refs.navBar;
-        if (!navBar) {
-          this.navIndicatorStyle = null;
-          return;
+        const navLinks = this.$refs.navLinks;
+        let idx = this.activeIdx;
+        // 自动根据路由匹配高亮
+        for (let i = 0; i < this.navItems.length; i++) {
+          if (this.isActive(this.navItems[i])) {
+            idx = i;
+            break;
+          }
         }
-        // 直接选中当前激活的 router-link
-        const activeLink = navBar.querySelector('.router-link-exact-active');
-        if (activeLink) {
-          const navRect = navBar.getBoundingClientRect();
-          const linkRect = activeLink.getBoundingClientRect();
-          const left = linkRect.left - navRect.left;
-          const width = linkRect.width;
-          this.navIndicatorStyle = {
-            position: 'absolute',
-            left: left + 'px',
-            bottom: '0',
-            width: width + 'px',
-            height: '2px',
-            background: '#fff',
-            borderRadius: '2px',
-            transition: 'left 0.3s cubic-bezier(.4,0,.2,1), width 0.3s cubic-bezier(.4,0,.2,1)'
+        const el = navLinks && navLinks[idx] && navLinks[idx].$el ? navLinks[idx].$el : navLinks && navLinks[idx];
+        if (el) {
+          this.highlightStyle = {
+            left: el.offsetLeft + 'px',
+            width: el.offsetWidth + 'px',
+            opacity: 1
           };
         } else {
-          this.navIndicatorStyle = null;
+          this.highlightStyle = { left: '0px', width: '0px', opacity: 0 };
         }
       });
     },
@@ -185,7 +198,7 @@ export default {
   },
   watch: {
     '$route.path'() {
-      this.updateNavIndicator();
+      this.updateHighlight();
     }
   }
 }
@@ -251,4 +264,81 @@ export default {
   z-index: 10;
 }
 .z-100 { z-index: 10000 !important; }
+.navbar-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.nav-item {
+  color: #fff;
+  font-weight: 500;
+  font-size: 18px;
+  padding: 0 28px;
+  height: 48px;
+  border-radius: 24px;
+  cursor: pointer;
+  background: transparent;
+  transition: color 0.2s, background 0.2s;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  letter-spacing: 1px;
+}
+.nav-item:not(.active):hover {
+  background: rgba(255,255,255,0.10);
+  color: #ffe066;
+}
+.nav-item .nav-icon {
+  margin-right: 8px;
+  font-size: 22px;
+  transition: transform 0.3s cubic-bezier(.68,-0.55,.27,1.55);
+}
+.nav-item.active {
+  color: #222 !important;
+  background: linear-gradient(90deg, #ffe066 60%, #ffe100 100%);
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(255,225,0,0.18), 0 1.5px 6px rgba(0,0,0,0.04);
+  z-index: 2;
+  transition: background 0.3s, color 0.2s, box-shadow 0.2s;
+  text-shadow: 0 1px 0 #fffbe6, 0 0.5px 0 #fffbe6;
+  letter-spacing: 1px;
+}
+.nav-item.active .nav-icon {
+  animation: bounce 0.4s;
+  transform: scale(1.2);
+}
+@keyframes bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.3); }
+  60%  { transform: scale(0.95); }
+  100% { transform: scale(1.2); }
+}
+.nav-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 48px;
+  border-radius: 24px;
+  background: linear-gradient(90deg, #ffe066 60%, #ffe100 100%);
+  box-shadow: 0 4px 16px rgba(255,225,0,0.18), 0 1.5px 6px rgba(0,0,0,0.04);
+  z-index: 0;
+  transition: left 0.3s cubic-bezier(.68,-0.55,.27,1.55), width 0.3s, background 0.3s, box-shadow 0.2s;
+  opacity: 1;
+  pointer-events: none;
+}
+.nav-symbol {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 22px;
+  color: #222;
+  animation: symbol-bounce 0.5s;
+  vertical-align: middle;
+}
+@keyframes symbol-bounce {
+  0%   { transform: translateY(0) scale(1);}
+  30%  { transform: translateY(-12px) scale(1.2);}
+  50%  { transform: translateY(0) scale(1);}
+  70%  { transform: translateY(-6px) scale(1.1);}
+  100% { transform: translateY(0) scale(1);}
+}
 </style>

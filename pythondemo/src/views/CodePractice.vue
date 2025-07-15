@@ -1,160 +1,173 @@
 <template>
 <div class="code-practice-container">
-  <!-- 主要内容区域 -->
-  <div class="practice-main">
-    <!-- 左侧题目区域 -->
-    <div class="problem-panel">
-      <!-- 题目头部 -->
-      <div class="problem-header">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h4 class="fw-bold text-dark mb-1">{{ problem ? problem.title : '加载中...' }}</h4>
-            <div class="d-flex align-items-center gap-2">
-              <span v-if="problem" :class="['badge', 
-                problem.difficulty === '简单' ? 'bg-success' : 
-                problem.difficulty === '中等' ? 'bg-warning text-dark' : 'bg-danger']">
-                {{ problem.difficulty }}
-              </span>
-              <span class="text-muted small">通过率: 52.3%</span>
-              <span class="text-muted small">提交次数: 2,456,789</span>
-            </div>
-          </div>
-          <div class="d-flex gap-2">
-            <button
-              class="collect-btn"
-              :class="{ collected: isFavorite, animating: animating }"
-              @click="handleFavoriteClick"
-              :disabled="favoriteLoading"
-            >
-              <span class="star-icon">
-                <svg v-if="!isFavorite" width="24" height="24" viewBox="0 0 40 40">
-                  <polygon points="20,4 25,16 38,16 28,24 32,36 20,28 8,36 12,24 2,16 15,16"
-                    fill="none" stroke="#2563eb" stroke-width="2"/>
-                </svg>
-                <svg v-else width="24" height="24" viewBox="0 0 40 40">
-                  <polygon points="20,4 25,16 38,16 28,24 32,36 20,28 8,36 12,24 2,16 15,16"
-                    fill="#FFD600" stroke="#2563eb" stroke-width="2"/>
-                </svg>
-              </span>
-              <span class="collect-text">{{ isFavorite ? '已收藏' : '收藏' }}</span>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill">
-              <i class="fa fa-share me-1"></i>分享
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 题目描述 -->
-      <div class="problem-description" v-if="problem">
-        <h5 class="fw-bold text-dark mb-3">题目描述</h5>
-        <div class="problem-content">
-          <p>{{ problem.description }}</p>
-
-          <h6 class="fw-bold text-dark mt-4 mb-2">示例：</h6>
-          <div v-for="(example, index) in problem.examples" :key="index" class="example-block">
-            <div class="example-item">
-              <strong>输入：</strong><code>{{ example.input }}</code>
-            </div>
-            <div class="example-item">
-              <strong>输出：</strong><code>{{ example.output }}</code>
-            </div>
-            <div v-if="example.explanation" class="example-item">
-              <strong>解释：</strong>{{ example.explanation }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 评论区 -->
-      <div class="comments-section">
-        <textarea v-model="newComment" class="form-control mb-2" placeholder="写下你的评论..."></textarea>
-        <button class="btn btn-primary btn-sm rounded-pill mb-3" @click="addComment">
-          <i class="fa fa-plus me-1"></i>发表评论
-        </button>
-        <div class="comments-list">
-          <CommentItem
-            v-for="comment in comments"
-            :key="comment.commentId"
-            :comment="comment"
-            @reply="replyComment"
-            @like="likeComment"
-          />
-        </div>
-        <BasePagination
-          :total="totalComments"
-          :page-size="pageSize"
-          :current-page="page"
-          @change="changePage"
-        />
-      </div>
-    </div>
-
-    <!-- 右侧代码编辑区域 -->
-    <div class="code-panel leetcode-style-panel" :class="{ fullscreen: isFullScreen }">
-      <!-- 工具栏 -->
-      <div class="editor-toolbar leetcode-toolbar">
-        <div class="toolbar-left">
-          <span class="lang-label">Python3</span>
-          <select v-model="theme" class="theme-select">
-            <option value="vs-dark">暗色主题</option>
-            <option value="vs">明亮主题</option>
-            <option value="hc-black">高对比度</option>
-          </select>
-          <select v-model="fontSize" class="font-select">
-            <option v-for="size in [14,16,18,20,22]" :key="size" :value="size">{{ size }}px</option>
-          </select>
-        </div>
-        <div class="toolbar-right">
-          <button class="toolbar-btn" @click="formatCode" :disabled="isRunning"><i class="fa fa-magic"></i> 格式化</button>
-          <button class="toolbar-btn" @click="resetCode" :disabled="isRunning"><i class="fa fa-refresh"></i> 重置</button>
-          <button class="toolbar-btn" @click="insertTemplate" :disabled="isRunning"><i class="fa fa-code"></i> 模板</button>
-          <button v-if="!isFullScreen" class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-expand"></i> 全屏</button>
-          <button v-else class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-compress"></i> 退出全屏</button>
-        </div>
-      </div>
-      <!-- 编辑器区 -->
-      <div class="editor-content leetcode-editor-content" :class="{ fullscreen: isFullScreen }" style="flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative;">
-        <MonacoEditor
-          v-model="code"
-          language="python"
-          :theme="theme"
-          :font-size="fontSize"
-          style="flex: 1; min-height: 300px; width: 100%; height: 100%;"
-        />
-        <!-- 浮层输入输出区+按钮 -->
-        <transition name="fade">
-          <div v-show="showResultPanel" class="io-float-panel">
-            <div class="result-header" style="display: flex; align-items: center; justify-content: space-between;">
-              <span class="result-title">输入/输出</span>
-              <button class="collapse-btn" @click="showResultPanel = false"><i class="fa fa-angle-down"></i></button>
-            </div>
-            <div class="result-body" style="flex: 1;">
-              <div class="io-flex-row">
-                <div class="input-area io-half">
-                  <label>自定义输入：</label>
-                  <textarea v-model="input" class="input-textarea" placeholder="请输入自定义输入..." :disabled="isRunning" style="height: 40px;"></textarea>
-                </div>
-                <div class="output-area io-half">
-                  <label>输出结果：</label>
-                  <pre class="output-text" style="min-height: 40px;">{{ result.output }}</pre>
-                </div>
+  <div class="centered-main">
+    <!-- 主要内容区域 -->
+    <div class="practice-main">
+      <!-- 左侧题目区域 -->
+      <div class="problem-panel">
+        <!-- 题目头部 -->
+        <div class="problem-header">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h4 class="fw-bold text-dark mb-1">{{ problem ? problem.title : '加载中...' }}</h4>
+              <div class="d-flex align-items-center gap-2">
+                <span v-if="problem" :class="['badge', 
+                  problem.difficulty === '简单' ? 'bg-success' : 
+                  problem.difficulty === '中等' ? 'bg-warning text-dark' : 'bg-danger']">
+                  {{ problem.difficulty }}
+                </span>
+                <span class="text-muted small">通过率: 52.3%</span>
+                <span class="text-muted small">提交次数: 2,456,789</span>
               </div>
             </div>
-            <div class="io-btn-row-bottom" style="margin-top: 8px; display: flex; justify-content: flex-end; gap: 12px;">
-              <button class="run-btn" @click="runCode" :disabled="isRunning">
-                <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
-                <i v-else class="fa fa-play"></i> 运行
+            <div class="d-flex gap-2">
+              <button
+                class="collect-btn"
+                :class="{ collected: isFavorite, animating: animating }"
+                @click="handleFavoriteClick"
+                :disabled="favoriteLoading"
+              >
+                <span class="star-icon">
+                  <svg v-if="!isFavorite" width="24" height="24" viewBox="0 0 40 40">
+                    <polygon points="20,4 25,16 38,16 28,24 32,36 20,28 8,36 12,24 2,16 15,16"
+                      fill="none" stroke="#2563eb" stroke-width="2"/>
+                  </svg>
+                  <svg v-else width="24" height="24" viewBox="0 0 40 40">
+                    <polygon points="20,4 25,16 38,16 28,24 32,36 20,28 8,36 12,24 2,16 15,16"
+                      fill="#FFD600" stroke="#2563eb" stroke-width="2"/>
+                  </svg>
+                </span>
+                <span class="collect-text">{{ isFavorite ? '已收藏' : '收藏' }}</span>
               </button>
-              <button class="submit-btn" @click="submitCode" :disabled="isRunning">
-                <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
-                <i v-else class="fa fa-check"></i> 提交
+              <button class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="fa fa-share me-1"></i>分享
               </button>
             </div>
           </div>
-        </transition>
-        <!-- 右下角悬浮展开按钮 -->
-        <button v-show="!showResultPanel" class="expand-btn-float" @click="showResultPanel = true"><i class="fa fa-angle-up"></i> 输入/输出</button>
+        </div>
+
+        <!-- 题目描述 -->
+        <div class="problem-description" v-if="problem">
+          <h5 class="fw-bold text-dark mb-3">题目描述</h5>
+          <div class="problem-content">
+            <p>{{ problem.description }}</p>
+
+            <h6 class="fw-bold text-dark mt-4 mb-2">示例：</h6>
+            <div v-for="(example, index) in problem.examples" :key="index" class="example-block">
+              <div class="example-item">
+                <strong>输入：</strong><code>{{ example.input }}</code>
+              </div>
+              <div class="example-item">
+                <strong>输出：</strong><code>{{ example.output }}</code>
+              </div>
+              <div v-if="example.explanation" class="example-item">
+                <strong>解释：</strong>{{ example.explanation }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 评论区 -->
+        <div class="comments-section">
+          <textarea v-model="newComment" class="form-control mb-2" placeholder="写下你的评论..."></textarea>
+          <button class="btn btn-primary btn-sm rounded-pill mb-3" @click="addComment">
+            <i class="fa fa-plus me-1"></i>发表评论
+          </button>
+          <div class="comments-list">
+            <CommentItem
+              v-for="comment in comments"
+              :key="comment.commentId"
+              :comment="comment"
+              @reply="replyComment"
+              @like="likeComment"
+            />
+          </div>
+          <BasePagination
+            :total="totalComments"
+            :page-size="pageSize"
+            :current-page="page"
+            @change="changePage"
+          />
+        </div>
+      </div>
+
+      <!-- 右侧代码编辑区域 -->
+      <div class="code-panel leetcode-style-panel" :class="{ fullscreen: isFullScreen }">
+        <!-- 工具栏 -->
+        <div class="editor-toolbar leetcode-toolbar">
+          <div class="toolbar-left">
+            <span class="lang-label">Python3</span>
+            <select v-model="theme" class="theme-select">
+              <option value="vs-dark">暗色主题</option>
+              <option value="vs">明亮主题</option>
+              <option value="hc-black">高对比度</option>
+            </select>
+            <select v-model="fontSize" class="font-select">
+              <option v-for="size in [14,16,18,20,22]" :key="size" :value="size">{{ size }}px</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <button class="toolbar-btn" @click="formatCode" :disabled="isRunning"><i class="fa fa-magic"></i> 格式化</button>
+            <button class="toolbar-btn" @click="resetCode" :disabled="isRunning"><i class="fa fa-refresh"></i> 重置</button>
+            <button class="toolbar-btn" @click="insertTemplate" :disabled="isRunning"><i class="fa fa-code"></i> 模板</button>
+            <button v-if="!isFullScreen" class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-expand"></i> 全屏</button>
+            <button v-else class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-compress"></i> 退出全屏</button>
+          </div>
+        </div>
+        <!-- 编辑器区 -->
+        <div class="editor-content leetcode-editor-content" :class="{ fullscreen: isFullScreen }" style="flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative;">
+          <MonacoEditor
+            v-model:value="code"
+            language="python"
+            :theme="theme"
+            :font-size="fontSize"
+            style="flex: 1; min-height: 300px; width: 100%; height: 100%;"
+          />
+          <!-- 浮层输入输出区+按钮 -->
+          <transition name="fade">
+            <div v-show="showResultPanel" class="io-float-panel">
+              <div class="result-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <span class="result-title">输入/输出</span>
+                <button class="collapse-btn" @click="showResultPanel = false"><i class="fa fa-angle-down"></i></button>
+              </div>
+              <div class="result-body" style="flex: 1;">
+                <div class="io-flex-row">
+                  <div class="input-area io-half">
+                    <label>自定义输入：</label>
+                    <textarea
+                      v-model="input"
+                      class="input-textarea"
+                      :disabled="isRunning"
+                      placeholder="请输入自定义输入，每行一组数据（如：\n2 3\n4 5）"
+                      rows="5"
+                      style="min-height: 80px; resize: vertical;"
+                    ></textarea>
+                    <div style="font-size: 12px; color: #888; margin-top: 2px;">
+                      输入内容会作为标准输入传递给你的代码，支持多行。
+                      <button @click="input=''" style="margin-left:8px;font-size:12px;">清空</button>
+                    </div>
+                  </div>
+                  <div class="output-area io-half">
+                    <label>输出结果：</label>
+                    <pre class="output-text" style="min-height: 40px;">{{ result.output }}</pre>
+                  </div>
+                </div>
+              </div>
+              <div class="io-btn-row-bottom" style="margin-top: 8px; display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="run-btn" @click="runCode" :disabled="isRunning">
+                  <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
+                  <i v-else class="fa fa-play"></i> 运行
+                </button>
+                <button class="submit-btn" @click="submitCode" :disabled="isRunning">
+                  <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
+                  <i v-else class="fa fa-check"></i> 提交
+                </button>
+              </div>
+            </div>
+          </transition>
+          <!-- 右下角悬浮展开按钮 -->
+          <button v-show="!showResultPanel" class="expand-btn-float" @click="showResultPanel = true"><i class="fa fa-angle-up"></i> 输入/输出</button>
+        </div>
       </div>
     </div>
   </div>
@@ -259,58 +272,79 @@ function toggleFullScreen() {
   isFullScreen.value = !isFullScreen.value
 }
 
+function checkInputMatch() {
+  // 检测代码中 input() 的数量
+  const inputCount = (code.value.match(/input\s*\(/g) || []).length;
+  // 检测是否有 input().split()
+  const hasSplit = /input\s*\(\)\.split\s*\(\)/.test(code.value);
+  // 检测输入区行数
+  const inputLines = input.value.split(/\r?\n/).filter(line => line.trim() !== '').length;
+  // 检测输入区是否只有一行
+  const isSingleLine = input.value.split(/\r?\n/).length === 1;
+  // 规则1：有 input().split()，输入区应为一行
+  if (hasSplit && !isSingleLine) {
+    alert('检测到你使用了 input().split()，请将所有输入写在同一行，用空格分隔，如：1 3');
+    return false;
+  }
+  // 规则2：有多个 input()，输入区应为多行
+  if (!hasSplit && inputCount > 1 && inputLines < inputCount) {
+    alert(`检测到你有 ${inputCount} 个 input()，请在输入区每行输入一个数据，如：\n1\n3`);
+    return false;
+  }
+  return true;
+}
+
 function runCode() {
-  isRunning.value = true
-  showResult.value = true
-  showResultPanel.value = true
-  result.value.output = ''
+  if (!checkInputMatch()) return;
+  isRunning.value = true;
+  showResult.value = true;
+  showResultPanel.value = true;
+  result.value.output = '';
   axios.post('/api/judge/run', {
     code: code.value,
     language: 'python',
     input: input.value
   }).then(res => {
-    const data = res.data
-    // 兼容 output 字段和 stdout 字段
-    let output = data.output || data.stdout || ''
-    if (data.stderr) output += (output ? '\n' : '') + '错误信息：' + data.stderr
-    result.value.output = output
+    const data = res.data;
+    let output = data.output || data.stdout || '';
+    if (data.stderr) output += (output ? '\n' : '') + '错误信息：' + data.stderr;
+    result.value.output = output;
   }).catch(err => {
-    result.value.output = '运行失败：' + (err.response?.data?.message || err.message)
+    result.value.output = '运行失败：' + (err.response?.data?.message || err.message);
   }).finally(() => {
-    isRunning.value = false
-  })
+    isRunning.value = false;
+  });
 }
 
 function submitCode() {
-  isRunning.value = true
-  showResult.value = true
-  showResultPanel.value = true
-  result.value.output = ''
-  // 组装测试用例
+  if (!checkInputMatch()) return;
+  isRunning.value = true;
+  showResult.value = true;
+  showResultPanel.value = true;
+  result.value.output = '';
   const testCases = (problem.value?.examples || []).map(e => ({
     input: e.input,
     expected: e.output
-  }))
+  }));
   axios.post('/api/judge/batch-judge', {
     code: code.value,
     language: 'python',
     testCases
   }).then(res => {
-    const cases = res.data
-    let output = ''
+    const cases = res.data;
+    let output = '';
     cases.forEach((c, idx) => {
-      // 兼容 output/actual/stdout 字段
-      let actual = c.output || c.actual || c.stdout || ''
-      output += `用例${idx + 1}: 输入：${c.input}\n期望输出：${c.expected}\n实际输出：${actual}\n${c.passed ? '✅通过' : '❌未通过'}\n`
-      if (c.stderr) output += '错误信息：' + c.stderr + '\n'
-      output += '\n'
-    })
-    result.value.output = output
+      let actual = c.output || c.actual || c.stdout || '';
+      output += `用例${idx + 1}: 输入：${c.input}\n期望输出：${c.expected}\n实际输出：${actual}\n${c.passed ? '✅通过' : '❌未通过'}\n`;
+      if (c.stderr) output += '错误信息：' + c.stderr + '\n';
+      output += '\n';
+    });
+    result.value.output = output;
   }).catch(err => {
-    result.value.output = '判题失败：' + (err.response?.data?.message || err.message)
+    result.value.output = '判题失败：' + (err.response?.data?.message || err.message);
   }).finally(() => {
-    isRunning.value = false
-  })
+    isRunning.value = false;
+  });
 }
 
 async function loadComments() {
@@ -423,10 +457,20 @@ async function toggleFavorite() {
 
 <style scoped>
 .code-practice-container {
-  height: calc(100vh - 60px); /* 顶部导航栏高度60px */
+  background: #f5f6fa;
+  min-height: 100vh;
+}
+.centered-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  padding: 24px 32px;
+  min-height: 80vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  justify-content: center;
 }
 
 .practice-main {
