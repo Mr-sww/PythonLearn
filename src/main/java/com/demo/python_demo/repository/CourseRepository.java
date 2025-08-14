@@ -38,22 +38,22 @@ public interface CourseRepository {
     /**
      * 搜索课程（标题、内容、标签）
      */
-    @Select("SELECT * FROM course WHERE Title LIKE '%' + #{keyword} + '%' " +
-            "OR Content LIKE '%' + #{keyword} + '%' " +
-            "OR Tags LIKE '%' + #{keyword} + '%' " +
+    @Select("SELECT * FROM course WHERE Title LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR Content LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR Tags LIKE CONCAT('%', #{keyword}, '%') " +
             "ORDER BY createdAt DESC")
     List<Course> searchByKeyword(String keyword);
 
     /**
-     * 获取热门课程（按浏览量排序，SQL Server实现）
+     * 获取热门课程（按浏览量排序，MySQL实现）
      */
-    @Select("SELECT TOP (${limit}) * FROM course ORDER BY Views DESC")
+    @Select("SELECT * FROM course ORDER BY Views DESC LIMIT #{limit}")
     List<Course> findPopularCourses(Integer limit);
 
     /**
-     * 获取最新课程（SQL Server实现）
+     * 获取最新课程（MySQL实现）
      */
-    @Select("SELECT TOP (${limit}) * FROM course ORDER BY PublicationDate DESC")
+    @Select("SELECT * FROM course ORDER BY PublicationDate DESC LIMIT #{limit}")
     List<Course> findLatestCourses(Integer limit);
 
     /**
@@ -91,9 +91,9 @@ public interface CourseRepository {
     int count();
 
     /**
-     * 分页查询课程（SQL Server实现）
+     * 分页查询课程（MySQL实现）
      */
-    @Select("SELECT * FROM course ORDER BY createdAt DESC OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY")
+    @Select("SELECT * FROM course ORDER BY createdAt DESC LIMIT #{offset}, #{limit}")
     List<Course> findWithPagination(@Param("offset") int offset, @Param("limit") int limit);
 
     /**

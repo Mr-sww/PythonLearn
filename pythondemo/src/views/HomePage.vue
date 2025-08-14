@@ -1,294 +1,5 @@
 <template>
   <div>
-    <!-- 首次访问欢迎模态框 -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-dark bg-opacity-50" v-if="showWelcomeModal && !isLoggedIn">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="p-8 text-center">
-                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fa fa-code text-primary text-2xl"></i>
-                </div>
-                <h3 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark mb-3">欢迎来到 Python 学习平台</h3>
-                <p class="text-muted mb-8">注册账号并登录，开启您的 Python 学习之旅</p>
-
-                <div class="space-y-3">
-                    <button @click="openRegisterModal" class="w-full py-3 px-6 bg-primary text-white rounded-lg font-medium transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                        立即注册
-                    </button>
-                    <button @click="openLoginModal" class="w-full py-3 px-6 border border-primary text-primary rounded-lg font-medium transition-all hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                        已有账号，登录
-                    </button>
-                    <button @click="closeWelcomeModal" class="w-full py-3 px-6 text-muted font-medium transition-all hover:text-dark focus:outline-none">
-                        暂不登录，浏览
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 登录模态框 -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-dark bg-opacity-50" v-if="showLoginModal && !isLoggedIn">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-dark">用户登录</h3>
-                    <button @click="closeLoginModal" class="text-muted hover:text-dark">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-
-                <form @submit.prevent="handleLogin">
-                    <div class="space-y-4">
-                        <div>
-                            <label for="username" class="block text-sm font-medium text-muted mb-1">用户名</label>
-                            <input type="text" id="username" v-model="loginForm.username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入您的用户名">
-                        </div>
-
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-muted mb-1">密码</label>
-                            <input type="password" id="password" v-model="loginForm.password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入密码">
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="remember" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                                <label for="remember" class="ml-2 block text-sm text-muted">记住我</label>
-                            </div>
-                            <a href="#" class="text-sm font-medium text-primary hover:text-primary/80">忘记密码?</a>
-                        </div>
-
-                        <button type="submit" class="w-full py-3 px-6 bg-primary text-white rounded-lg font-medium transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                            登录
-                        </button>
-
-                        <div class="relative">
-                            <div class="absolute inset-0 flex items-center">
-                                <div class="w-full border-t border-gray-300"></div>
-                            </div>
-                            <div class="relative flex justify-center text-xs uppercase">
-                                <span class="px-2 bg-white text-muted">其他登录方式</span>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <button class="py-2 px-4 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-all">
-                                <i class="fa fa-github text-2xl"></i>
-                            </button>
-                            <button class="py-2 px-4 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-all">
-                                <i class="fa fa-google text-2xl"></i>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="mt-6 text-center">
-                    <span class="text-muted">还没有账号?</span>
-                    <button @click="openRegisterModal" class="ml-2 text-primary font-medium hover:text-primary/80">立即注册</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 注册模态框 -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-dark bg-opacity-50" v-if="showRegisterModal && !isLoggedIn">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-dark">注册账号</h3>
-                    <button @click="closeRegisterModal" class="text-muted hover:text-dark">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-
-                <form @submit.prevent="handleRegister">
-                    <div class="space-y-4">
-                        <div>
-                            <label for="reg-nickname" class="block text-sm font-medium text-muted mb-1">昵称</label>
-                            <input type="text" id="reg-nickname" v-model="registerForm.nickname" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请设置您的昵称">
-                        </div>
-
-                        <div>
-                            <label for="reg-gender" class="block text-sm font-medium text-muted mb-1">性别</label>
-                            <select id="reg-gender" v-model="registerForm.gender" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-                                <option value="">请选择性别</option>
-                                <option value="男">男</option>
-                                <option value="女">女</option>
-                                <option value="保密">保密</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="reg-username" class="block text-sm font-medium text-muted mb-1">用户名</label>
-                            <input type="text" id="reg-username" v-model="registerForm.username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请设置用户名">
-                        </div>
-
-                        <div>
-                            <label for="reg-email" class="block text-sm font-medium text-muted mb-1">邮箱</label>
-                            <input type="email" id="reg-email" v-model="registerForm.email" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入您的邮箱">
-                        </div>
-
-                        <div>
-                            <label for="reg-phone" class="block text-sm font-medium text-muted mb-1">手机号</label>
-                            <input type="tel" id="reg-phone" v-model="registerForm.phone" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入您的手机号">
-                        </div>
-
-                        <div>
-                            <label for="reg-password" class="block text-sm font-medium text-muted mb-1">密码</label>
-                            <input type="password" id="reg-password" v-model="registerForm.password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请设置密码">
-                        </div>
-
-                        <div>
-                            <label for="reg-confirm-password" class="block text-sm font-medium text-muted mb-1">确认密码</label>
-                            <input type="password" id="reg-confirm-password" v-model="registerForm.confirmPassword" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请再次输入密码">
-                        </div>
-
-                        <div class="flex items-center">
-                            <input type="checkbox" id="terms" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                            <label for="terms" class="ml-2 block text-sm text-muted">我已阅读并同意<a href="#" class="text-primary hover:text-primary/80">服务条款</a>和<a href="#" class="text-primary hover:text-primary/80">隐私政策</a></label>
-                        </div>
-
-                        <button type="submit" class="w-full py-3 px-6 bg-primary text-white rounded-lg font-medium transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                            注册
-                        </button>
-                    </div>
-                </form>
-
-                <div class="mt-6 text-center">
-                    <span class="text-muted">已有账号?</span>
-                    <button @click="openLoginModal" class="ml-2 text-primary font-medium hover:text-primary/80">立即登录</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 专业选择模态框 -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-dark bg-opacity-50" v-if="showMajorModal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-dark">选择您的专业大类</h3>
-                    <button @click="closeMajorModal" class="text-muted hover:text-dark">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" :value="1" v-model="user.groupType">
-                        <span class="font-medium">计算机类</span>
-                    </label>
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" v-model="user.groupType" :value="2" class="mr-2" />
-                        <span class="font-medium">工设类</span>
-                    </label>
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" v-model="user.groupType" :value="3" class="mr-2" />
-                        <span class="font-medium">艺术类</span>
-                    </label>
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" v-model="user.groupType" :value="4" class="mr-2" />
-                        <span class="font-medium">医学类</span>
-                    </label>
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" v-model="user.groupType" :value="5" class="mr-2" />
-                        <span class="font-medium">文科类</span>
-                    </label>
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" v-model="user.groupType" :value="6" class="mr-2" />
-                        <span class="font-medium">体育类</span>
-                    </label>
-                    <label class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all flex items-center mb-2">
-                        <input type="radio" v-model="user.groupType" :value="7" class="mr-2" />
-                        <span class="font-medium">其他</span>
-                    </label>
-                </div>
-
-                <button @click="completeRegistration" class="w-full py-3 px-6 bg-primary text-white rounded-lg font-medium transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50" :disabled="!user.groupType">
-                    完成注册
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 学习方向选择模态框 -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-dark bg-opacity-50" v-if="showLearningDirectionModal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-dark">选择您感兴趣的学习方向</h3>
-                    <button @click="closeLearningDirectionModal" class="text-muted hover:text-dark">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all" @click="toggleLearningDirection(1)">
-                        <div class="flex items-center mb-2">
-                            <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center mr-2">
-                                <div class="w-3 h-3 rounded-full bg-primary" v-if="user.intestTypes && user.intestTypes.includes(1)"></div>
-                            </div>
-                            <span class="font-medium">Web开发</span>
-                        </div>
-                        <p class="text-sm text-muted">Django, Flask, 前端框架</p>
-                    </div>
-
-                    <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all" @click="toggleLearningDirection(2)">
-                        <div class="flex items-center mb-2">
-                            <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center mr-2">
-                                <div class="w-3 h-3 rounded-full bg-primary" v-if="user.intestTypes && user.intestTypes.includes(2)"></div>
-                            </div>
-                            <span class="font-medium">数据分析</span>
-                        </div>
-                        <p class="text-sm text-muted">Pandas, Numpy, Matplotlib</p>
-                    </div>
-
-                    <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all" @click="toggleLearningDirection(3)">
-                        <div class="flex items-center mb-2">
-                            <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center mr-2">
-                                <div class="w-3 h-3 rounded-full bg-primary" v-if="user.intestTypes && user.intestTypes.includes(3)"></div>
-                            </div>
-                            <span class="font-medium">机器学习</span>
-                        </div>
-                        <p class="text-sm text-muted">Scikit-learn, TensorFlow</p>
-                    </div>
-
-                    <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all" @click="toggleLearningDirection(4)">
-                        <div class="flex items-center mb-2">
-                            <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center mr-2">
-                                <div class="w-3 h-3 rounded-full bg-primary" v-if="user.intestTypes && user.intestTypes.includes(4)"></div>
-                            </div>
-                            <span class="font-medium">自动化脚本</span>
-                        </div>
-                        <p class="text-sm text-muted">文件处理, 网页抓取</p>
-                    </div>
-
-                    <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all" @click="toggleLearningDirection(5)">
-                        <div class="flex items-center mb-2">
-                            <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center mr-2">
-                                <div class="w-3 h-3 rounded-full bg-primary" v-if="user.intestTypes && user.intestTypes.includes(5)"></div>
-                            </div>
-                            <span class="font-medium">DevOps</span>
-                        </div>
-                        <p class="text-sm text-muted">CI/CD, Docker, 云服务</p>
-                    </div>
-
-                    <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-all" @click="toggleLearningDirection(6)">
-                        <div class="flex items-center mb-2">
-                            <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center mr-2">
-                                <div class="w-3 h-3 rounded-full bg-primary" v-if="user.intestTypes && user.intestTypes.includes(6)"></div>
-                            </div>
-                            <span class="font-medium">游戏开发</span>
-                        </div>
-                        <p class="text-sm text-muted">Pygame, 2D/3D游戏</p>
-                    </div>
-                </div>
-
-                <button @click="saveLearningDirections" class="w-full py-3 px-6 bg-primary text-white rounded-lg font-medium transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50" :disabled="!user.intestTypes || !user.intestTypes.length">
-                    保存学习方向
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- 主内容区 -->
     <main class="container mx-auto px-4 py-8">
         <!-- 首页轮播和推荐课程 -->
@@ -732,7 +443,6 @@
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { EventBus } from '../eventBus';
 
 axios.defaults.withCredentials = true;
 
@@ -759,36 +469,13 @@ export default {
                 6: '游戏开发'
             },
 
-            // 模态框状态
-            showWelcomeModal: true,
-            showLoginModal: false,
-            showRegisterModal: false,
-            showMajorModal: false,
-            showLearningDirectionModal: false,
-
             // 用户状态
             isLoggedIn: false,
             user: {
                 avatar: null,
                 nickname: '',
                 userId: null,
-                groupType: null,  // 改为数字
-                intestTypes: [] // 改为数组
-            },
-
-            // 表单数据
-            loginForm: {
-                username: '',
-                password: ''
-            },
-            registerForm: {
-                nickname: '',
-                gender: '',
-                username: '',
-                email: '',
-                phone: '',
-                password: '',
-                confirmPassword: '',
+                groupType: null,
                 intestTypes: []
             },
 
@@ -873,27 +560,14 @@ export default {
         this.fetchPracticeProgress();
         this.fetchRecommendProblems();
         this.fetchAiFaq();
-        axios.get('http://localhost:8080/api/user/me')
-            .then(res => {
+        // 使用认证工具函数检查登录状态
+        import('../utils/auth').then(({ isLoggedIn, getCurrentUser }) => {
+            if (isLoggedIn()) {
                 this.isLoggedIn = true;
-                this.user = res.data;
-                let rawIntestTypes = res.data.intestTypes || res.data.intest_types;
-                console.log('[me] 后端兴趣原始值:', rawIntestTypes, 'user:', this.user);
-                this.user.intestTypes = this.parseIntestTypes(rawIntestTypes);
-                console.log('[me] 最终 user.intestTypes:', this.user.intestTypes);
-                localStorage.setItem('userId', this.user.userId);
-            })
-            .catch(() => {
-                this.isLoggedIn = false;
-                this.user = {
-                    avatar: null,
-                    nickname: '',
-                    userId: null,
-                    groupType: null,
-                    intestTypes: []
-                };
-                localStorage.removeItem('userId');
-            });
+                const user = getCurrentUser();
+                this.user = user;
+            }
+        });
         this.initLearningChart();
         this.scrollToBottom();
         this.startSlideShow();
@@ -902,30 +576,7 @@ export default {
         this.$nextTick(() => {
             this.updateNavIndicator();
         });
-        if (localStorage.getItem('justRegistered') === 'true') {
-            this.openLearningDirectionModal();
-            localStorage.removeItem('justRegistered');
-        }
-        let userId = this.user && this.user.userId;
-        if (!userId) {
-            userId = localStorage.getItem('userId');
-        }
-        if (!userId || userId === 'null') {
-            return;
-        }
-        // 拉取用户信息并判断兴趣弹窗
-        axios.get(`http://localhost:8080/api/user/${userId}`).then(res => {
-            this.user = res.data;
-            let rawIntestTypes = res.data.intestTypes || res.data.intest_types;
-            console.log('[byId] 后端兴趣原始值:', rawIntestTypes, 'user:', this.user);
-            this.user.intestTypes = this.parseIntestTypes(rawIntestTypes);
-            console.log('[byId] 最终 user.intestTypes:', this.user.intestTypes);
-            if (!this.user.intestTypes || this.user.intestTypes.length === 0) {
-                this.openLearningDirectionModal();
-            }
-        });
-        EventBus.on('open-login-modal', this.openLoginModal);
-        EventBus.on('open-register-modal', this.openRegisterModal);
+
         this.fetchKnowledgeTree();
     },
     beforeUnmount() {
@@ -934,8 +585,6 @@ export default {
 
         // 移除滚动事件监听
         window.removeEventListener('scroll', this.handleScroll);
-        EventBus.off('open-login-modal', this.openLoginModal);
-        EventBus.off('open-register-modal', this.openRegisterModal);
     },
     methods: {
         parseIntestTypes(intestTypes) {
@@ -945,160 +594,6 @@ export default {
                 return intestTypes.split(/[,，\s]+/).filter(x => x).map(Number);
             }
             return [];
-        },
-        // 模态框操作方法
-        openLoginModal() {
-            this.showLoginModal = true;
-            this.showWelcomeModal = false;
-            this.showRegisterModal = false;
-        },
-        closeLoginModal() {
-            this.showLoginModal = false;
-        },
-        openRegisterModal() {
-            this.showRegisterModal = true;
-            this.showWelcomeModal = false;
-            this.showLoginModal = false;
-        },
-        closeRegisterModal() {
-            this.showRegisterModal = false;
-        },
-        closeWelcomeModal() {
-            this.showWelcomeModal = false;
-        },
-        openMajorModal() {
-            this.showMajorModal = true;
-            this.showRegisterModal = false;
-        },
-        closeMajorModal() {
-            this.showMajorModal = false;
-        },
-        openLearningDirectionModal() {
-            console.log('打开兴趣弹窗');
-            this.showLearningDirectionModal = true;
-        },
-        closeLearningDirectionModal() {
-            this.showLearningDirectionModal = false;
-        },
-
-        // 用户登录注册方法
-        handleLogin() {
-            if (this.loginForm.username && this.loginForm.password) {
-                axios.post('http://localhost:8080/api/user/login', {
-                    account: this.loginForm.username,
-                    password: this.loginForm.password
-                }).then(res => {
-                    const user = res.data.data || res.data;
-                    let rawIntestTypes = user.intestTypes || user.intest_types;
-                    console.log('[login] 后端兴趣原始值:', rawIntestTypes, 'user:', user);
-                    if (user && (user.userId || user.account)) {
-                        this.isLoggedIn = true;
-                        this.user = user;
-                        this.user.userId = user.userId || user.user_id;
-                        this.user.intestTypes = this.parseIntestTypes(rawIntestTypes);
-                        console.log('[login] 最终 user.intestTypes:', this.user.intestTypes);
-                        this.closeLoginModal();
-                        if (!this.user.groupType) {
-                            this.openMajorModal();
-                        } else if (!this.user.intestTypes || this.user.intestTypes.length === 0) {
-                            this.openLearningDirectionModal();
-                        }
-                        localStorage.setItem('userId', this.user.userId);
-                    } else {
-                        alert('登录失败');
-                    }
-                }).catch(err => {
-                    alert(typeof err.response?.data === 'string' ? err.response.data : JSON.stringify(err.response?.data) || '登录失败');
-                });
-            } else {
-                alert('请填写完整的登录信息');
-            }
-        },
-        handleRegister() {
-            if (this.registerForm.nickname && this.registerForm.username && this.registerForm.password) {
-                if (this.registerForm.password !== this.registerForm.confirmPassword) {
-                    alert('两次输入的密码不一致');
-                    return;
-                }
-                const intestTypesStr = Array.isArray(this.registerForm.intestTypes) ? this.registerForm.intestTypes.join(',') : '';
-                axios.post('http://localhost:8080/api/user/register', {
-                    nickname: this.registerForm.nickname,
-                    account: this.registerForm.username,
-                    phone: this.registerForm.phone,
-                    password: this.registerForm.password,
-                    groupType: this.user.groupType,
-                    intestTypes: intestTypesStr,
-                    email: this.registerForm.email
-                }).then(res => {
-                    this.user = res.data;
-                    this.user.userId = res.data.userId || res.data.user_id;
-                    let rawIntestTypes = res.data.intestTypes || res.data.intest_types;
-                    console.log('[register] 后端兴趣原始值:', rawIntestTypes, 'user:', this.user);
-                    this.isLoggedIn = true;
-                    this.user.intestTypes = this.parseIntestTypes(rawIntestTypes);
-                    console.log('[register] 最终 user.intestTypes:', this.user.intestTypes);
-                    this.openMajorModal();
-                    alert('注册成功');
-                    this.closeRegisterModal();
-                    localStorage.setItem('justRegistered', 'true');
-                    axios.post('http://localhost:8080/api/user/login', {
-                        account: this.registerForm.username,
-                        password: this.registerForm.password
-                    }).then(res => {
-                        this.isLoggedIn = true;
-                        this.user = res.data;
-                        this.user.userId = res.data.userId || res.data.user_id;
-                        let rawIntestTypes = res.data.intestTypes || res.data.intest_types;
-                        this.user.intestTypes = this.parseIntestTypes(rawIntestTypes);
-                        console.log('[register->login] 最终 user.intestTypes:', this.user.intestTypes);
-                        this.openMajorModal();
-                    });
-                }).catch(() => {
-                    alert('注册失败');
-                });
-            } else {
-                alert('请填写完整的注册信息');
-            }
-        },
-        selectMajor(major) {
-            this.user.groupType = major;
-        },
-        completeRegistration() {
-            if (this.user.groupType) {
-                axios.patch(`http://localhost:8080/api/user/${this.user.userId}/groupType`, {
-                    groupType: this.user.groupType
-                }).then(() => {
-                    console.log('关闭专业弹窗，打开兴趣弹窗');
-                    this.closeMajorModal();
-                    this.openLearningDirectionModal();
-                }).catch(() => {
-                    alert('保存专业失败');
-                });
-            }
-            console.log('completeRegistration user:', this.user);
-            console.log('userId:', this.user.userId);
-        },
-        toggleLearningDirection(direction) {
-            const idx = this.user.intestTypes.indexOf(direction);
-            if (idx === -1) {
-                this.user.intestTypes.push(direction);
-            } else {
-                this.user.intestTypes.splice(idx, 1);
-            }
-        },
-        saveLearningDirections() {
-            if (this.user.intestTypes.length > 0) {
-                const intestTypesStr = this.user.intestTypes.join(',');
-                axios.patch(`http://localhost:8080/api/user/${this.user.userId}/intestTypes`, {
-                    intestTypes: intestTypesStr
-                }).then(() => {
-                    localStorage.setItem('hasLearningDirections', 'true');
-                    this.closeLearningDirectionModal();
-                    this.isLoggedIn = true;
-                }).catch(() => {
-                    alert('保存兴趣失败');
-                });
-            }
         },
 
         // 导航菜单方法
@@ -1111,6 +606,10 @@ export default {
         logout() {
             // 调用后端注销接口，清除 session/cookie
             axios.post('http://localhost:8080/api/user/logout', {}, { withCredentials: true }).finally(() => {
+                // 使用认证工具函数清除登录状态
+                import('../utils/auth').then(({ clearLoginState }) => {
+                    clearLoginState();
+                });
                 this.isLoggedIn = false;
                 this.user = {
                     avatar: null,
@@ -1120,9 +619,8 @@ export default {
                     intestTypes: []
                 };
                 this.showUserMenu = false;
-                localStorage.removeItem('userId');
-                localStorage.removeItem('hasLearningDirections');
-                window.location.reload(); // 强制刷新页面，彻底清空状态
+                // 跳转到登录页面
+                this.$router.push('/auth');
             });
         },
         goToProfile() {
@@ -1372,31 +870,68 @@ export default {
             this.allCourses = res.data;
         },
         async fetchUserStats() {
-            const res = await axios.get('/api/user/statistics');
-            this.userStats = res.data;
+            try {
+                const res = await axios.get('/api/user/statistics');
+                this.userStats = res.data;
+            } catch (error) {
+                console.error('获取用户统计信息失败:', error);
+                // 设置默认值
+                this.userStats = {
+                    completed: 0,
+                    accuracy: 0,
+                    practiceTime: 0,
+                    totalProblems: 0,
+                    continuousDays: 0
+                };
+            }
         },
         async fetchLearningProgress() {
-            const res = await axios.get('/api/user/learning-progress');
-            this.learningProgress = res.data;
+            try {
+                const res = await axios.get('/api/user/learning-progress');
+                this.learningProgress = res.data;
+            } catch (error) {
+                console.error('获取学习进度失败:', error);
+                this.learningProgress = { progress: 0, days: 0, coursesCompleted: 0 };
+            }
         },
         async fetchPracticeProgress() {
-            const res = await axios.get('/api/practice/progress');
-            this.practiceProgress = res.data;
+            try {
+                const res = await axios.get('/api/practice/progress');
+                this.practiceProgress = res.data;
+            } catch (error) {
+                console.error('获取练习进度失败:', error);
+                this.practiceProgress = [];
+            }
         },
         async fetchRecommendProblems() {
-            const res = await axios.get('/api/practice/recommend');
-            this.recommendProblems = res.data;
+            try {
+                const res = await axios.get('/api/practice/recommend');
+                this.recommendProblems = res.data;
+            } catch (error) {
+                console.error('获取推荐题目失败:', error);
+                this.recommendProblems = [];
+            }
         },
         async fetchAiFaq() {
-            const res = await axios.get('/api/ai/faq');
-            this.aiFaq = res.data;
+            try {
+                const res = await axios.get('/api/ai/faq');
+                this.aiFaq = res.data;
+            } catch (error) {
+                console.error('获取AI问答失败:', error);
+                this.aiFaq = [];
+            }
         },
         async fetchMyLearning() {
-            const res = await axios.get('/api/knowledge/catalog');
-            this.myLearning = res.data;
+            try {
+                const res = await axios.get('/api/knowledge/catalog');
+                this.myLearning = res.data;
+            } catch (error) {
+                console.error('获取学习目录失败:', error);
+                this.myLearning = [];
+            }
         },
         fetchKnowledgeTree() {
-            this.$axios.get('/api/knowledge/points').then(res => {
+            axios.get('/api/knowledge/points').then(res => {
                 const points = res.data;
                 // 分组
                 const group = {

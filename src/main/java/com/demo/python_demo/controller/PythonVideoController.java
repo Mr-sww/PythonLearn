@@ -9,6 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/python-videos")
+@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true")
 public class PythonVideoController {
     @Autowired
     private PythonVideoService pythonVideoService;

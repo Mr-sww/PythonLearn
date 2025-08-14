@@ -94,6 +94,25 @@
       </div>
     </div>
 
+    <!-- 练习记录入口 -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="bg-white rounded-3 shadow-sm border p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h5 class="fw-bold text-dark mb-2">
+                <i class="fa fa-history me-2 text-primary"></i>练习记录
+              </h5>
+              <p class="text-muted mb-0">查看详细的做题历史、进度分析和学习轨迹</p>
+            </div>
+            <router-link to="/practice-records" class="btn btn-primary rounded-pill px-4">
+              <i class="fa fa-arrow-right me-2"></i>查看详细记录
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
       <!-- 左侧筛选和分类 -->
       <div class="col-lg-3">
@@ -284,15 +303,25 @@ export default {
   },
   methods: {
     async fetchProblems() {
-      const res = await axios.get('/api/practice/problems');
-      this.problems = res.data;
+      try {
+        const res = await axios.get('/api/practice/problems');
+        this.problems = res.data;
+      } catch (error) {
+        console.error('获取练习题失败:', error);
+        this.problems = [];
+      }
     },
     goToProblem(id) {
       this.$router.push('/problem/' + id);
     },
     async loadFavoriteProblems() {
-      const res = await axios.get('/api/practice/favorites', { params: { userId: this.userId } });
-      this.favoriteProblems = res.data;
+      try {
+        const res = await axios.get('/api/practice/favorites', { params: { userId: this.userId } });
+        this.favoriteProblems = res.data;
+      } catch (error) {
+        console.error('获取收藏练习题失败:', error);
+        this.favoriteProblems = [];
+      }
     },
     // async fetchPracticeStats() {
     //   try {

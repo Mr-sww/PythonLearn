@@ -89,19 +89,5 @@ public class CourseController {
         return faq;
     }
 
-    // 兼容前端请求的接口路径，转发到现有mock方法
-    @GetMapping("/api/practice/progress")
-    public Map<String, Object> practiceProgress() {
-        return getPracticeProgress();
-    }
 
-    @GetMapping("/api/practice/recommend")
-    public List<Map<String, Object>> recommendProblems() {
-        return getRecommendProblems();
-    }
-
-    @GetMapping("/api/ai/faq")
-    public List<Map<String, String>> aiFaq() {
-        return getAiFaq();
-    }
 } 

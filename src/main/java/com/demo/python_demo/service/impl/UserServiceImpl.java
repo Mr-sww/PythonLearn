@@ -9,6 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -71,20 +72,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Integer userId) {
-        // TODO: 实现用户删除逻辑
-    }
-
-    @Override
     public User createUser(User user) {
         // TODO: 实现用户创建逻辑
         return null;
     }
 
     @Override
-    public java.util.List<User> getAllUsers() {
-        // TODO: 实现获取所有用户逻辑
-        return java.util.Collections.emptyList();
+    public List<User> getAllUsers() {
+        return userRepository.getAllUsers();
     }
 
     @Override
@@ -101,5 +96,66 @@ public class UserServiceImpl implements UserService {
     @Override
     public int updateIntestTypes(Integer userId, String intestTypes) {
         return userRepository.updateIntestTypes(userId, intestTypes);
+    }
+
+    // 管理员功能实现
+    @Override
+    public List<User> searchUsers(String keyword, Integer groupType, String status) {
+        return userRepository.searchUsers(keyword, groupType, status);
+    }
+
+    @Override
+    public boolean updateUserStatus(Integer userId, String status) {
+        return userRepository.updateUserStatus(userId, status) > 0;
+    }
+
+    @Override
+    public boolean updateUserGroupType(Integer userId, Integer groupType) {
+        return userRepository.updateGroupType(userId, groupType) > 0;
+    }
+
+    @Override
+    public boolean deleteUser(Integer userId) {
+        return userRepository.deleteById(userId) > 0;
+    }
+
+    @Override
+    public int countAllUsers() {
+        return userRepository.countAllUsers();
+    }
+
+    @Override
+    public int countUsersByStatus(String status) {
+        return userRepository.countUsersByStatus(status);
+    }
+
+    @Override
+    public List<User> getAllStudents() {
+        return userRepository.findByGroupType(1); // 假设1是学生
+    }
+
+    @Override
+    public List<User> getStudentsByMajor(Integer majorType) {
+        return userRepository.findStudentsByMajor(majorType);
+    }
+
+    @Override
+    public List<User> getAllTeachers() {
+        return userRepository.findByGroupType(2); // 假设2是教师
+    }
+
+    @Override
+    public List<User> getAllAdmins() {
+        return userRepository.findByGroupType(3); // 假设3是管理员
+    }
+
+    @Override
+    public List<Object> getMajorStatistics() {
+        return userRepository.getMajorStatistics();
+    }
+
+    @Override
+    public List<Object> getRoleStatistics() {
+        return userRepository.getRoleStatistics();
     }
 }

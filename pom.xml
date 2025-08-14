@@ -132,12 +132,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- SQL Server JDBC 驱动依赖 -->
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <version>12.6.1.jre8</version>
-        </dependency>
+
     </dependencies>
 
     <build>

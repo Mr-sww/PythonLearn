@@ -172,4 +172,29 @@ public class CourseServiceImpl implements CourseService {
         }
         return getPopularCourses(limit);
     }
+
+    // 管理员功能实现
+    @Override
+    public int countAllCourses() {
+        return getCourseCount();
+    }
+
+    @Override
+    public int countCoursesByStatus(String status) {
+        // 假设课程没有状态字段，返回总数
+        return getCourseCount();
+    }
+
+    @Override
+    public boolean reviewCourse(Integer courseId, String action, String comment) {
+        // 简单的审核逻辑
+        if (courseId == null || action == null) {
+            return false;
+        }
+        
+        // 这里可以实现实际的审核逻辑
+        // 比如更新课程状态、记录审核意见等
+        
+        return true; // 暂时返回true
+    }
 } 

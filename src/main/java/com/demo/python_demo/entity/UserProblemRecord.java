@@ -12,6 +12,10 @@ public class UserProblemRecord {
     private Integer usedTime;
     private Integer usedMemory;
     private String language;
+    private Integer executionTime;
+    private Integer memoryUsage;
+    private Integer score;
+    
     // getter/setter
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -33,4 +37,10 @@ public class UserProblemRecord {
     public void setUsedMemory(Integer usedMemory) { this.usedMemory = usedMemory; }
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
+    public Integer getExecutionTime() { return executionTime; }
+    public void setExecutionTime(Integer executionTime) { this.executionTime = executionTime; }
+    public Integer getMemoryUsage() { return memoryUsage; }
+    public void setMemoryUsage(Integer memoryUsage) { this.memoryUsage = memoryUsage; }
+    public Integer getScore() { return score; }
+    public void setScore(Integer score) { this.score = score; }
 } 

@@ -1,93 +1,200 @@
 <template>
   <!-- 移除顶部导航栏，已由全局组件统一管理 -->
-  <div class="flex justify-center items-center min-h-screen bg-gray-50">
-    <div class="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-lg flex flex-col items-center">
-      <div class="relative mb-6 group">
-        <img :src="avatarPreview || (user.avatar ? getAvatarUrl(user.avatar) : defaultAvatar)" alt="头像" class="w-32 h-32 rounded-full border-4 border-primary shadow-lg object-cover mx-auto transition-transform hover:scale-105" />
-        <label class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-          <i class="fa fa-camera text-white text-2xl"></i>
-          <input type="file" accept="image/png,image/jpeg" class="hidden" @change="onAvatarChange" />
-        </label>
-        <div v-if="avatarLoading" class="absolute inset-0 flex items-center justify-center bg-white/60 rounded-full">
-          <span class="loader"></span>
+  <div class="min-h-screen bg-gray-50 py-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- 左侧：个人信息和编辑 -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-3xl shadow-2xl p-8">
+            <!-- 头像和基本信息 -->
+            <div class="text-center mb-6">
+              <div class="relative mb-4 group inline-block">
+                <img :src="avatarPreview || (user.avatar ? getAvatarUrl(user.avatar) : defaultAvatar)" alt="头像" class="w-32 h-32 rounded-full border-4 border-primary shadow-lg object-cover transition-transform hover:scale-105" />
+                <label class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <i class="fa fa-camera text-white text-2xl"></i>
+                  <input type="file" accept="image/png,image/jpeg" class="hidden" @change="onAvatarChange" />
+                </label>
+                <div v-if="avatarLoading" class="absolute inset-0 flex items-center justify-center bg-white/60 rounded-full">
+                  <span class="loader"></span>
+                </div>
+              </div>
+              <h2 class="text-2xl font-bold text-dark mb-1">{{ user.nickname || '未设置昵称' }}</h2>
+              <div class="text-muted text-base">用户名：{{ user.account }}</div>
+            </div>
+
+            <!-- 个人信息详情 -->
+            <div class="space-y-4 mb-6">
+              <div class="flex items-center"><i class="fa fa-envelope text-primary mr-3"></i><span class="text-dark">邮箱：</span><span class="text-muted ml-1">{{ user.email || '未设置' }}</span></div>
+              <div class="flex items-center"><i class="fa fa-phone text-primary mr-3"></i><span class="text-dark">手机号：</span><span class="text-muted ml-1">{{ user.phone || '未设置' }}</span></div>
+              <div class="flex items-center"><i class="fa fa-graduation-cap text-primary mr-3"></i><span class="text-dark">专业大类：</span><span class="text-muted ml-1">{{ groupTypeMap[user.groupType] || '未设置' }}</span></div>
+              <div class="flex items-start"><i class="fa fa-star text-primary mr-3 mt-1"></i><span class="text-dark">兴趣方向：</span>
+                <div class="flex flex-wrap gap-2 ml-1">
+                  <template v-if="user.intestTypes && user.intestTypes.length">
+                    <span v-for="i in user.intestTypes" :key="i" class="inline-block bg-gradient-to-r from-blue-400 to-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-sm">{{ intestTypeMap[i] || i }}</span>
+                  </template>
+                  <span v-else class="text-muted">未设置</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 编辑资料按钮 -->
+            <button class="w-full px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-primary/90 transition-all text-lg flex items-center justify-center gap-2" @click="editProfile">
+              <i class="fa fa-edit"></i> 编辑资料
+            </button>
+          </div>
         </div>
-      </div>
-      <h2 class="text-2xl font-bold text-dark mb-1">{{ user.nickname || '未设置昵称' }}</h2>
-      <div class="text-muted text-base mb-6">用户名：{{ user.account }}</div>
-      <div class="w-full space-y-4 mb-6">
-        <div class="flex items-center"><i class="fa fa-envelope text-primary mr-3"></i><span class="text-dark">邮箱：</span><span class="text-muted ml-1">{{ user.email || '未设置' }}</span></div>
-        <div class="flex items-center"><i class="fa fa-phone text-primary mr-3"></i><span class="text-dark">手机号：</span><span class="text-muted ml-1">{{ user.phone || '未设置' }}</span></div>
-        <div class="flex items-center"><i class="fa fa-graduation-cap text-primary mr-3"></i><span class="text-dark">专业大类：</span><span class="text-muted ml-1">{{ groupTypeMap[user.groupType] || '未设置' }}</span></div>
-        <div class="flex items-start"><i class="fa fa-star text-primary mr-3 mt-1"></i><span class="text-dark">兴趣方向：</span>
-          <div class="flex flex-wrap gap-2 ml-1">
-            <template v-if="user.intestTypes && user.intestTypes.length">
-              <span v-for="i in user.intestTypes" :key="i" class="inline-block bg-gradient-to-r from-blue-400 to-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-sm">{{ intestTypeMap[i] || i }}</span>
-            </template>
-            <span v-else class="text-muted">未设置</span>
+
+        <!-- 右侧：功能区域 -->
+        <div class="lg:col-span-2">
+          <!-- 练习统计卡片 -->
+          <router-link to="/practice-records" class="bg-white rounded-3xl shadow-2xl p-6 mb-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-primary/20">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-bold text-dark">
+                <i class="fa fa-chart-line text-primary me-2"></i>练习统计
+              </h3>
+              <i class="fa fa-arrow-right text-primary text-xl"></i>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                <div class="text-3xl font-bold text-blue-600 mb-1">{{ practiceStats.totalSubmissions || 0 }}</div>
+                <div class="text-sm text-blue-700">总提交次数</div>
+              </div>
+              <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
+                <div class="text-3xl font-bold text-green-600 mb-1">{{ practiceStats.accuracy || 0 }}%</div>
+                <div class="text-sm text-green-700">通过率</div>
+              </div>
+              <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl">
+                <div class="text-3xl font-bold text-yellow-600 mb-1">{{ practiceStats.continuousDays || 0 }}</div>
+                <div class="text-sm text-yellow-700">连续刷题天数</div>
+              </div>
+              <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                <div class="text-3xl font-bold text-purple-600 mb-1">{{ practiceStats.passedProblems || 0 }}</div>
+                <div class="text-sm text-purple-700">通过题目数</div>
+              </div>
+            </div>
+            <div class="text-center mt-4 text-primary text-sm font-medium">
+              点击查看详细练习记录 →
+            </div>
+          </router-link>
+
+          <!-- 学习记录卡片 -->
+          <router-link to="/learning" class="bg-white rounded-3xl shadow-2xl p-6 mb-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-primary/20">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-bold text-dark">
+                <i class="fa fa-book text-primary me-2"></i>学习记录
+              </h3>
+              <i class="fa fa-arrow-right text-primary text-xl"></i>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-2xl font-bold text-indigo-600">{{ learningStats.totalCourses || 0 }}</div>
+                    <div class="text-sm text-indigo-700">已选课程</div>
+                  </div>
+                  <i class="fa fa-graduation-cap text-3xl text-indigo-400"></i>
+                </div>
+              </div>
+              <div class="p-4 bg-gradient-to-r from-pink-50 to-pink-100 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-2xl font-bold text-pink-600">{{ learningStats.completedLessons || 0 }}</div>
+                    <div class="text-sm text-pink-700">已完成课时</div>
+                  </div>
+                  <i class="fa fa-check-circle text-3xl text-pink-400"></i>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-4 text-primary text-sm font-medium">
+              点击查看详细学习记录 →
+            </div>
+          </router-link>
+
+          <!-- 快捷功能卡片 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <router-link to="/favorites" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-red-200">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-dark">
+                  <i class="fa fa-heart text-red-500 me-2"></i>我的收藏课程
+                </h3>
+                <i class="fa fa-arrow-right text-red-500 text-xl"></i>
+              </div>
+              <div class="text-center">
+                <i class="fa fa-heart text-4xl text-red-400 mb-3"></i>
+                <div class="text-sm text-gray-600">查看您收藏的所有课程</div>
+              </div>
+              <div class="text-center mt-4 text-red-500 text-sm font-medium">
+                点击进入 →
+              </div>
+            </router-link>
+            
+            <router-link to="/favorite-problems" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-blue-200">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-dark">
+                  <i class="fa fa-star text-blue-500 me-2"></i>我收藏的题目
+                </h3>
+                <i class="fa fa-arrow-right text-blue-500 text-xl"></i>
+              </div>
+              <div class="text-center">
+                <i class="fa fa-star text-4xl text-blue-400 mb-3"></i>
+                <div class="text-sm text-gray-600">查看您收藏的所有题目</div>
+              </div>
+              <div class="text-center mt-4 text-blue-500 text-sm font-medium">
+                点击进入 →
+              </div>
+            </router-link>
           </div>
         </div>
       </div>
-      
-      <!-- 功能按钮区域 -->
-      <div class="w-full space-y-3 mb-6">
-        <button class="w-full px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-primary/90 transition-all text-lg flex items-center justify-center gap-2" @click="editProfile">
-          <i class="fa fa-edit"></i> 编辑资料
-        </button>
-        <router-link to="/favorites" class="w-full px-8 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:from-red-600 hover:to-pink-600 transition-all text-lg flex items-center justify-center gap-2">
-          <i class="fa fa-heart"></i> 我的收藏课程
-        </router-link>
-        <router-link to="/favorite-problems" class="w-full px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-blue-500 transition-all text-lg flex items-center justify-center gap-2">
-          <i class="fa fa-star"></i> 我收藏的题目
-        </router-link>
-      </div>
+    </div>
 
-      <!-- 编辑资料弹窗 -->
-      <div v-if="editMode" class="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
-          <button class="absolute top-4 right-4 text-muted hover:text-dark text-xl" @click="editMode=false"><i class="fa fa-times"></i></button>
-          <h3 class="text-xl font-bold text-dark mb-6 text-center">编辑个人资料</h3>
-          <form @submit.prevent="saveProfile" class="space-y-5">
-            <div class="relative flex flex-col items-center mb-4 group">
-              <img :src="avatarPreview || (user.avatar ? getAvatarUrl(user.avatar) : defaultAvatar)" alt="头像" class="w-24 h-24 rounded-full border-4 border-primary shadow-lg object-cover mx-auto transition-transform hover:scale-105" />
-              <label class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <i class="fa fa-camera text-white text-xl"></i>
-                <input type="file" accept="image/png,image/jpeg" class="hidden" @change="onAvatarChange" />
+    <!-- 编辑资料弹窗 -->
+    <div v-if="editMode" class="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
+        <button class="absolute top-4 right-4 text-muted hover:text-dark text-xl" @click="editMode=false"><i class="fa fa-times"></i></button>
+        <h3 class="text-xl font-bold text-dark mb-6 text-center">编辑个人资料</h3>
+        <form @submit.prevent="saveProfile" class="space-y-5">
+          <div class="relative flex flex-col items-center mb-4 group">
+            <img :src="avatarPreview || (user.avatar ? getAvatarUrl(user.avatar) : defaultAvatar)" alt="头像" class="w-24 h-24 rounded-full border-4 border-primary shadow-lg object-cover mx-auto transition-transform hover:scale-105" />
+            <label class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <i class="fa fa-camera text-white text-xl"></i>
+              <input type="file" accept="image/png,image/jpeg" class="hidden" @change="onAvatarChange" />
+            </label>
+            <div v-if="avatarLoading" class="absolute inset-0 flex items-center justify-center bg-white/60 rounded-full">
+              <span class="loader"></span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-muted mb-1">昵称</label>
+            <input v-model="editForm.nickname" type="text" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入昵称">
+          </div>
+          <div>
+            <label class="block text-muted mb-1">邮箱</label>
+            <input v-model="editForm.email" type="email" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入邮箱">
+          </div>
+          <div>
+            <label class="block text-muted mb-1">手机号</label>
+            <input v-model="editForm.phone" type="tel" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入手机号">
+          </div>
+          <div>
+            <label class="block text-muted mb-1">专业大类</label>
+            <select v-model="editForm.groupType" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+              <option value="">请选择</option>
+              <option v-for="(name, key) in intestTypeMap" :key="key" :value="key">{{ name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-muted mb-1">兴趣方向</label>
+            <div class="flex flex-wrap gap-2">
+              <label v-for="(name, key) in intestTypeMap" :key="key" class="flex items-center cursor-pointer">
+                <input type="checkbox" v-model="editForm.intestTypes" :value="Number(key)" class="mr-2 rounded border-gray-300 focus:ring-primary">
+                <span class="inline-block bg-gradient-to-r from-blue-400 to-blue-600 text-white px-3 py-1 rounded-full text-sm">{{ name }}</span>
               </label>
-              <div v-if="avatarLoading" class="absolute inset-0 flex items-center justify-center bg-white/60 rounded-full">
-                <span class="loader"></span>
-              </div>
             </div>
-            <div>
-              <label class="block text-muted mb-1">昵称</label>
-              <input v-model="editForm.nickname" type="text" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入昵称">
-            </div>
-            <div>
-              <label class="block text-muted mb-1">邮箱</label>
-              <input v-model="editForm.email" type="email" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入邮箱">
-            </div>
-            <div>
-              <label class="block text-muted mb-1">手机号</label>
-              <input v-model="editForm.phone" type="tel" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入手机号">
-            </div>
-            <div>
-              <label class="block text-muted mb-1">专业大类</label>
-              <select v-model="editForm.groupType" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-                <option value="">请选择</option>
-                <option v-for="(name, key) in groupTypeMap" :key="key" :value="key">{{ name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-muted mb-1">兴趣方向</label>
-              <div class="flex flex-wrap gap-2">
-                <label v-for="(name, key) in intestTypeMap" :key="key" class="flex items-center cursor-pointer">
-                  <input type="checkbox" v-model="editForm.intestTypes" :value="Number(key)" class="mr-2 rounded border-gray-300 focus:ring-primary">
-                  <span class="inline-block bg-gradient-to-r from-blue-400 to-blue-600 text-white px-3 py-1 rounded-full text-sm">{{ name }}</span>
-                </label>
-              </div>
-            </div>
-            <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-bold text-lg shadow-lg hover:bg-primary/90 transition-all mt-2">保存</button>
-          </form>
-        </div>
+          </div>
+          <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-bold text-lg shadow-lg hover:bg-primary/90 transition-all mt-2">保存</button>
+        </form>
       </div>
     </div>
   </div>
@@ -135,17 +242,27 @@ export default {
         4: '自动化脚本',
         5: 'DevOps',
         6: '游戏开发'
+      },
+      practiceStats: {
+        totalSubmissions: 0,
+        accuracy: 0,
+        continuousDays: 0,
+        passedProblems: 0
+      },
+      learningStats: {
+        totalCourses: 0,
+        completedLessons: 0
       }
     }
   },
   mounted() {
-    let userId = this.user && this.user.userId;
+    // 从新的用户信息中获取userId
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    let userId = user ? (user.userId || user.user_id) : null
+    
     if (!userId) {
-      userId = localStorage.getItem('userId');
-    }
-    if (!userId || userId === 'null') {
       alert('请先登录！');
-      this.$router.push('/login');
+      this.$router.push('/auth');
       return;
     }
     axios.get(`http://localhost:8080/api/user/${userId}`).then(res => {
@@ -154,6 +271,12 @@ export default {
       console.log('[profile] 后端兴趣原始值:', rawIntestTypes, 'user:', this.user);
       this.user.intestTypes = this.parseIntestTypes(rawIntestTypes);
       console.log('[profile] 最终 user.intestTypes:', this.user.intestTypes);
+      
+      // 加载练习统计信息
+      this.loadPracticeStats(userId);
+      
+      // 加载学习统计信息
+      this.loadLearningStats(userId);
     });
   },
   methods: {
@@ -279,6 +402,41 @@ export default {
             return intestTypes.split(/[,，\s]+/).filter(x => x).map(Number);
         }
         return [];
+    },
+    loadPracticeStats(userId) {
+      // 加载练习统计信息
+      axios.get(`http://localhost:8080/api/user-problem-record/statistics?userId=${userId}`).then(res => {
+        if (res.data.success && res.data.data) {
+          const stats = res.data.data;
+          this.practiceStats = {
+            totalSubmissions: stats.totalSubmissions || 0,
+            accuracy: Math.round((stats.accuracy || 0) * 100),
+            continuousDays: stats.continuousDays || 0,
+            passedProblems: stats.passedProblems || 0
+          };
+        }
+      }).catch(err => {
+        console.error('加载练习统计失败:', err);
+      });
+    },
+    loadLearningStats(userId) {
+      // 加载学习统计信息
+      axios.get(`http://localhost:8080/api/user/learning-statistics?userId=${userId}`).then(res => {
+        if (res.data.success && res.data.data) {
+          const stats = res.data.data;
+          this.learningStats = {
+            totalCourses: stats.totalCourses || 0,
+            completedLessons: stats.completedLessons || 0
+          };
+        }
+      }).catch(err => {
+        console.error('加载学习统计失败:', err);
+        // 如果API不存在，设置默认值
+        this.learningStats = {
+          totalCourses: 0,
+          completedLessons: 0
+        };
+      });
     }
   }
 }
@@ -312,53 +470,60 @@ export default {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-.profile-header-nav {
-  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
-  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
-}
-.profile-logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #fff;
-  letter-spacing: 2px;
-  display: flex;
+
+/* 新增的样式 */
+.btn {
+  display: inline-flex;
   align-items: center;
-}
-.profile-logo i {
-  margin-right: 8px;
-  color: #ffe066;
-}
-.profile-nav-link {
-  color: #fff !important;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  font-size: 1.1rem;
-  padding: 0.5rem 1.5rem;
-  border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
   text-decoration: none;
-  display: inline-block;
+  border-radius: 9999px;
+  transition: all 0.2s;
+  cursor: pointer;
 }
-.profile-nav-link:hover,
-.profile-nav-link.router-link-exact-active {
-  background: rgba(255,255,255,0.18);
-  color: #ffe066 !important;
-  text-decoration: none;
+
+.btn-primary {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  color: white;
+  border: none;
 }
+
+.btn-primary:hover {
+  background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .grid-cols-1.lg\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .lg\:col-span-2 {
+    grid-column: span 1;
+  }
+}
+
 @media (max-width: 768px) {
-  .profile-header-nav .container {
-    flex-direction: column;
-    height: auto;
-    padding: 1rem 0;
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
-  .profile-logo {
-    margin-bottom: 0.5rem;
+  
+  .grid-cols-2.md\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
   }
-  .profile-header-nav nav {
-    flex-wrap: wrap;
-    justify-content: center;
+  
+  .p-8 {
+    padding: 1.5rem;
   }
-  .profile-nav-link {
-    margin-bottom: 0.5rem;
+  
+  .p-6 {
+    padding: 1rem;
   }
 }
 </style>

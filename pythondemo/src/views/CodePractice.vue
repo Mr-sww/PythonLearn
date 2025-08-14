@@ -1,5 +1,12 @@
 <template>
 <div class="code-practice-container">
+  <!-- 加载状态 -->
+  <div v-if="loading" class="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+  </div>
+
   <!-- 主要内容区域 -->
   <div class="practice-main">
     <!-- 左侧题目区域 -->
@@ -8,15 +15,27 @@
       <div class="problem-header">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <h4 class="fw-bold text-dark mb-1">{{ problem ? problem.title : '加载中...' }}</h4>
+            <h4 class="fw-bold text-dark mb-1">
+              <span v-if="problem">{{ problem.title }}</span>
+              <span v-else class="placeholder-glow">
+                <span class="placeholder col-8"></span>
+              </span>
+            </h4>
             <div class="d-flex align-items-center gap-2">
               <span v-if="problem" :class="['badge', 
                 problem.difficulty === '简单' ? 'bg-success' : 
                 problem.difficulty === '中等' ? 'bg-warning text-dark' : 'bg-danger']">
                 {{ problem.difficulty }}
               </span>
-              <span class="text-muted small">通过率: 52.3%</span>
-              <span class="text-muted small">提交次数: 2,456,789</span>
+              <span v-else class="placeholder-glow">
+                <span class="placeholder col-3"></span>
+              </span>
+              <span class="text-muted small">
+                <i class="fa fa-check-circle me-1"></i>通过率: {{ problem ? '52.3%' : '--' }}
+              </span>
+              <span class="text-muted small">
+                <i class="fa fa-upload me-1"></i>提交次数: {{ problem ? '2,456,789' : '--' }}
+              </span>
             </div>
           </div>
           <div class="d-flex gap-2">
@@ -25,6 +44,7 @@
               :class="{ collected: isFavorite, animating: animating }"
               @click="handleFavoriteClick"
               :disabled="favoriteLoading"
+              :title="isFavorite ? '取消收藏' : '收藏题目'"
             >
               <span class="star-icon">
                 <svg v-if="!isFavorite" width="24" height="24" viewBox="0 0 40 40">
@@ -37,8 +57,9 @@
                 </svg>
               </span>
               <span class="collect-text">{{ isFavorite ? '已收藏' : '收藏' }}</span>
+              <span v-if="favoriteCount > 0" class="favorite-count">{{ favoriteCount }}</span>
             </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill" @click="shareProblem" title="分享题目">
               <i class="fa fa-share me-1"></i>分享
             </button>
           </div>
@@ -95,22 +116,46 @@
       <!-- 工具栏 -->
       <div class="editor-toolbar leetcode-toolbar">
         <div class="toolbar-left">
-          <span class="lang-label">Python3</span>
-          <select v-model="theme" class="theme-select">
-            <option value="vs-dark">暗色主题</option>
-            <option value="vs">明亮主题</option>
-            <option value="hc-black">高对比度</option>
-          </select>
-          <select v-model="fontSize" class="font-select">
-            <option v-for="size in [14,16,18,20,22]" :key="size" :value="size">{{ size }}px</option>
-          </select>
+          <div class="lang-selector">
+            <i class="fa fa-code me-1"></i>
+            <span class="lang-label">Python3</span>
+            <i class="fa fa-chevron-down ms-1"></i>
+          </div>
+          <div class="theme-selector">
+            <i class="fa fa-palette me-1"></i>
+            <select v-model="theme" class="theme-select" @change="savePreferences">
+              <option value="vs-dark">暗色主题</option>
+              <option value="vs">明亮主题</option>
+              <option value="hc-black">高对比度</option>
+            </select>
+          </div>
+          <div class="font-selector">
+            <i class="fa fa-font me-1"></i>
+            <select v-model="fontSize" class="font-select" @change="savePreferences">
+              <option v-for="size in [12,14,16,18,20,22,24]" :key="size" :value="size">{{ size }}px</option>
+            </select>
+          </div>
         </div>
         <div class="toolbar-right">
-          <button class="toolbar-btn" @click="formatCode" :disabled="isRunning"><i class="fa fa-magic"></i> 格式化</button>
-          <button class="toolbar-btn" @click="resetCode" :disabled="isRunning"><i class="fa fa-refresh"></i> 重置</button>
-          <button class="toolbar-btn" @click="insertTemplate" :disabled="isRunning"><i class="fa fa-code"></i> 模板</button>
-          <button v-if="!isFullScreen" class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-expand"></i> 全屏</button>
-          <button v-else class="toolbar-btn" @click="toggleFullScreen"><i class="fa fa-compress"></i> 退出全屏</button>
+          <button class="toolbar-btn" @click="formatCode" :disabled="isRunning" title="格式化代码">
+            <i class="fa fa-magic"></i> 格式化
+          </button>
+          <button class="toolbar-btn" @click="resetCode" :disabled="isRunning" title="重置代码">
+            <i class="fa fa-refresh"></i> 重置
+          </button>
+          <button class="toolbar-btn" @click="insertTemplate" :disabled="isRunning" title="插入模板">
+            <i class="fa fa-code"></i> 模板
+          </button>
+          <button class="toolbar-btn" @click="saveCode" :disabled="isRunning" title="保存代码">
+            <i class="fa fa-save"></i> 保存
+          </button>
+          <div class="toolbar-divider"></div>
+          <button v-if="!isFullScreen" class="toolbar-btn" @click="toggleFullScreen" title="全屏模式">
+            <i class="fa fa-expand"></i> 全屏
+          </button>
+          <button v-else class="toolbar-btn" @click="toggleFullScreen" title="退出全屏">
+            <i class="fa fa-compress"></i> 退出全屏
+          </button>
         </div>
       </div>
       <!-- 编辑器区 -->
@@ -125,31 +170,74 @@
         <!-- 浮层输入输出区+按钮 -->
         <transition name="fade">
           <div v-show="showResultPanel" class="io-float-panel">
-            <div class="result-header" style="display: flex; align-items: center; justify-content: space-between;">
-              <span class="result-title">输入/输出</span>
-              <button class="collapse-btn" @click="showResultPanel = false"><i class="fa fa-angle-down"></i></button>
+            <div class="result-header">
+              <div class="result-title">
+                <i class="fa fa-terminal me-2"></i>输入/输出
+                <span v-if="isRunning" class="ms-2">
+                  <i class="fa fa-spinner fa-spin text-primary"></i> 运行中...
+                </span>
+              </div>
+              <div class="result-actions">
+                <button class="btn btn-sm btn-outline-secondary me-2" @click="clearOutput" title="清空输出">
+                  <i class="fa fa-trash"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary me-2" @click="copyOutput" title="复制输出">
+                  <i class="fa fa-copy"></i>
+                </button>
+                <button class="collapse-btn" @click="showResultPanel = false" title="收起面板">
+                  <i class="fa fa-angle-down"></i>
+                </button>
+              </div>
             </div>
-            <div class="result-body" style="flex: 1;">
+            <div class="result-body">
               <div class="io-flex-row">
                 <div class="input-area io-half">
-                  <label>自定义输入：</label>
-                  <textarea v-model="input" class="input-textarea" placeholder="请输入自定义输入..." :disabled="isRunning" style="height: 40px;"></textarea>
+                  <label class="input-label">
+                    <i class="fa fa-keyboard me-1"></i>自定义输入：
+                  </label>
+                  <textarea 
+                    v-model="input" 
+                    class="input-textarea" 
+                    placeholder="请输入测试数据..." 
+                    :disabled="isRunning"
+                    @keydown.ctrl.enter="runCode"
+                  ></textarea>
+                  <div class="input-hint">
+                    <small class="text-muted">
+                      <i class="fa fa-info-circle me-1"></i>按 Ctrl+Enter 快速运行
+                    </small>
+                  </div>
                 </div>
                 <div class="output-area io-half">
-                  <label>输出结果：</label>
-                  <pre class="output-text" style="min-height: 40px;">{{ result.output }}</pre>
+                  <label class="output-label">
+                    <i class="fa fa-terminal me-1"></i>输出结果：
+                  </label>
+                  <div class="output-container">
+                    <pre class="output-text" :class="{ 'has-error': result.error }">{{ result.output || '等待运行...' }}</pre>
+                    <div v-if="result.error" class="error-indicator">
+                      <i class="fa fa-exclamation-triangle text-danger"></i>
+                      <span class="error-message">{{ result.error }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="io-btn-row-bottom" style="margin-top: 8px; display: flex; justify-content: flex-end; gap: 12px;">
-              <button class="run-btn" @click="runCode" :disabled="isRunning">
-                <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
-                <i v-else class="fa fa-play"></i> 运行
-              </button>
-              <button class="submit-btn" @click="submitCode" :disabled="isRunning">
-                <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
-                <i v-else class="fa fa-check"></i> 提交
-              </button>
+            <div class="io-btn-row-bottom">
+              <div class="btn-group">
+                <button class="run-btn" @click="runCode" :disabled="isRunning">
+                  <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
+                  <i v-else class="fa fa-play"></i> 运行
+                </button>
+                <button class="submit-btn" @click="submitCode" :disabled="isRunning">
+                  <i v-if="isRunning" class="fa fa-spinner fa-spin"></i>
+                  <i v-else class="fa fa-check"></i> 提交
+                </button>
+              </div>
+              <div class="execution-info" v-if="result.executionTime">
+                <small class="text-muted">
+                  <i class="fa fa-clock me-1"></i>执行时间: {{ result.executionTime }}ms
+                </small>
+              </div>
             </div>
           </div>
         </transition>
@@ -176,7 +264,7 @@ const fontSize = ref(16)
 const isFullScreen = ref(false)
 const isRunning = ref(false)
 const showResult = ref(false)
-const result = ref({ output: '', testCases: [] })
+const result = ref({ output: '', error: null, executionTime: null })
 const problemId = ref('')
 const problem = ref(null)
 const comments = ref([])
@@ -190,21 +278,53 @@ const animating = ref(false)
 const favoriteCount = ref(0)
 const favoriteLoading = ref(false)
 const showResultPanel = ref(true)
+const loading = ref(false)
 
 const route = useRoute()
 
+// 加载用户偏好设置
+function loadPreferences() {
+  const savedTheme = localStorage.getItem('codeEditor_theme')
+  const savedFontSize = localStorage.getItem('codeEditor_fontSize')
+  if (savedTheme) theme.value = savedTheme
+  if (savedFontSize) fontSize.value = parseInt(savedFontSize)
+}
+
+// 保存用户偏好设置
+function savePreferences() {
+  localStorage.setItem('codeEditor_theme', theme.value)
+  localStorage.setItem('codeEditor_fontSize', fontSize.value.toString())
+}
+
 onMounted(async () => {
+  loading.value = true
+  loadPreferences()
+  
   problemId.value = route.params.id || window.location.pathname.split('/').pop() || ''
-  userId.value = localStorage.getItem('userId')
-  await loadProblem()
-  await loadComments()
-  await checkFavorite()
-  await loadFavoriteCount()
+  // 从新的用户信息中获取userId
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  userId.value = user ? (user.userId || user.user_id) : null
+  
+  try {
+    await Promise.all([
+      loadProblem(),
+      loadComments(),
+      checkFavorite(),
+      loadFavoriteCount()
+    ])
+  } catch (error) {
+    console.error('加载数据失败:', error)
+  } finally {
+    loading.value = false
+  }
 })
 
 watch(() => route.params.id, async (newId, oldId) => {
   if (newId && newId !== oldId) {
     problemId.value = newId
+    // 重新获取用户ID
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    userId.value = user ? (user.userId || user.user_id) : null
     await loadProblem()
     await loadComments()
     await checkFavorite()
@@ -228,7 +348,25 @@ async function loadProblem() {
     } catch {
       problem.value.examples = []
     }
-    code.value = problem.value.template || ''
+    
+    // 先尝试加载保存的代码，如果没有则使用模板
+    loadSavedCode()
+    console.log('loadSavedCode后的code.value:', code.value) // 调试信息
+    
+    // 通用代码加载逻辑
+    if (!code.value.trim() || code.value.includes('在这里编写你的代码')) {
+      // 如果有题目模板，使用题目模板
+      if (problem.value && problem.value.template) {
+        code.value = problem.value.template
+        console.log('使用题目模板:', code.value) // 调试信息
+      } else {
+        // 使用默认模板
+        code.value = '# 在这里编写你的代码\n'
+        console.log('使用默认模板:', code.value) // 调试信息
+      }
+    } else {
+      console.log('使用已保存的代码:', code.value) // 调试信息
+    }
   }
 }
 
@@ -255,62 +393,274 @@ function insertTemplate() {
   }
 }
 
+// 保存代码到本地存储
+function saveCode() {
+  if (problemId.value && code.value) {
+    localStorage.setItem(`code_${problemId.value}`, code.value)
+    showToast('代码已保存到本地', 'success')
+  }
+}
+
+// 加载保存的代码
+function loadSavedCode() {
+  if (problemId.value) {
+    const savedCode = localStorage.getItem(`code_${problemId.value}`)
+    if (savedCode && savedCode !== code.value) {
+      code.value = savedCode
+    }
+  }
+}
+
+// 清空输出
+function clearOutput() {
+  result.value = { output: '', error: null, executionTime: null }
+}
+
+// 复制输出到剪贴板
+async function copyOutput() {
+  try {
+    await navigator.clipboard.writeText(result.value.output || '')
+    showToast('输出已复制到剪贴板', 'success')
+  } catch (error) {
+    console.error('复制失败:', error)
+    showToast('复制失败', 'error')
+  }
+}
+
+// 分享题目
+function shareProblem() {
+  const url = `${window.location.origin}/problem/${problemId.value}`
+  if (navigator.share) {
+    navigator.share({
+      title: problem.value?.title || 'Python题目',
+      url: url
+    })
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('链接已复制到剪贴板', 'success')
+    })
+  }
+}
+
+// 显示提示消息
+function showToast(message, type = 'info') {
+  // 简单的提示实现，可以替换为更完善的toast组件
+  const toast = document.createElement('div')
+  toast.className = `toast toast-${type}`
+  toast.textContent = message
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+  `
+  document.body.appendChild(toast)
+  setTimeout(() => {
+    toast.remove()
+  }, 3000)
+}
+
 function toggleFullScreen() {
   isFullScreen.value = !isFullScreen.value
 }
 
-function runCode() {
+
+
+async function runCode() {
+  console.log('runCode function called') // 调试信息
+  console.log('code.value:', code.value) // 调试信息
+  console.log('code.value.trim():', code.value.trim()) // 调试信息
+  console.log('!code.value.trim():', !code.value.trim()) // 调试信息
+  
+  if (!code.value.trim()) {
+    console.log('Code is empty, showing error toast') // 调试信息
+    showToast('请先输入代码', 'error')
+    return
+  }
+  
+  console.log('Code to run:', code.value) // 调试信息
+  console.log('Input:', input.value) // 调试信息
+  
   isRunning.value = true
   showResult.value = true
   showResultPanel.value = true
-  result.value.output = ''
-  axios.post('/api/judge/run', {
-    code: code.value,
-    language: 'python',
-    input: input.value
-  }).then(res => {
-    const data = res.data
+  result.value = { output: '', error: null, executionTime: null }
+  
+  const startTime = Date.now()
+  
+  try {
+    console.log('Sending request to /api/judge/run') // 调试信息
+    console.log('Request payload:', { code: code.value, language: 'python', input: input.value }) // 调试信息
+    
+    const requestData = {
+      code: code.value,
+      language: 'python',
+      input: input.value
+    }
+    
+    console.log('Full URL:', axios.defaults.baseURL + '/api/judge/run') // 调试信息
+    
+    const response = await axios.post('/api/judge/run', requestData)
+    
+    const data = response.data
+    const executionTime = Date.now() - startTime
+    
     // 兼容 output 字段和 stdout 字段
     let output = data.output || data.stdout || ''
-    if (data.stderr) output += (output ? '\n' : '') + '错误信息：' + data.stderr
-    result.value.output = output
-  }).catch(err => {
-    result.value.output = '运行失败：' + (err.response?.data?.message || err.message)
-  }).finally(() => {
+    let error = null
+    
+    if (data.stderr) {
+      error = data.stderr
+      output += (output ? '\n' : '') + '错误信息：' + data.stderr
+    }
+    
+    result.value = {
+      output: output,
+      error: error,
+      executionTime: executionTime
+    }
+    
+    // 自动保存代码
+    saveCode()
+    
+  } catch (err) {
+    const executionTime = Date.now() - startTime
+    result.value = {
+      output: '运行失败：' + (err.response?.data?.message || err.message),
+      error: err.response?.data?.message || err.message,
+      executionTime: executionTime
+    }
+    showToast('运行失败，请检查代码', 'error')
+  } finally {
     isRunning.value = false
-  })
+  }
 }
 
-function submitCode() {
+async function submitCode() {
+  console.log('submitCode function called') // 调试信息
+  
+  if (!code.value.trim()) {
+    showToast('请先输入代码', 'error')
+    return
+  }
+  
+  if (!userId.value) {
+    showToast('请先登录后再提交', 'error')
+    return
+  }
+  
+  console.log('Code to submit:', code.value) // 调试信息
+  console.log('User ID:', userId.value) // 调试信息
+  
   isRunning.value = true
   showResult.value = true
   showResultPanel.value = true
-  result.value.output = ''
-  // 组装测试用例
-  const testCases = (problem.value?.examples || []).map(e => ({
-    input: e.input,
-    expected: e.output
-  }))
-  axios.post('/api/judge/batch-judge', {
-    code: code.value,
-    language: 'python',
-    testCases
-  }).then(res => {
-    const cases = res.data
+  result.value = { output: '', error: null, executionTime: null }
+  
+  const startTime = Date.now()
+  
+  try {
+    // 组装测试用例
+    const testCases = (problem.value?.examples || []).map(e => ({
+      input: e.input,
+      expected: e.output
+    }))
+    
+    console.log('Sending request to /api/judge/batch-judge') // 调试信息
+    console.log('Request payload:', { code: code.value, language: 'python', testCases }) // 调试信息
+    
+    const requestData = {
+      code: code.value,
+      language: 'python',
+      userId: userId.value,
+      problemId: parseInt(problemId.value.replace('P', '')), // 移除P前缀
+      testCases
+    }
+    
+    console.log('Full URL:', axios.defaults.baseURL + '/api/judge/batch-judge') // 调试信息
+    
+    const response = await axios.post('/api/judge/batch-judge', requestData)
+    
+    const cases = response.data
+    const executionTime = Date.now() - startTime
+    
     let output = ''
+    let passedCount = 0
+    let totalCount = cases.length
+    
     cases.forEach((c, idx) => {
       // 兼容 output/actual/stdout 字段
       let actual = c.output || c.actual || c.stdout || ''
-      output += `用例${idx + 1}: 输入：${c.input}\n期望输出：${c.expected}\n实际输出：${actual}\n${c.passed ? '✅通过' : '❌未通过'}\n`
+      const passed = c.passed
+      if (passed) passedCount++
+      
+      output += `用例${idx + 1}: 输入：${c.input}\n期望输出：${c.expected}\n实际输出：${actual}\n${passed ? '✅通过' : '❌未通过'}\n`
       if (c.stderr) output += '错误信息：' + c.stderr + '\n'
       output += '\n'
     })
-    result.value.output = output
-  }).catch(err => {
-    result.value.output = '判题失败：' + (err.response?.data?.message || err.message)
-  }).finally(() => {
+    
+    // 添加总结
+    output += `\n=== 提交结果 ===\n通过用例：${passedCount}/${totalCount}\n执行时间：${executionTime}ms\n`
+    
+    if (passedCount === totalCount) {
+      output += '🎉 恭喜！所有用例都通过了！'
+      showToast('提交成功！所有用例通过', 'success')
+      
+      // 保存提交记录
+      await saveSubmissionRecord(true)
+    } else {
+      output += '❌ 还有用例未通过，请检查代码'
+      showToast(`提交完成，通过 ${passedCount}/${totalCount} 个用例`, 'info')
+      
+      // 保存提交记录
+      await saveSubmissionRecord(false)
+    }
+    
+    result.value = {
+      output: output,
+      error: null,
+      executionTime: executionTime
+    }
+    
+    // 自动保存代码
+    saveCode()
+    
+  } catch (err) {
+    const executionTime = Date.now() - startTime
+    result.value = {
+      output: '判题失败：' + (err.response?.data?.message || err.message),
+      error: err.response?.data?.message || err.message,
+      executionTime: executionTime
+    }
+    showToast('判题失败，请稍后重试', 'error')
+  } finally {
     isRunning.value = false
-  })
+  }
+}
+
+// 保存提交记录
+async function saveSubmissionRecord(passed) {
+  if (!userId.value || !problemId.value) return
+  
+  try {
+    await axios.post('/api/user-problem-record', {
+      userId: userId.value,
+      problemId: problemId.value,
+      code: code.value,
+      result: passed ? '通过' : '未通过',
+      passRate: passed ? 100 : 0,
+      usedTime: result.value.executionTime || 0,
+      usedMemory: 0,
+      language: 'python'
+    })
+  } catch (error) {
+    console.error('保存提交记录失败:', error)
+  }
 }
 
 async function loadComments() {
@@ -338,7 +688,7 @@ function buildCommentTree(list) {
 async function addComment() {
   if (!userId.value) {
     alert('请先登录后再评论！')
-    window.location.href = '/login'
+    window.location.href = '/auth'
     return
   }
   if (!newComment.value.trim()) return
@@ -354,7 +704,7 @@ async function addComment() {
 async function replyComment(parentId, content) {
   if (!userId.value) {
     alert('请先登录后再回复！')
-    window.location.href = '/login'
+    window.location.href = '/auth'
     return
   }
   await axios.post(`/api/practice/problem/${problemId.value}/comments`, {
@@ -397,7 +747,7 @@ async function handleFavoriteClick() {
   if (favoriteLoading.value) return
   if (!userId.value) {
     alert('请先登录后再收藏题目！')
-    window.location.href = '/login'
+    window.location.href = '/auth'
     return
   }
   favoriteLoading.value = true
@@ -1250,5 +1600,258 @@ async function toggleFavorite() {
 .expand-btn-float:hover {
   background: #1746a2;
   color: #ffe066;
+}
+
+/* 加载状态 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* 工具栏优化 */
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  gap: 16px;
+}
+
+.toolbar-left, .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lang-selector, .theme-selector, .font-selector {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolbar-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #dee2e6;
+  margin: 0 8px;
+}
+
+/* 输入输出区域优化 */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.result-title {
+  font-weight: 600;
+  color: #495057;
+  display: flex;
+  align-items: center;
+}
+
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-label, .output-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.input-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.output-container {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 80px;
+}
+
+.output-text {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.output-text.has-error {
+  color: #dc3545;
+}
+
+.error-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+}
+
+.input-hint {
+  margin-top: 4px;
+}
+
+.execution-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 收藏按钮优化 */
+.collect-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+  border: 2px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.collect-btn:hover {
+  border-color: #2563eb;
+  background: #f8f9ff;
+}
+
+.collect-btn.collected {
+  border-color: #ffd600;
+  background: #fffbf0;
+  color: #856404;
+}
+
+.collect-btn.animating {
+  animation: collectPulse 0.6s ease;
+}
+
+.favorite-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 动画效果 */
+@keyframes collectPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Toast 样式 */
+.toast {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .practice-main {
+    flex-direction: column;
+  }
+  
+  .problem-panel, .code-panel {
+    width: 100%;
+  }
+  
+  .toolbar-left, .toolbar-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .io-flex-row {
+    flex-direction: column;
+  }
+  
+  .io-half {
+    width: 100%;
+  }
 }
 </style> 

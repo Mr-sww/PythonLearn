@@ -15,6 +15,14 @@ public class Course {
     private String category;
     private String tags;
     private Integer views;
+    private Double price;
+    private Double rating;
+    private String duration;
+    private Integer lessons;
+    private String difficulty;
+    private String coverImage;
+    private String authorAvatar;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -105,6 +113,70 @@ public class Course {
 
     public void setViews(Integer views) {
         this.views = views;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
+
+    public Integer getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(Integer lessons) {
+        this.lessons = lessons;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public String getCoverImage() {
+        return coverImage;
+    }
+
+    public void setCoverImage(String coverImage) {
+        this.coverImage = coverImage;
+    }
+
+    public String getAuthorAvatar() {
+        return authorAvatar;
+    }
+
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {

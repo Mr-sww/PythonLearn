@@ -10,6 +10,7 @@ public class PythonProblem {
     private String samples;
     private String background;
     private String createTime;
+    private Integer dif;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -29,6 +30,8 @@ public class PythonProblem {
     public void setBackground(String background) { this.background = background; }
     public String getCreateTime() { return createTime; }
     public void setCreateTime(String createTime) { this.createTime = createTime; }
+    public Integer getDif() { return dif; }
+    public void setDif(Integer dif) { this.dif = dif; }
 
     // 可选：静态工厂方法
     public static PythonProblem ofId(String id) {

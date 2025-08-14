@@ -26,8 +26,8 @@
           </div>
         </template>
         <template v-else>
-          <button @click="openLoginModal" class="px-4 py-2 border border-white text-white rounded-lg font-medium hover:bg-white/10 transition-colors mr-2">登录</button>
-          <button @click="openRegisterModal" class="px-4 py-2 bg-white text-primary rounded-lg font-medium hover:bg-white/90 transition-colors">注册</button>
+          <router-link to="/auth" class="px-4 py-2 border border-white text-white rounded-lg font-medium hover:bg-white/10 transition-colors mr-2">登录</router-link>
+          <router-link to="/auth?mode=register" class="px-4 py-2 bg-white text-primary rounded-lg font-medium hover:bg-white/90 transition-colors">注册</router-link>
         </template>
       </div>
     </div>
@@ -35,7 +35,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import { EventBus } from '../eventBus';
 export default {
   name: 'GlobalNavbar',
@@ -84,20 +83,19 @@ export default {
   },
   methods: {
     fetchUser() {
-      let userId = localStorage.getItem('userId');
-      if (!userId || userId === 'null') {
-        this.isLoggedIn = false;
-        return;
-      }
-      axios.get('http://localhost:8080/api/user/me', { withCredentials: true })
-        .then(res => {
+      // 使用认证工具函数检查登录状态
+      import('../utils/auth').then(({ isLoggedIn, getCurrentUser }) => {
+        if (isLoggedIn()) {
           this.isLoggedIn = true;
-          this.user = res.data;
-        })
-        .catch(() => {
+          const user = getCurrentUser();
+          this.user = user;
+          console.log('GlobalNavbar: 用户已登录', user);
+        } else {
           this.isLoggedIn = false;
           this.user = { avatar: null, nickname: '', userId: null };
-        });
+          console.log('GlobalNavbar: 用户未登录');
+        }
+      });
     },
     getAvatarUrl(url) {
       if (!url || typeof url !== 'string') {
@@ -130,11 +128,14 @@ export default {
       this.updateUserMenuPosition();
     },
     logout() {
+      // 使用认证工具函数清除登录状态
+      import('../utils/auth').then(({ clearLoginState }) => {
+        clearLoginState();
+      });
       this.isLoggedIn = false;
       this.user = { avatar: null, nickname: '', userId: null };
-      localStorage.removeItem('userId');
       this.showUserMenu = false;
-      this.$router.push('/login');
+      this.$router.push('/auth');
     },
     isActive(item) {
       return this.$route.path === item.to;
@@ -175,12 +176,6 @@ export default {
       if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
         this.showUserMenu = false;
       }
-    },
-    openLoginModal() {
-      EventBus.emit('open-login-modal');
-    },
-    openRegisterModal() {
-      EventBus.emit('open-register-modal');
     }
   },
   watch: {

@@ -19,6 +19,11 @@ public class UserProblemRecordServiceImpl implements UserProblemRecordService {
 
     @Override
     public int getTotalSubmissions(Integer userId) {
+        if (userId == 0) {
+            // 获取所有用户的提交总数
+            return repository.countAllSubmissions();
+        }
+        
         int count = repository.countTotalSubmissions(userId);
         if (count == 0) {
             // 插入一条默认记录
@@ -94,5 +99,35 @@ public class UserProblemRecordServiceImpl implements UserProblemRecordService {
     @Override
     public int getContinuousDays(Integer userId) {
         return repository.getContinuousDays(userId);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getUserProblemRecordsWithPagination(Integer userId, int offset, int size) {
+        return repository.getUserProblemRecordsWithPagination(userId, offset, size);
+    }
+    
+    @Override
+    public int getUserProblemRecordsCount(Integer userId) {
+        return repository.getUserProblemRecordsCount(userId);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getUserProblemRecordsByResultWithPagination(Integer userId, String result, int offset, int size) {
+        return repository.getUserProblemRecordsByResultWithPagination(userId, result, offset, size);
+    }
+    
+    @Override
+    public int getUserProblemRecordsByResultCount(Integer userId, String result) {
+        return repository.getUserProblemRecordsByResultCount(userId, result);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getDailySubmissionTrend(Integer userId) {
+        return repository.dailySubmissionTrend(userId);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getResultDistribution(Integer userId) {
+        return repository.resultDistribution(userId);
     }
 } 

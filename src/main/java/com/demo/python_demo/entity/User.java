@@ -24,6 +24,7 @@ public class User implements Serializable {
     private Date createTime;
     private Date updateTime;
     private String email;
+    private String status;
 
     // Getter and Setter methods
     public Integer getUserId() {
@@ -112,6 +113,14 @@ public class User implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public List<Integer> getIntestTypesList() {

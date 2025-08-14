@@ -84,4 +84,9 @@ public interface CourseService {
      * 获取推荐课程
      */
     List<Course> getRecommendedCourses(Integer userId, Integer limit);
+
+    // 管理员功能
+    int countAllCourses();
+    int countCoursesByStatus(String status);
+    boolean reviewCourse(Integer courseId, String action, String comment);
 } 

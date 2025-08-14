@@ -48,8 +48,9 @@ public interface UserService {
     /**
      * 删除用户
      * @param userId 用户ID
+     * @return 是否删除成功
      */
-    void deleteUser(Integer userId);
+    boolean deleteUser(Integer userId);
 
     /**
      * 用户登录
@@ -68,10 +69,27 @@ public interface UserService {
 
     boolean register(User user);
 
-
+    /**
+     * 更新用户信息（简化版）
+     * @param user 用户信息
+     * @return 更新后的用户
+     */
     User updateUser(User user);
 
     int updateGroupType(Integer userId, Integer groupType);
 
     int updateIntestTypes(Integer userId, String intestTypes);
+
+    // 管理员功能
+    List<User> searchUsers(String keyword, Integer groupType, String status);
+    boolean updateUserStatus(Integer userId, String status);
+    boolean updateUserGroupType(Integer userId, Integer groupType);
+    int countAllUsers();
+    int countUsersByStatus(String status);
+    List<User> getAllStudents();
+    List<User> getStudentsByMajor(Integer majorType);
+    List<User> getAllTeachers();
+    List<User> getAllAdmins();
+    List<Object> getMajorStatistics();
+    List<Object> getRoleStatistics();
 }
