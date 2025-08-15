@@ -72,3 +72,11 @@ export function hasCompletedLearningDirectionSelection() {
   const user = getCurrentUser()
   return user && user.intestTypes && user.intestTypes.length > 0
 }
+
+
+
+
+
+
+
+

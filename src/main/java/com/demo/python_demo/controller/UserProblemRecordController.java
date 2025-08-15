@@ -312,5 +312,22 @@ public class UserProblemRecordController {
                 "message", "导出记录失败: " + e.getMessage()
             ));
         }
+        }
+    
+        @PostMapping("/submit")
+        public Map<String, Object> submit(@RequestBody UserProblemRecord record) {
+            userProblemRecordService.saveRecord(record);
+            Map<String, Object> map = new HashMap<>();
+            map.put("message", "记录已保存");
+            return map;
+        }
+    
+        @GetMapping("/stats")
+        public Map<String, Object> getStats(@RequestParam Integer userId) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("totalSubmissions", userProblemRecordService.getTotalSubmissions(userId));
+            map.put("passedProblems", userProblemRecordService.getPassedProblems(userId));
+            map.put("accuracy", userProblemRecordService.getAccuracy(userId));
+            return map;
+        }
     }
-} 
