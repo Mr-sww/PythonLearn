@@ -8,12 +8,12 @@ import java.util.List;
 
 @Mapper
 public interface KnowledgePointRepository {
-    @Select("SELECT * FROM RunoobPython3Install ORDER BY stage ASC")
+    @Select("SELECT * FROM runoobpython3install ORDER BY stage ASC")
     List<KnowledgePoint> findAllOrderByStage();
 
-    @Select("SELECT * FROM RunoobPython3Install WHERE title = #{title}")
+    @Select("SELECT * FROM runoobpython3install WHERE title = #{title}")
     KnowledgePoint findByTitle(String title);
 
-    @Select("SELECT * FROM RunoobPython3Install WHERE id = #{id}")
+    @Select("SELECT * FROM runoobpython3install WHERE id = #{id}")
     KnowledgePoint findById(Integer id);
 }

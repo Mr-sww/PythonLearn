@@ -12,7 +12,7 @@ public interface UserFavoriteRepository {
      * 查询用户收藏的课程列表
      */
     @Select("SELECT uf.id, uf.user_id, uf.course_id, uf.create_time, " +
-            "c.ArticleID, c.Title, c.URL, c.PublicationDate, c.Content, c.Author, c.Category, c.Tags, c.Views, c.CreatedAt, c.UpdatedAt " +
+            "c.ArticleID, c.Title, c.PublicationDate, c.Content, c.Author, c.Category, c.Tags, c.Views, c.CreatedAt, c.UpdatedAt " +
             "FROM user_favorite uf " +
             "LEFT JOIN course c ON uf.course_id = c.ArticleID " +
             "WHERE uf.user_id = #{userId} " +

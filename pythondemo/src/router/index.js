@@ -11,6 +11,12 @@ import CodePractice from '../views/CodePractice.vue'
 import ProblemList from '../views/ProblemList.vue'
 import AuthPage from '../views/AuthPage.vue'
 import PracticeRecords from '../views/PracticeRecords.vue'
+import LearningRecords from '../views/LearningRecords.vue'
+import AdminDashboard from '../views/AdminDashboard.vue'
+import TeacherDashboard from '../views/TeacherDashboard.vue'
+import StudentDashboard from '../views/StudentDashboard.vue'
+import MyCourses from '../views/MyCourses.vue'
+import TeacherCourses from '../views/TeacherCourses.vue'
 
 const routes = [
   { path: '/', component: HomePage },
@@ -26,6 +32,39 @@ const routes = [
   { path: '/exercise/:id', component: ExerciseDetailPage },
   { path: '/ai', component: AIChatPage },
   { path: '/practice-records', component: PracticeRecords },
+  { path: '/learning-records', component: LearningRecords },
+  
+  // 身份管理路由
+  { 
+    path: '/admin', 
+    component: AdminDashboard,
+    meta: { requiresAuth: true, requiresRole: 'admin' }
+  },
+  { 
+    path: '/teacher', 
+    component: TeacherDashboard,
+    meta: { requiresAuth: true, requiresRole: 'teacher' }
+  },
+  { 
+    path: '/student', 
+    component: StudentDashboard,
+    meta: { requiresAuth: true, requiresRole: 'student' }
+  },
+  
+  // 课程相关路由
+  {
+    path: '/my-courses',
+    name: 'MyCourses',
+    component: MyCourses,
+    meta: { requiresAuth: true, requiresRole: 'student' }
+  },
+  {
+    path: '/teacher-courses',
+    name: 'TeacherCourses',
+    component: TeacherCourses,
+    meta: { requiresAuth: true, requiresRole: 'teacher' }
+  },
+  
   {
     path: '/favorites',
     name: 'FavoriteCourses',
@@ -48,7 +87,7 @@ const router = createRouter({
   routes
 })
 
-// 全局路由守卫 - 检查登录状态
+// 全局路由守卫 - 检查登录状态和角色权限
 router.beforeEach((to, from, next) => {
   // 不需要登录检查的路径
   const publicPaths = ['/auth']
@@ -67,10 +106,50 @@ router.beforeEach((to, from, next) => {
     // 未登录，保存当前路径并跳转到登录页
     localStorage.setItem('redirectPath', to.fullPath)
     next('/auth')
-  } else {
-    // 已登录，允许访问
-    next()
+    return
   }
+  
+  // 检查角色权限
+  if (to.meta.requiresRole) {
+    // 从localStorage获取用户角色，如果没有则从用户信息中计算
+    let userRole = localStorage.getItem('userRole')
+    
+    if (!userRole && user.groupType) {
+      // 根据group_type计算角色
+      if (user.groupType >= 1 && user.groupType <= 6) {
+        userRole = 'student'
+      } else if (user.groupType === 7) {
+        userRole = 'teacher'
+      } else if (user.groupType === 8) {
+        userRole = 'admin'
+      } else {
+        userRole = 'student'
+      }
+      // 保存到localStorage
+      localStorage.setItem('userRole', userRole)
+    }
+    
+    if (userRole !== to.meta.requiresRole) {
+      // 角色不匹配，根据用户角色跳转到对应的仪表板
+      switch (userRole) {
+        case 'admin':
+          next('/admin')
+          break
+        case 'teacher':
+          next('/teacher')
+          break
+        case 'student':
+          next('/student')
+          break
+        default:
+          next('/')
+      }
+      return
+    }
+  }
+  
+  // 权限检查通过，允许访问
+  next()
 })
 
 export default router

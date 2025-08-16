@@ -14,7 +14,7 @@ public interface CourseRepository {
     /**
      * 获取所有课程
      */
-    @Select("SELECT * FROM course ORDER BY createdAt DESC")
+    @Select("SELECT * FROM course ORDER BY CreatedAt DESC")
     List<Course> findAll();
 
     /**
@@ -26,13 +26,13 @@ public interface CourseRepository {
     /**
      * 根据分类获取课程
      */
-    @Select("SELECT * FROM course WHERE Category = #{category} ORDER BY createdAt DESC")
+    @Select("SELECT * FROM course WHERE Category = #{category} ORDER BY CreatedAt DESC")
     List<Course> findByCategory(String category);
 
     /**
      * 根据作者获取课程
      */
-    @Select("SELECT * FROM course WHERE Author = #{author} ORDER BY createdAt DESC")
+    @Select("SELECT * FROM course WHERE Author = #{author} ORDER BY CreatedAt DESC")
     List<Course> findByAuthor(String author);
 
     /**
@@ -41,17 +41,17 @@ public interface CourseRepository {
     @Select("SELECT * FROM course WHERE Title LIKE CONCAT('%', #{keyword}, '%') " +
             "OR Content LIKE CONCAT('%', #{keyword}, '%') " +
             "OR Tags LIKE CONCAT('%', #{keyword}, '%') " +
-            "ORDER BY createdAt DESC")
+            "ORDER BY CreatedAt DESC")
     List<Course> searchByKeyword(String keyword);
 
     /**
-     * 获取热门课程（按浏览量排序，MySQL实现）
+     * 获取热门课程（按浏览量排序）
      */
     @Select("SELECT * FROM course ORDER BY Views DESC LIMIT #{limit}")
     List<Course> findPopularCourses(Integer limit);
 
     /**
-     * 获取最新课程（MySQL实现）
+     * 获取最新课程
      */
     @Select("SELECT * FROM course ORDER BY PublicationDate DESC LIMIT #{limit}")
     List<Course> findLatestCourses(Integer limit);
@@ -59,17 +59,19 @@ public interface CourseRepository {
     /**
      * 创建课程
      */
-    @Insert("INSERT INTO course (Title, URL, PublicationDate, Content, Author, Category, Tags, Views) " +
-            "VALUES (#{title}, #{url}, #{publicationDate}, #{content}, #{author}, #{category}, #{tags}, #{views})")
+    @Insert("INSERT INTO course (Title, PublicationDate, Content, Author, Category, Tags, Views, Rating, Duration, Lessons, Difficulty, CoverImage) " +
+            "VALUES (#{title}, #{publicationDate}, #{content}, #{author}, #{category}, #{tags}, #{views}, #{rating}, #{duration}, #{lessons}, #{difficulty}, #{coverImage})")
     @Options(useGeneratedKeys = true, keyProperty = "articleId")
     int insert(Course course);
 
     /**
      * 更新课程
      */
-    @Update("UPDATE course SET Title = #{title}, URL = #{url}, PublicationDate = #{publicationDate}, " +
+    @Update("UPDATE course SET Title = #{title}, PublicationDate = #{publicationDate}, " +
             "Content = #{content}, Author = #{author}, Category = #{category}, Tags = #{tags}, " +
-            "Views = #{views}, UpdatedAt = CURRENT_TIMESTAMP WHERE ArticleID = #{articleId}")
+            "Views = #{views}, Rating = #{rating}, Duration = #{duration}, Lessons = #{lessons}, " +
+            "Difficulty = #{difficulty}, CoverImage = #{coverImage}, UpdatedAt = CURRENT_TIMESTAMP " +
+            "WHERE ArticleID = #{articleId}")
     int update(Course course);
 
     /**
@@ -91,9 +93,9 @@ public interface CourseRepository {
     int count();
 
     /**
-     * 分页查询课程（MySQL实现）
+     * 分页查询课程
      */
-    @Select("SELECT * FROM course ORDER BY createdAt DESC LIMIT #{offset}, #{limit}")
+    @Select("SELECT * FROM course ORDER BY CreatedAt DESC LIMIT #{offset}, #{limit}")
     List<Course> findWithPagination(@Param("offset") int offset, @Param("limit") int limit);
 
     /**

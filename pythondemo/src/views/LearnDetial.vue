@@ -2,11 +2,19 @@
   <div class="learning-center">
     <div class="sidebar">
       <h3>知识点目录</h3>
-      <ul>
-        <li v-for="item in catalog" :key="item.id" @click="selectKnowledge(item)" :class="{active: selectedKnowledge && selectedKnowledge.id === item.id}">
-          {{ item.title }}
-        </li>
-      </ul>
+      <div v-for="group in catalog" :key="group.id" class="catalog-group">
+        <div class="group-header" :class="{active: selectedGroup === group.id}">
+          <i class="fa" :class="group.status === '已完成' ? 'fa-check-circle text-success' : 'fa-dot-circle-o text-warning'"></i>
+          <span class="group-title">{{ group.title }}</span>
+        </div>
+        <ul class="group-items" v-if="group.children && group.children.length">
+          <li v-for="item in group.children" :key="item.id" 
+              @click="selectKnowledge(item)" 
+              :class="{active: selectedKnowledge && selectedKnowledge.id === item.id}">
+            {{ item.title }}
+          </li>
+        </ul>
+      </div>
     </div>
     <div class="main-content">
       <div class="knowledge-section card">
@@ -19,18 +27,18 @@
           <p class="text-muted">请选择左侧知识点</p>
         </div>
       </div>
-      <div class="problem-list-section card">
-        <h3>题目列表</h3>
-        <div v-if="problems.length === 0" class="text-muted">暂无题目</div>
-        <div v-else class="problem-card-list">
-          <div v-for="prob in problems" :key="prob.id" class="problem-card">
-            <div class="problem-title">{{ prob.title }}</div>
-            <button class="go-btn" @click="$router.push(`/problem/${prob.id}`)">
-              去做题
-            </button>
-          </div>
-        </div>
-      </div>
+             <div class="problem-list-section card" v-if="selectedKnowledge && selectedKnowledge.question && selectedKnowledge.question.trim() !== ''">
+         <h3>题目列表</h3>
+         <div v-if="problems.length === 0" class="text-muted">暂无题目</div>
+         <div v-else class="problem-card-list">
+           <div v-for="prob in problems" :key="prob.id" class="problem-card">
+             <div class="problem-title">{{ prob.title }}</div>
+                           <button class="go-btn" @click="goToProblem(prob.id)">
+                去做题
+              </button>
+           </div>
+         </div>
+       </div>
     </div>
   </div>
 </template>
@@ -43,6 +51,7 @@ export default {
     return {
       catalog: [],
       selectedKnowledge: null,
+      selectedGroup: null,
       problems: [],
       loading: false,
       point: {}
@@ -81,6 +90,26 @@ export default {
         const res = await axios.get(`/api/knowledge/${item.id}/detail`);
         this.selectedKnowledge = res.data.knowledge;
         this.problems = res.data.problems;
+        
+        // 设置选中的分组
+        this.selectedGroup = this.catalog.find(group => 
+          group.children && group.children.some(child => child.id === item.id)
+        )?.id;
+      } catch (error) {
+        console.error('获取知识点详情失败:', error);
+        // 使用模拟数据
+        this.selectedKnowledge = {
+          id: item.id,
+          title: item.title,
+          content: '这是关于' + item.title + '的详细内容。请稍后再试或联系管理员。'
+        };
+        // 错误时不显示题目列表
+        this.problems = [];
+        
+        // 设置选中的分组
+        this.selectedGroup = this.catalog.find(group => 
+          group.children && group.children.some(child => child.id === item.id)
+        )?.id;
       } finally {
         this.loading = false;
       }
@@ -89,9 +118,16 @@ export default {
       if (!this.catalog.length) {
         await this.fetchCatalog();
       }
-      let item = this.catalog.find(k => k.title === title);
-      if (item) {
-        await this.selectKnowledge(item);
+      
+      // 在分组中查找知识点
+      for (const group of this.catalog) {
+        if (group.children) {
+          const item = group.children.find(k => k.title === title);
+          if (item) {
+            await this.selectKnowledge(item);
+            return;
+          }
+        }
       }
     },
     async fetchKnowledgePoint(title) {
@@ -107,6 +143,10 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    goToProblem(problemId) {
+      // 跳转到题目页面
+      this.$router.push(`/problem/${problemId}`);
     }
   }
 }
@@ -141,31 +181,73 @@ export default {
   color: #2563eb;
 }
 
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  width: 100%;
+.catalog-group {
+  margin-bottom: 20px;
 }
 
-.sidebar li {
+.group-header {
+  display: flex;
+  align-items: center;
   padding: 12px 10px;
   border-radius: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   font-size: 16px;
+  font-weight: bold;
   color: #22223b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
-.sidebar li:hover {
+.group-header:hover {
   background: #e3eafe;
   color: #2563eb;
 }
 
-.sidebar li.active {
+.group-header.active {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+}
+
+.group-header i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.group-title {
+  flex: 1;
+}
+
+.group-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-left: 20px;
+}
+
+.group-items li {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  font-size: 14px;
+  color: #374151;
+  border-left: 3px solid transparent;
+}
+
+.group-items li:hover {
+  background: #e3eafe;
+  color: #2563eb;
+  border-left-color: #2563eb;
+}
+
+.group-items li.active {
   background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
   color: #fff;
   font-weight: bold;
+  border-left-color: #fff;
 }
 
 .main-content {

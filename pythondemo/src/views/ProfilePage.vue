@@ -27,7 +27,8 @@
             <div class="space-y-4 mb-6">
               <div class="flex items-center"><i class="fa fa-envelope text-primary mr-3"></i><span class="text-dark">邮箱：</span><span class="text-muted ml-1">{{ user.email || '未设置' }}</span></div>
               <div class="flex items-center"><i class="fa fa-phone text-primary mr-3"></i><span class="text-dark">手机号：</span><span class="text-muted ml-1">{{ user.phone || '未设置' }}</span></div>
-              <div class="flex items-center"><i class="fa fa-graduation-cap text-primary mr-3"></i><span class="text-dark">专业大类：</span><span class="text-muted ml-1">{{ groupTypeMap[user.groupType] || '未设置' }}</span></div>
+              <div class="flex items-center"><i class="fa fa-graduation-cap text-primary mr-3"></i><span class="text-dark">专业大类：</span><span class="text-muted ml-1">{{ majorName }}</span></div>
+              <div class="flex items-center"><i class="fa fa-user-tag text-primary mr-3"></i><span class="text-dark">用户角色：</span><span class="text-muted ml-1">{{ userRole === 'student' ? '学生' : userRole === 'teacher' ? '教师' : userRole === 'admin' ? '管理员' : '未知' }}</span></div>
               <div class="flex items-start"><i class="fa fa-star text-primary mr-3 mt-1"></i><span class="text-dark">兴趣方向：</span>
                 <div class="flex flex-wrap gap-2 ml-1">
                   <template v-if="user.intestTypes && user.intestTypes.length">
@@ -113,6 +114,57 @@
 
           <!-- 快捷功能卡片 -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 学生功能：查看已选课程 -->
+            <div v-if="isStudent" @click="goToMyCourses" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-green-200">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-dark">
+                  <i class="fa fa-graduation-cap text-green-500 me-2"></i>我的已选课程
+                </h3>
+                <i class="fa fa-arrow-right text-green-500 text-xl"></i>
+              </div>
+              <div class="text-center">
+                <i class="fa fa-book text-4xl text-green-400 mb-3"></i>
+                <div class="text-sm text-gray-600">查看您已选择的所有课程</div>
+              </div>
+              <div class="text-center mt-4 text-green-500 text-sm font-medium">
+                点击进入 →
+              </div>
+            </div>
+            
+            <!-- 教师功能：查看创建的课程 -->
+            <div v-if="isTeacher" @click="goToTeacherCourses" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-blue-200">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-dark">
+                  <i class="fa fa-chalkboard-teacher text-blue-500 me-2"></i>我创建的课程
+                </h3>
+                <i class="fa fa-arrow-right text-blue-500 text-xl"></i>
+              </div>
+              <div class="text-center">
+                <i class="fa fa-plus-circle text-4xl text-blue-400 mb-3"></i>
+                <div class="text-sm text-gray-600">管理您创建的所有课程</div>
+              </div>
+              <div class="text-center mt-4 text-blue-500 text-sm font-medium">
+                点击进入 →
+              </div>
+            </div>
+            
+            <!-- 管理员功能：进入后台管理系统 -->
+            <div v-if="isAdmin" @click="goToAdminPanel" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-red-200">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-dark">
+                  <i class="fa fa-cog text-red-500 me-2"></i>后台管理系统
+                </h3>
+                <i class="fa fa-arrow-right text-red-500 text-xl"></i>
+              </div>
+              <div class="text-center">
+                <i class="fa fa-shield-alt text-4xl text-red-400 mb-3"></i>
+                <div class="text-sm text-gray-600">进入系统管理后台</div>
+              </div>
+              <div class="text-center mt-4 text-red-500 text-sm font-medium">
+                点击进入 →
+              </div>
+            </div>
+            
             <router-link to="/favorites" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-red-200">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold text-dark">
@@ -202,6 +254,8 @@
 
 <script>
 import axios from 'axios';
+import { getRoleByGroupType, getMajorName, isStudent, isTeacher, isAdmin } from '@/utils/auth';
+
 export default {
   data() {
     return {
@@ -210,7 +264,8 @@ export default {
         nickname: '',
         account: '',
         email: '',
-        userId: null
+        userId: null,
+        groupType: null
       },
       editMode: false,
       editForm: {
@@ -233,7 +288,8 @@ export default {
         4: '医学类',
         5: '文科类',
         6: '体育类',
-        7: '其他'
+        7: '教师',
+        8: '管理员'
       },
       intestTypeMap: {
         1: 'Web开发',
@@ -253,6 +309,30 @@ export default {
         totalCourses: 0,
         completedLessons: 0
       }
+    }
+  },
+  computed: {
+    // 计算用户角色
+    userRole() {
+      return getRoleByGroupType(this.user.groupType)
+    },
+    
+    // 角色判断
+    isStudent() {
+      return isStudent()
+    },
+    
+    isTeacher() {
+      return isTeacher()
+    },
+    
+    isAdmin() {
+      return isAdmin()
+    },
+    
+    // 获取专业名称
+    majorName() {
+      return getMajorName(this.user.groupType)
     }
   },
   mounted() {
@@ -437,6 +517,19 @@ export default {
           completedLessons: 0
         };
       });
+    },
+    
+    // 跳转方法
+    goToMyCourses() {
+      this.$router.push('/my-courses');
+    },
+    
+    goToTeacherCourses() {
+      this.$router.push('/teacher-courses');
+    },
+    
+    goToAdminPanel() {
+      this.$router.push('/admin');
     }
   }
 }

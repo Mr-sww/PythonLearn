@@ -55,59 +55,47 @@
     </div>
 
     <!-- 练习统计卡片 -->
-    <div class="row g-4 mb-4">
-      <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
-          <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
-            <i class="fa fa-check-circle text-primary fa-2x"></i>
-          </div>
-          <h4 class="fw-bold text-dark mb-1">{{ practiceStats.completed }}题</h4>
-          <p class="text-muted mb-0">已完成</p>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
-          <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
-            <i class="fa fa-trophy text-success fa-2x"></i>
-          </div>
-          <h4 class="fw-bold text-dark mb-1">{{ practiceStats.accuracy }}%</h4>
-          <p class="text-muted mb-0">正确率</p>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
-          <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
-            <i class="fa fa-clock text-warning fa-2x"></i>
-          </div>
-          <h4 class="fw-bold text-dark mb-1">{{ practiceStats.practiceTime }}小时</h4>
-          <p class="text-muted mb-0">练习时长</p>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
-          <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
-            <i class="fa fa-fire text-info fa-2x"></i>
-          </div>
-          <h4 class="fw-bold text-dark mb-1">{{ practiceStats.continuousDays }}天</h4>
-          <p class="text-muted mb-0">连续刷题</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 练习记录入口 -->
     <div class="row mb-4">
       <div class="col-12">
-        <div class="bg-white rounded-3 shadow-sm border p-4">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h5 class="fw-bold text-dark mb-2">
-                <i class="fa fa-history me-2 text-primary"></i>练习记录
-              </h5>
-              <p class="text-muted mb-0">查看详细的做题历史、进度分析和学习轨迹</p>
+        <div class="bg-white rounded-3 shadow-sm border p-4 cursor-pointer practice-record-card" @click="goToPracticeRecords">
+          
+          <div class="row g-4">
+            <div class="col-md-3">
+              <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
+                  <i class="fa fa-check-circle text-primary fa-2x"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ practiceStats.completed }}题</h4>
+                <p class="text-muted mb-0">已完成</p>
+              </div>
             </div>
-            <router-link to="/practice-records" class="btn btn-primary rounded-pill px-4">
-              <i class="fa fa-arrow-right me-2"></i>查看详细记录
-            </router-link>
+            <div class="col-md-3">
+              <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
+                  <i class="fa fa-trophy text-success fa-2x"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ practiceStats.accuracy }}%</h4>
+                <p class="text-muted mb-0">正确率</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
+                  <i class="fa fa-clock text-warning fa-2x"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ practiceStats.practiceTime }}小时</h4>
+                <p class="text-muted mb-0">练习时长</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
+                  <i class="fa fa-fire text-info fa-2x"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ practiceStats.continuousDays }}天</h4>
+                <p class="text-muted mb-0">连续刷题</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -331,6 +319,9 @@ export default {
     //     this.practiceStats = { completed: 0, accuracy: 0, practiceTime: 0, totalProblems: 0, continuousDays: 0 };
     //   }
     // }
+    goToPracticeRecords() {
+      this.$router.push('/practice-records');
+    }
   }
 }
 </script>
@@ -368,5 +359,39 @@ export default {
 .problem-card:hover {
   box-shadow: 0 4px 16px #d0d7e2;
   background: #f5faff;
+}
+
+.practice-record-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.practice-record-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+  border-color: #007bff;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+}
+
+.practice-record-card:hover .text-primary {
+  color: #0056b3 !important;
+  font-weight: 600;
+}
+
+.practice-record-card:hover h5 {
+  color: #007bff !important;
+}
+
+.practice-record-card:hover .fa-chart-line {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+
+/* 内部小卡片的悬停效果 */
+.practice-record-card:hover .bg-white {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
 }
 </style> 

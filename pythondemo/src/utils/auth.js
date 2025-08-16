@@ -1,12 +1,82 @@
 // 认证工具函数
 
+// 用户角色定义
+export const USER_ROLES = {
+  STUDENT: 'student',
+  TEACHER: 'teacher', 
+  ADMIN: 'admin'
+}
+
+// 专业类型映射
+export const MAJOR_TYPES = {
+  1: '计算机类',
+  2: '工设类', 
+  3: '艺术类',
+  4: '医学类',
+  5: '文科类',
+  6: '体育类'
+}
+
+// 角色权限映射
+export const ROLE_PERMISSIONS = {
+  [USER_ROLES.STUDENT]: ['view_courses', 'practice_problems', 'view_profile', 'ai_chat', 'view_my_courses'],
+  [USER_ROLES.TEACHER]: ['view_courses', 'manage_courses', 'manage_students', 'view_analytics', 'view_my_courses', 'create_courses'],
+  [USER_ROLES.ADMIN]: ['view_courses', 'manage_users', 'manage_system', 'view_all_analytics', 'access_admin_panel']
+}
+
+/**
+ * 根据group_type获取用户角色
+ * @param {number} groupType 用户专业类型
+ * @returns {string} 用户角色
+ */
+export function getRoleByGroupType(groupType) {
+  if (!groupType) return USER_ROLES.STUDENT
+  
+  const groupTypeNum = Number(groupType)
+  
+  if (groupTypeNum >= 1 && groupTypeNum <= 6) {
+    return USER_ROLES.STUDENT
+  } else if (groupTypeNum === 7) {
+    return USER_ROLES.TEACHER
+  } else if (groupTypeNum === 8) {
+    return USER_ROLES.ADMIN
+  }
+  
+  return USER_ROLES.STUDENT
+}
+
+/**
+ * 获取用户专业名称
+ * @param {number} groupType 用户专业类型
+ * @returns {string} 专业名称
+ */
+export function getMajorName(groupType) {
+  if (!groupType) return '未设置'
+  
+  const groupTypeNum = Number(groupType)
+  
+  if (groupTypeNum >= 1 && groupTypeNum <= 6) {
+    return MAJOR_TYPES[groupTypeNum] || '未知专业'
+  } else if (groupTypeNum === 7) {
+    return '教师'
+  } else if (groupTypeNum === 8) {
+    return '管理员'
+  }
+  
+  return '未设置'
+}
+
 /**
  * 设置登录状态
  * @param {Object} user 用户信息
  */
 export function setLoginState(user) {
+  // 根据group_type自动设置用户角色
+  const userRole = getRoleByGroupType(user.groupType)
+  
   localStorage.setItem('user', JSON.stringify(user))
   localStorage.setItem('isLoggedIn', 'true')
+  localStorage.setItem('userRole', userRole)
 }
 
 /**
@@ -16,6 +86,7 @@ export function clearLoginState() {
   localStorage.removeItem('user')
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('redirectPath')
+  localStorage.removeItem('userRole')
 }
 
 /**
@@ -33,6 +104,72 @@ export function isLoggedIn() {
  */
 export function getCurrentUser() {
   return JSON.parse(localStorage.getItem('user') || 'null')
+}
+
+/**
+ * 获取当前用户角色
+ * @returns {string} 用户角色
+ */
+export function getCurrentUserRole() {
+  // 优先从localStorage获取，如果没有则从用户信息中计算
+  let userRole = localStorage.getItem('userRole')
+  
+  if (!userRole) {
+    const user = getCurrentUser()
+    if (user && user.groupType) {
+      userRole = getRoleByGroupType(user.groupType)
+      // 保存到localStorage
+      localStorage.setItem('userRole', userRole)
+    } else {
+      userRole = USER_ROLES.STUDENT
+    }
+  }
+  
+  return userRole
+}
+
+/**
+ * 检查用户是否有指定权限
+ * @param {string} permission 权限名称
+ * @returns {boolean} 是否有权限
+ */
+export function hasPermission(permission) {
+  const role = getCurrentUserRole()
+  return ROLE_PERMISSIONS[role]?.includes(permission) || false
+}
+
+/**
+ * 检查用户是否为指定角色
+ * @param {string} role 角色名称
+ * @returns {boolean} 是否为指定角色
+ */
+export function isRole(role) {
+  const currentRole = getCurrentUserRole()
+  return currentRole === role
+}
+
+/**
+ * 检查用户是否为学生
+ * @returns {boolean} 是否为学生
+ */
+export function isStudent() {
+  return isRole(USER_ROLES.STUDENT)
+}
+
+/**
+ * 检查用户是否为教师
+ * @returns {boolean} 是否为教师
+ */
+export function isTeacher() {
+  return isRole(USER_ROLES.TEACHER)
+}
+
+/**
+ * 检查用户是否为管理员
+ * @returns {boolean} 是否为管理员
+ */
+export function isAdmin() {
+  return isRole(USER_ROLES.ADMIN)
 }
 
 /**
