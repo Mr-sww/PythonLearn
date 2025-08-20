@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/knowledge")
@@ -169,46 +170,64 @@ public class KnowledgePointController {
             // 只有当question字段有值时才获取题目
             List<Map<String, Object>> problems = new ArrayList<>();
             if (knowledge != null && knowledge.getQuestion() != null && !knowledge.getQuestion().trim().isEmpty()) {
-                String[] questionIds = knowledge.getQuestion().split(",");
-                List<String> problemIds = new ArrayList<>();
-                
-                // 收集所有题目ID
-                for (String questionId : questionIds) {
-                    String taskId = questionId.trim();
-                    if (!taskId.isEmpty()) {
-                        problemIds.add(taskId);
+                // 兼容中文逗号、顿号、分号以及空白
+                String normalized = knowledge.getQuestion()
+                        .replace('，', ',')
+                        .replace('、', ',')
+                        .replace('；', ',')
+                        .replace(';', ',')
+                        .replace('\n', ',')
+                        .replace('\r', ',')
+                        .replaceAll("\\s+", "");
+
+                String[] parts = normalized.split(",");
+                if (parts.length > 0) {
+                    List<String> idsInOrder = new ArrayList<>();
+                    for (String raw : parts) {
+                        if (raw == null) continue;
+                        String idStr = raw.trim();
+                        if (!idStr.isEmpty()) idsInOrder.add(idStr);
                     }
-                }
-                
-                // 从题目表中获取实际题目信息
-                if (!problemIds.isEmpty()) {
-                    try {
-                        List<PythonProblem> actualProblems = pythonProblemService.findByIds(problemIds);
-                        for (PythonProblem problem : actualProblems) {
-                            String difficulty = "简单";
-                            if (problem.getDif() != null) {
-                                if (problem.getDif() == 1) {
-                                    difficulty = "简单";
-                                } else if (problem.getDif() == 2) {
-                                    difficulty = "中等";
-                                } else if (problem.getDif() == 3) {
-                                    difficulty = "困难";
+
+                    if (!idsInOrder.isEmpty()) {
+                        try {
+                            List<PythonProblem> actualProblems = pythonProblemService.findByIds(idsInOrder);
+                            Map<String, PythonProblem> idToProblem = new HashMap<>();
+                            for (PythonProblem p : actualProblems) {
+                                idToProblem.put(p.getId(), p);
+                            }
+                            // 按原顺序逐个输出，没查到的给占位
+                            for (String qid : idsInOrder) {
+                                PythonProblem p = idToProblem.get(qid);
+                                if (p != null) {
+                                    String difficulty = "简单";
+                                    if (p.getDif() != null) {
+                                        if (p.getDif() == 1) difficulty = "简单";
+                                        else if (p.getDif() == 2) difficulty = "中等";
+                                        else if (p.getDif() == 3) difficulty = "困难";
+                                    }
+                                    problems.add(Map.of(
+                                        "id", p.getId(),
+                                        "title", p.getTitle(),
+                                        "difficulty", difficulty
+                                    ));
+                                } else {
+                                    problems.add(Map.of(
+                                        "id", qid,
+                                        "title", "题目 " + qid,
+                                        "difficulty", "简单"
+                                    ));
                                 }
                             }
-                            problems.add(Map.of(
-                                "id", problem.getId(),
-                                "title", problem.getTitle(),
-                                "difficulty", difficulty
-                            ));
-                        }
-                    } catch (Exception e) {
-                        // 如果获取实际题目失败，使用默认标题
-                        for (String taskId : problemIds) {
-                            problems.add(Map.of(
-                                "id", taskId,
-                                "title", "题目 " + taskId,
-                                "difficulty", "简单"
-                            ));
+                        } catch (Exception ignore) {
+                            // 查询失败时，全部用占位标题
+                            for (String qid : idsInOrder) {
+                                problems.add(Map.of(
+                                    "id", qid,
+                                    "title", "题目 " + qid,
+                                    "difficulty", "简单"
+                                ));
+                            }
                         }
                     }
                 }
@@ -231,5 +250,83 @@ public class KnowledgePointController {
                 "problems", new ArrayList<>()
             );
         }
+    }
+
+    /**
+     * 简单评论模型
+     */
+    public static class KnowledgeCommentDto {
+        public Integer id;
+        public Integer knowledgeId;
+        public Integer userId;
+        public String nickname;
+        public String content;
+        public Long likes;
+        public String avatar;
+        public Integer parentId;
+        public Integer rootId;
+        public Integer replyToUserId;
+        public Long replyCount;
+        public Long createdAt;
+    }
+
+    @Autowired
+    private com.demo.python_demo.service.KnowledgeCommentService knowledgeCommentService;
+
+    @GetMapping("/{id}/comments")
+    public List<KnowledgeCommentDto> getComments(@PathVariable Integer id,
+                                                @RequestParam(defaultValue = "1") int page,
+                                                @RequestParam(defaultValue = "20") int pageSize) {
+        List<com.demo.python_demo.entity.KnowledgeComment> list = knowledgeCommentService.listByKnowledgeId(id, page, pageSize);
+        List<KnowledgeCommentDto> out = new ArrayList<>(list.size());
+        for (com.demo.python_demo.entity.KnowledgeComment c : list) {
+            KnowledgeCommentDto dto = new KnowledgeCommentDto();
+            dto.id = c.getId();
+            dto.knowledgeId = c.getKnowledgeId();
+            dto.userId = c.getUserId();
+            dto.nickname = c.getNickname();
+            dto.avatar = c.getAvatar();
+            dto.parentId = c.getParentId();
+            dto.rootId = c.getRootId();
+            dto.replyToUserId = c.getReplyToUserId();
+            dto.replyCount = c.getReplyCount();
+            dto.content = c.getContent();
+            dto.likes = c.getLikes() == null ? 0L : c.getLikes();
+            dto.createdAt = c.getCreatedAt() != null ? c.getCreatedAt().getTime() : null;
+            out.add(dto);
+        }
+        return out;
+    }
+
+    @PostMapping("/{id}/comments")
+    public Map<String, Object> addComment(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+        String content = String.valueOf(body.getOrDefault("content", ""));
+        if (content == null || content.trim().isEmpty()) {
+            return Map.of("success", false, "message", "内容不能为空");
+        }
+        com.demo.python_demo.entity.KnowledgeComment comment = new com.demo.python_demo.entity.KnowledgeComment();
+        comment.setKnowledgeId(id);
+        Object uid = body.get("userId");
+        try {
+            comment.setUserId(uid == null ? 0 : Integer.valueOf(String.valueOf(uid)));
+        } catch (NumberFormatException ignore) {
+            comment.setUserId(0);
+        }
+        comment.setNickname(String.valueOf(body.getOrDefault("nickname", "")));
+        comment.setAvatar(String.valueOf(body.getOrDefault("avatar", "")));
+        try { comment.setParentId(Integer.valueOf(String.valueOf(body.getOrDefault("parentId", "0")))); } catch (Exception e) { comment.setParentId(0); }
+        try { comment.setRootId(Integer.valueOf(String.valueOf(body.getOrDefault("rootId", "0")))); } catch (Exception e) { comment.setRootId(0); }
+        try { comment.setReplyToUserId(Integer.valueOf(String.valueOf(body.getOrDefault("replyToUserId", "0")))); } catch (Exception e) { comment.setReplyToUserId(0); }
+        comment.setContent(content.trim());
+        comment.setLikes(0L);
+        comment.setReplyCount(0L);
+        knowledgeCommentService.addComment(comment);
+        return Map.of("success", true);
+    }
+
+    @RequestMapping(value = "/comments/{commentId}/likes", method = {RequestMethod.POST, RequestMethod.GET})
+    public Map<String, Object> changeLikes(@PathVariable Integer commentId, @RequestParam(defaultValue = "1") long delta) {
+        knowledgeCommentService.changeLikes(commentId, delta);
+        return Map.of("success", true);
     }
 }
