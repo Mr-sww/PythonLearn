@@ -243,23 +243,59 @@ export default {
   margin-right: 10px;
   font-size: 1.5em;
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  display: inline-block;
+  animation: emojiFloat 3s ease-in-out infinite;
+}
+
+.global-nav-link:nth-child(1) .emoji { animation-delay: 0s; }
+.global-nav-link:nth-child(2) .emoji { animation-delay: 0.2s; }
+.global-nav-link:nth-child(3) .emoji { animation-delay: 0.4s; }
+.global-nav-link:nth-child(4) .emoji { animation-delay: 0.6s; }
+.global-nav-link:nth-child(5) .emoji { animation-delay: 0.8s; }
+
+@keyframes emojiFloat {
+  0%, 100% { 
+    transform: translateY(0) scale(1); 
+  }
+  50% { 
+    transform: translateY(-2px) scale(1.02); 
+  }
 }
 
 .global-nav-link:hover .emoji {
-  transform: scale(1.1);
+  transform: translateY(-4px) scale(1.15);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+}
+
+.global-nav-link:active .emoji {
+  transform: translateY(-2px) scale(1.05);
+  transition: all 0.1s ease;
 }
 
 .jump-animation .emoji {
-  animation: emojiJump 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: emojiJump 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 @keyframes emojiJump {
-  0% { transform: translateY(0) scale(1); }
-  25% { transform: translateY(-8px) scale(1.1); }
-  50% { transform: translateY(-12px) scale(1.2); }
-  75% { transform: translateY(-6px) scale(1.1); }
-  100% { transform: translateY(0) scale(1); }
+  0% { 
+    transform: translateY(0) scale(1) rotate(0deg); 
+  }
+  20% { 
+    transform: translateY(-15px) scale(1.2) rotate(-5deg); 
+  }
+  40% { 
+    transform: translateY(-20px) scale(1.3) rotate(5deg); 
+  }
+  60% { 
+    transform: translateY(-10px) scale(1.15) rotate(-3deg); 
+  }
+  80% { 
+    transform: translateY(-5px) scale(1.1) rotate(2deg); 
+  }
+  100% { 
+    transform: translateY(0) scale(1) rotate(0deg); 
+  }
 }
 
 /* 响应式设计 */
@@ -272,6 +308,15 @@ export default {
   .global-nav-link .emoji {
     margin-right: 0.75rem;
     font-size: 1.4em;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .global-nav-link:hover .emoji {
+    transform: translateY(-3px) scale(1.1);
+  }
+  
+  .global-nav-link:active .emoji {
+    transform: translateY(-1px) scale(1.05);
   }
 }
 </style>
