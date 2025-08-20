@@ -16,7 +16,7 @@
               v-for="item in navItems" 
               :key="item.path"
               :to="item.path"
-              class="global-nav-link px-3 py-2 rounded-md text-base font-medium text-white hover:text-white hover:bg-blue-700 transition-all duration-200"
+              class="global-nav-link px-4 py-3 rounded-md text-lg font-semibold text-white hover:text-white hover:bg-blue-700 transition-all duration-200 no-underline"
               :class="{ 'is-active': $route.path === item.path }"
             >
               <span class="emoji">{{ item.emoji }}</span>
@@ -99,7 +99,7 @@
           v-for="item in navItems" 
           :key="item.path"
           :to="item.path"
-          class="global-nav-link block px-3 py-2 rounded-md text-base font-medium text-white hover:text-white hover:bg-blue-600 transition-all duration-200"
+          class="global-nav-link block px-4 py-3 rounded-md text-lg font-semibold text-white hover:text-white hover:bg-blue-600 transition-all duration-200 no-underline"
           :class="{ 'is-active': $route.path === item.path }"
           @click="showMobileMenu = false"
         >
@@ -228,6 +228,7 @@ export default {
 .global-nav-link {
   position: relative;
   transition: all 0.3s ease;
+  text-decoration: none !important;
 }
 
 .global-nav-link.is-active {
@@ -239,7 +240,8 @@ export default {
 }
 
 .global-nav-link .emoji {
-  margin-right: 8px;
+  margin-right: 10px;
+  font-size: 1.5em;
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
   transition: transform 0.2s ease;
 }
@@ -263,12 +265,13 @@ export default {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .global-nav-link {
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+    padding: 1rem 1.25rem;
+    font-size: 1.125rem;
   }
   
   .global-nav-link .emoji {
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
+    font-size: 1.4em;
   }
 }
 </style>

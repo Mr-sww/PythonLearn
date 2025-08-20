@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>头像显示测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .avatar-test {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #3B82F6;
+        }
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>头像显示测试</h1>
+        
+        <div class="avatar-test">
+            <h3>测试用例 1: 空头像</h3>
+            <div class="test-case">
+                <p>输入: null</p>
+                <img id="avatar1" class="avatar" alt="测试头像1">
+                <p id="result1"></p>
+            </div>
+        </div>
+
+        <div class="avatar-test">
+            <h3>测试用例 2: 相对路径头像</h3>
+            <div class="test-case">
+                <p>输入: /avatar/test_avatar.jpg</p>
+                <img id="avatar2" class="avatar" alt="测试头像2">
+                <p id="result2"></p>
+            </div>
+        </div>
+
+        <div class="avatar-test">
+            <h3>测试用例 3: 完整URL头像</h3>
+            <div class="test-case">
+                <p>输入: https://via.placeholder.com/64x64/3B82F6/FFFFFF?text=U</p>
+                <img id="avatar3" class="avatar" alt="测试头像3">
+                <p id="result3"></p>
+            </div>
+        </div>
+
+        <div class="avatar-test">
+            <h3>测试用例 4: 默认头像</h3>
+            <div class="test-case">
+                <p>输入: 空字符串</p>
+                <img id="avatar4" class="avatar" alt="测试头像4">
+                <p id="result4"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟头像工具函数
+        const DEFAULT_AVATARS = {
+            small: 'https://via.placeholder.com/32x32/3B82F6/FFFFFF?text=U',
+            medium: 'https://via.placeholder.com/64x64/3B82F6/FFFFFF?text=U',
+            large: 'https://via.placeholder.com/128x128/3B82F6/FFFFFF?text=U'
+        };
+
+        function getAvatarUrl(avatar, size = 'small') {
+            console.log('getAvatarUrl 输入:', { avatar, size });
+            
+            // 如果没有头像，返回默认头像
+            if (!avatar || typeof avatar !== 'string' || avatar.trim() === '') {
+                console.log('头像为空，使用默认头像');
+                return DEFAULT_AVATARS[size] || DEFAULT_AVATARS.small;
+            }
+            
+            // 如果是相对路径，添加后端基础URL
+            if (avatar.startsWith('/avatar/')) {
+                const fullUrl = 'http://localhost:8080' + avatar;
+                console.log('相对路径头像，完整URL:', fullUrl);
+                return fullUrl;
+            }
+            
+            // 如果是完整URL，直接返回
+            if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+                console.log('完整URL头像:', avatar);
+                return avatar;
+            }
+            
+            // 如果是其他相对路径，添加后端基础URL
+            const fullUrl = 'http://localhost:8080' + avatar;
+            console.log('其他相对路径头像，完整URL:', fullUrl);
+            return fullUrl;
+        }
+
+        // 测试函数
+        function testAvatar(avatarInput, imgElement, resultElement) {
+            const url = getAvatarUrl(avatarInput, 'medium');
+            imgElement.src = url;
+            
+            imgElement.onload = function() {
+                resultElement.textContent = '✅ 加载成功: ' + url;
+                resultElement.className = 'success';
+            };
+            
+            imgElement.onerror = function() {
+                resultElement.textContent = '❌ 加载失败: ' + url;
+                resultElement.className = 'error';
+            };
+        }
+
+        // 执行测试
+        window.onload = function() {
+            testAvatar(null, document.getElementById('avatar1'), document.getElementById('result1'));
+            testAvatar('/avatar/test_avatar.jpg', document.getElementById('avatar2'), document.getElementById('result2'));
+            testAvatar('https://via.placeholder.com/64x64/3B82F6/FFFFFF?text=U', document.getElementById('avatar3'), document.getElementById('result3'));
+            testAvatar('', document.getElementById('avatar4'), document.getElementById('result4'));
+        };
+    </script>
+</body>
+</html>
