@@ -276,18 +276,18 @@ export default {
       favoriteProblems: [],
       userId: 1, // 实际应取当前登录用户
       practiceStats: {
-        completed: 36, // 静态假数据：已完成36题
-        accuracy: 85, // 静态假数据：正确率85%
-        practiceTime: 4, // 静态假数据：练习时长4小时
-        totalProblems: 156, // 静态假数据：总题数
-        continuousDays: 5 // 静态假数据：连续刷题5天
+        completed: 0,
+        accuracy: 0,
+        practiceTime: 0,
+        totalProblems: 0,
+        continuousDays: 0
       }
     }
   },
   async mounted() {
     await this.fetchProblems();
     await this.loadFavoriteProblems();
-    // await this.fetchPracticeStats(); // 注释掉动态获取，使用静态假数据
+    await this.fetchPracticeStats();
   },
   methods: {
     async fetchProblems() {
@@ -311,14 +311,27 @@ export default {
         this.favoriteProblems = [];
       }
     },
-    // async fetchPracticeStats() {
-    //   try {
-    //     const res = await axios.get('/api/user/statistics', { withCredentials: true });
-    //     this.practiceStats = res.data;
-    //   } catch (e) {
-    //     this.practiceStats = { completed: 0, accuracy: 0, practiceTime: 0, totalProblems: 0, continuousDays: 0 };
-    //   }
-    // }
+    async fetchPracticeStats() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || 'null')
+        if (!user) return
+        const userId = user.userId || user.user_id
+        const res = await axios.get(`/api/user-problem-record/statistics`, { params: { userId } })
+        const data = res.data?.data || {}
+
+        // completed 使用通过题目数；练习时长将 used_time 秒转换为小时
+        const hours = Math.round(((data.sumUsedTime || 0) / 3600) * 10) / 10
+        this.practiceStats = {
+          completed: data.passedProblems || 0,
+          accuracy: Math.round(((data.accuracy || 0) * 100)),
+          practiceTime: hours,
+          totalProblems: data.distinctProblems || 0,
+          continuousDays: data.continuousDays || 0
+        }
+      } catch (e) {
+        console.error('获取练习统计失败:', e)
+      }
+    },
     goToPracticeRecords() {
       this.$router.push('/practice-records');
     }

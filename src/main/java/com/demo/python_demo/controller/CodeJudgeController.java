@@ -120,7 +120,7 @@ public class CodeJudgeController {
                 results.add(caseResult);
             }
             
-            // 记录提交记录
+            // 记录提交记录（服务层/仓库已做“同一用户同题同日只记一条”去重）
             if (userId != null && problemId != null) {
                 try {
                     UserProblemRecord record = new UserProblemRecord();
@@ -145,8 +145,12 @@ public class CodeJudgeController {
                     // 设置执行时间和内存使用
                     if (!results.isEmpty()) {
                         Map<String, Object> firstResult = results.get(0);
-                        record.setExecutionTime((Integer) firstResult.get("executionTime"));
-                        record.setMemoryUsage((Integer) firstResult.get("memoryUsage"));
+                        Object execObj = firstResult.get("executionTime");
+                        Object memObj = firstResult.get("memoryUsage");
+                        int execMs = execObj instanceof Number ? ((Number) execObj).intValue() : 0;
+                        int memKb = memObj instanceof Number ? ((Number) memObj).intValue() : 0;
+                        record.setExecutionTime(execMs);
+                        record.setMemoryUsage(memKb);
                     }
                     
                     // 设置默认值
@@ -239,7 +243,8 @@ public class CodeJudgeController {
                 throw new RuntimeException("未找到可用的Python解释器。请确保Python已正确安装并添加到系统PATH中。");
             }
             
-            pb = new ProcessBuilder(pythonCommand, codeFile.toString());
+            // 由于已将工作目录切换到 tempDir，命令参数只需要文件名，避免路径重复
+            pb = new ProcessBuilder(pythonCommand, codeFile.getFileName().toString());
             System.out.println("使用Python命令: " + pythonCommand);
             
             // 设置工作目录
@@ -249,7 +254,7 @@ public class CodeJudgeController {
             pb.redirectErrorStream(true);
             
             System.out.println("=== 调试信息 ===");
-            System.out.println("代码文件: " + codeFile.toString());
+            System.out.println("代码文件: " + codeFile.toAbsolutePath());
             System.out.println("代码内容: " + code);
             System.out.println("输入内容: " + input);
             

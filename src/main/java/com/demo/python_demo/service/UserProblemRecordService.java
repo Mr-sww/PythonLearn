@@ -20,6 +20,9 @@ public interface UserProblemRecordService {
     java.util.Map<String, Object> getUserStatistics(Integer userId);
 
     int getContinuousDays(Integer userId);
+
+    // 活跃天数（有提交的天）
+    int getActiveDays(Integer userId);
     
     // 获取用户做题记录（分页）
     List<java.util.Map<String, Object>> getUserProblemRecordsWithPagination(Integer userId, int offset, int size);

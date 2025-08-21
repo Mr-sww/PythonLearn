@@ -607,22 +607,19 @@ async function submitCode() {
     // 添加总结
     output += `\n=== 提交结果 ===\n通过用例：${passedCount}/${totalCount}\n执行时间：${executionTime}ms\n`
     
+    const passRate = totalCount > 0 ? passedCount / totalCount : 0
     if (passedCount === totalCount) {
       output += '🎉 恭喜！所有用例都通过了！'
       showToast('提交成功！所有用例通过', 'success')
-      
-      // 保存提交记录
-      await saveSubmissionRecord(true)
     } else {
       output += '❌ 还有用例未通过，请检查代码'
       showToast(`提交完成，通过 ${passedCount}/${totalCount} 个用例`, 'info')
-      
-      // 保存提交记录
-      await saveSubmissionRecord(false)
     }
+
+    // 记录由后端 /api/judge/batch-judge 统一完成，前端不再重复写库
     
     result.value = {
-      output: output,
+      output: output + `通过率：${Math.round(passRate * 100)}%`,
       error: null,
       executionTime: executionTime
     }
@@ -643,25 +640,7 @@ async function submitCode() {
   }
 }
 
-// 保存提交记录
-async function saveSubmissionRecord(passed) {
-  if (!userId.value || !problemId.value) return
-  
-  try {
-    await axios.post('/api/user-problem-record', {
-      userId: userId.value,
-      problemId: problemId.value,
-      code: code.value,
-      result: passed ? '通过' : '未通过',
-      passRate: passed ? 100 : 0,
-      usedTime: result.value.executionTime || 0,
-      usedMemory: 0,
-      language: 'python'
-    })
-  } catch (error) {
-    console.error('保存提交记录失败:', error)
-  }
-}
+ 
 
 async function loadComments() {
   const res = await axios.get(`/api/practice/problem/${problemId.value}/comments`, {

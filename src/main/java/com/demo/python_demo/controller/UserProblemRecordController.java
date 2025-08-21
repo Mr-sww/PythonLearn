@@ -183,9 +183,8 @@ public class UserProblemRecordController {
     @GetMapping("/trends")
     public ResponseEntity<Map<String, Object>> getUserTrends(@RequestParam(required = false) Integer userId) {
         try {
-            // 暂时返回空数据，实际项目中需要实现这些方法
-            List<Map<String, Object>> dailyTrend = new ArrayList<>();
-            List<Map<String, Object>> resultDistribution = new ArrayList<>();
+            List<Map<String, Object>> dailyTrend = userProblemRecordService.getDailySubmissionTrend(userId);
+            List<Map<String, Object>> resultDistribution = userProblemRecordService.getResultDistribution(userId);
             
             return ResponseEntity.ok(Map.of(
                 "success", true,

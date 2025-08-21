@@ -14,6 +14,14 @@ public class UserProblemRecordServiceImpl implements UserProblemRecordService {
 
     @Override
     public void saveRecord(UserProblemRecord record) {
+        // 如果数据库未设置自增主键，则在这里生成一个ID
+        if (record.getId() == null || record.getId() == 0) {
+            try {
+                int id = repository.nextId();
+                record.setId(id);
+            } catch (Exception ignored) {}
+        }
+        // 去重：同一用户同一题目当天只保留一条（若需要保留最好成绩可扩展为先删后插）
         repository.insert(record);
     }
 
@@ -93,12 +101,19 @@ public class UserProblemRecordServiceImpl implements UserProblemRecordService {
         stats.put("avgUsedTime", repository.avgUsedTime(userId));
         stats.put("resultDistribution", repository.resultDistribution(userId));
         stats.put("dailyTrend", repository.dailySubmissionTrend(userId));
+        stats.put("continuousDays", repository.getContinuousDays(userId));
+        stats.put("activeDays", repository.countActiveDays(userId));
         return stats;
     }
 
     @Override
     public int getContinuousDays(Integer userId) {
         return repository.getContinuousDays(userId);
+    }
+
+    @Override
+    public int getActiveDays(Integer userId) {
+        return repository.countActiveDays(userId);
     }
     
     @Override

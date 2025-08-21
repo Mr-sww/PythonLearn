@@ -277,7 +277,8 @@ export default {
     };
   },
   async mounted() {
-    this.userId = localStorage.getItem('userId');
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    this.userId = user ? (user.userId || user.user_id) : null;
     if (!this.userId) {
       this.$router.push('/auth');
       return;
@@ -292,8 +293,14 @@ export default {
   methods: {
     async loadOverview() {
       try {
-        const response = await axios.get(`/api/user/statistics`, { withCredentials: true });
-        this.overview = response.data;
+        const response = await axios.get(`/api/user-problem-record/statistics`, { params: { userId: this.userId } });
+        const data = response.data?.data || {};
+        this.overview = {
+          totalSubmissions: data.totalSubmissions || 0,
+          passedProblems: data.passedProblems || 0,
+          accuracy: Math.round(((data.accuracy || 0) * 100)),
+          continuousDays: data.continuousDays || 0
+        };
       } catch (error) {
         console.error('获取统计概览失败:', error);
       }
@@ -307,28 +314,22 @@ export default {
           page: this.pagination.page,
           size: this.pagination.size
         };
-        
+
         let response;
         if (this.filter.result) {
-          response = await axios.get('/api/user/problem/records/filter', { 
-            params: { ...params, result: this.filter.result },
-            withCredentials: true 
-          });
+          response = await axios.get('/api/user-problem-record/records', { params: { ...params, result: this.filter.result } });
         } else {
-          response = await axios.get('/api/user/problem/records', { 
-            params,
-            withCredentials: true 
-          });
+          response = await axios.get('/api/user-problem-record/records', { params });
         }
-        
-        if (response.data.success) {
-          this.records = response.data.records;
-          this.pagination.total = response.data.total;
-          this.pagination.totalPages = response.data.totalPages;
+
+        if (response.data.success && response.data.data) {
+          this.records = response.data.data.records || [];
+          this.pagination.total = response.data.data.pagination?.total || 0;
+          this.pagination.totalPages = response.data.data.pagination?.totalPages || 0;
         }
       } catch (error) {
         console.error('获取记录失败:', error);
-        this.$toast.error('获取记录失败');
+        this.records = [];
       } finally {
         this.loading = false;
       }
