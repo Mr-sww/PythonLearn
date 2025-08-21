@@ -45,9 +45,6 @@ export default {
       this.replyContent = '';
       this.showReply = false;
     }
-  },
-  components: {
-    CommentItem: () => import('./CommentItem.vue')
   }
 }
 </script> 

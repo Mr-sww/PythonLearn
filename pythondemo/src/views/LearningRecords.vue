@@ -122,8 +122,8 @@
                       >
                     </div>
                     <div class="flex-grow-1">
-                      <h6 class="mb-1">{{ record.courseTitle }}</h6>
-                      <p class="text-muted mb-1 small">{{ record.lessonTitle }}</p>
+                                             <h6 class="mb-1">{{ record.courseTitle || '代码练习' }}</h6>
+                       <p class="text-muted mb-1 small">{{ record.lessonTitle || `题目 ${record.lessonId}` }}</p>
                       <div class="d-flex align-items-center">
                         <small class="text-muted me-3">
                           <i class="fa fa-clock me-1"></i>{{ formatDate(record.studyDate) }}
@@ -159,10 +159,10 @@ export default {
       loading: false,
       records: [],
       statistics: {
-        totalCourses: 12,
-        completedLessons: 45,
-        totalStudyTime: 28,
-        continuousDays: 7
+        totalCourses: 0,
+        completedLessons: 0,
+        totalStudyTime: 0,
+        continuousDays: 0
       },
       filters: [
         { label: '全部', value: 'all' },
@@ -175,55 +175,112 @@ export default {
     }
   },
   mounted() {
+    this.loadStatistics()
     this.loadRecords()
   },
   methods: {
+    async loadStatistics() {
+      try {
+        const res = await this.$axios.get('/api/study-records/statistics', { withCredentials: true })
+        this.statistics = {
+          totalCourses: res.data.totalCourses || 0,
+          completedLessons: res.data.completedLessons || 0,
+          totalStudyTime: res.data.totalStudyHours || 0,
+          continuousDays: res.data.continuousDays || 0
+        }
+      } catch (error) {
+        console.error('加载统计信息失败:', error)
+      }
+    },
     async loadRecords() {
       this.loading = true
       try {
-        // 模拟数据
-        this.records = [
-          {
-            id: 1,
-            courseTitle: 'Python基础入门',
-            lessonTitle: '第一章：Python简介',
-            courseImage: '/course_images/2169.jpg',
-            studyDate: '2025-01-17 14:30:00',
-            duration: 45,
-            progress: 100
-          },
-          {
-            id: 2,
-            courseTitle: '数据结构与算法',
-            lessonTitle: '第二章：数组和链表',
-            courseImage: '/course_images/2170.jpg',
-            studyDate: '2025-01-16 16:20:00',
-            duration: 60,
-            progress: 85
-          },
-          {
-            id: 3,
-            courseTitle: 'Web开发实战',
-            lessonTitle: '第三章：HTML基础',
-            courseImage: '/course_images/2171.jpg',
-            studyDate: '2025-01-15 10:15:00',
-            duration: 30,
-            progress: 100
-          }
-        ]
+        const res = await this.$axios.get('/api/study-records', { withCredentials: true })
+                 this.records = res.data.map(record => ({
+           id: record.recordId,
+           courseTitle: record.courseTitle || (record.courseId === 9999 ? '代码练习' : '未知课程'),
+           lessonTitle: record.lessonTitle || (record.courseId === 9999 ? `题目 ${record.lessonId}` : '未知课时'),
+           courseImage: record.courseImage || (record.courseId === 9999 ? '/course_images/code_practice.jpg' : '/course_images/default.jpg'),
+           studyDate: record.studyDate,
+           duration: Math.round(record.studyTime / 60), // 转换为分钟
+           progress: Math.round(record.progress || 0),
+           courseId: record.courseId,
+           lessonId: record.lessonId
+         }))
       } catch (error) {
         console.error('加载学习记录失败:', error)
+        this.records = []
       } finally {
         this.loading = false
       }
     },
     setFilter(filter) {
       this.currentFilter = filter
-      this.loadRecords()
+      // 根据筛选条件重新加载数据
+      if (filter === 'all') {
+        this.loadRecords()
+      } else {
+        this.loadFilteredRecords(filter)
+      }
+    },
+    async loadFilteredRecords(filter) {
+      this.loading = true
+      try {
+        const res = await this.$axios.get('/api/study-records', { withCredentials: true })
+        let filteredRecords = res.data
+        
+        // 根据筛选条件过滤数据
+        const now = new Date()
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        
+        switch (filter) {
+          case 'week':
+            filteredRecords = filteredRecords.filter(record => 
+              new Date(record.studyDate) >= oneWeekAgo
+            )
+            break
+          case 'month':
+            filteredRecords = filteredRecords.filter(record => 
+              new Date(record.studyDate) >= oneMonthAgo
+            )
+            break
+          case 'quarter':
+            filteredRecords = filteredRecords.filter(record => 
+              new Date(record.studyDate) >= threeMonthsAgo
+            )
+            break
+        }
+        
+                 this.records = filteredRecords.map(record => ({
+           id: record.recordId,
+           courseTitle: record.courseTitle || (record.courseId === 9999 ? '代码练习' : '未知课程'),
+           lessonTitle: record.lessonTitle || (record.courseId === 9999 ? `题目 ${record.lessonId}` : '未知课时'),
+           courseImage: record.courseImage || (record.courseId === 9999 ? '/course_images/code_practice.jpg' : '/course_images/default.jpg'),
+           studyDate: record.studyDate,
+           duration: Math.round(record.studyTime / 60),
+           progress: Math.round(record.progress || 0),
+           courseId: record.courseId,
+           lessonId: record.lessonId
+         }))
+      } catch (error) {
+        console.error('加载筛选记录失败:', error)
+        this.records = []
+      } finally {
+        this.loading = false
+      }
     },
     handleSearch() {
-      // 实现搜索逻辑
-      this.loadRecords()
+      // 实现搜索逻辑 - 可以过滤课程标题
+      if (this.searchKeyword.trim()) {
+        this.records = this.records.filter(record => 
+          record.courseTitle.toLowerCase().includes(this.searchKeyword.toLowerCase()) ||
+          record.lessonTitle.toLowerCase().includes(this.searchKeyword.toLowerCase())
+        )
+      } else {
+        this.loadRecords()
+      }
     },
     formatDate(dateString) {
       const date = new Date(dateString)

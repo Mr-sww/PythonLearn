@@ -161,7 +161,7 @@
       <!-- 编辑器区 -->
       <div class="editor-content leetcode-editor-content" :class="{ fullscreen: isFullScreen }" style="flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative;">
         <MonacoEditor
-          v-model="code"
+          v-model:value="code"
           language="python"
           :theme="theme"
           :font-size="fontSize"
@@ -624,6 +624,9 @@ async function submitCode() {
       executionTime: executionTime
     }
     
+    // 记录学习进度
+    await recordStudyProgress(passedCount === totalCount, Math.round(passRate * 100))
+    
     // 自动保存代码
     saveCode()
     
@@ -697,6 +700,21 @@ async function replyComment(parentId, content) {
 async function likeComment(commentId) {
   await axios.post(`/api/practice/comment/${commentId}/like`)
   await loadComments()
+}
+
+// 记录学习进度
+async function recordStudyProgress(passed, passRate) {
+  if (!userId.value) return
+  
+  try {
+    await axios.post('/api/study-records/practice-complete', {
+      problemId: parseInt(problemId.value.replace('P', '')),
+      passed: passed,
+      passRate: passRate
+    }, { withCredentials: true })
+  } catch (error) {
+    console.error('记录学习进度失败:', error)
+  }
 }
 
 function changePage(p) {

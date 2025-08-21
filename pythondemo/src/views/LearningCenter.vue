@@ -8,47 +8,50 @@
       <p class="text-muted mb-0">跟踪学习进度，管理学习计划</p>
     </div>
 
+    
+
     <!-- 学习概览卡片 -->
     <div class="row g-4 mb-4">
       <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+        <div class="bg-white rounded-3 shadow-sm border p-4 text-center clickable metric-card" @click="goToLearningRecords" role="button" tabindex="0" @keyup.enter="goToLearningRecords">
           <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-clock text-primary fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">18.5小时</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ learningStats.totalStudyHours }}小时</h4>
           <p class="text-muted mb-0">总学习时长</p>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+        <div class="bg-white rounded-3 shadow-sm border p-4 text-center clickable metric-card" @click="goToLearningRecords" role="button" tabindex="0" @keyup.enter="goToLearningRecords">
           <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-check-circle text-success fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">3门</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ learningStats.completedCourses }}门</h4>
           <p class="text-muted mb-0">完成课程</p>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+        <div class="bg-white rounded-3 shadow-sm border p-4 text-center clickable metric-card" @click="goToLearningRecords" role="button" tabindex="0" @keyup.enter="goToLearningRecords">
           <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
-            <i class="fa fa-tasks text-warning fa-2x"></i>
+            <i class="fa fa-code text-warning fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">24题</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ practiceStats.completed || 0 }}题</h4>
           <p class="text-muted mb-0">完成练习</p>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="bg-white rounded-3 shadow-sm border p-4 text-center">
+        <div class="bg-white rounded-3 shadow-sm border p-4 text-center clickable metric-card" @click="goToLearningRecords" role="button" tabindex="0" @keyup.enter="goToLearningRecords">
           <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
             <i class="fa fa-calendar text-info fa-2x"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-1">7天</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ learningStats.continuousDays || practiceStats.continuousDays }}天</h4>
           <p class="text-muted mb-0">连续学习</p>
         </div>
       </div>
     </div>
 
-    <div class="row g-4">
+    <div class="bg-white rounded-3 shadow-sm border p-4 mb-4">
+      <div class="row g-4">
       <!-- 学习进度树 -->
       <div class="col-lg-8">
         <div class="learning-tree-cards">
@@ -58,8 +61,6 @@
                 <i class="fa" :class="groupName === '基础' ? 'fa-check-circle text-success' : 'fa-dot-circle-o text-warning'"></i>
                 <span class="ms-2">{{ groupName === '基础' ? 'Python基础' : 'Python进阶' }}</span>
               </span>
-              <!-- 状态标签可选 -->
-              <!-- <span class="tree-status" :class="groupName === '基础' ? 'done' : 'doing'">{{ groupName === '基础' ? '已完成' : '进行中' }}</span> -->
             </div>
             <div class="tree-card-body">
               <ul class="tree-card-list">
@@ -79,7 +80,11 @@
         <!-- 最近学习记录 -->
         <div class="bg-white rounded-3 shadow-sm border p-4">
           <h3 class="fw-bold text-dark mb-4">最近学习记录</h3>
-          <div class="table-responsive">
+          <div v-if="recentStudyRecords.length === 0" class="text-center py-4">
+            <i class="fa fa-book fa-3x text-muted mb-3"></i>
+            <p class="text-muted">暂无学习记录</p>
+          </div>
+          <div v-else class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
@@ -91,48 +96,37 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
+                <tr v-for="record in recentStudyRecords" :key="record.recordId">
                   <td>
                     <div class="d-flex align-items-center">
-                      <img src="https://picsum.photos/60/40?random=1" class="rounded me-2" width="60" height="40" alt="课程图片">
-                      <div>
-                        <div class="fw-medium">Python基础入门</div>
-                        <div class="text-muted small">第3章：函数与模块</div>
-                      </div>
+                      <img :src="record.courseImage || '/course_images/default.jpg'" 
+                           alt="课程图片" 
+                           class="rounded me-2" 
+                           style="width: 40px; height: 40px; object-fit: cover;">
+                      <span>{{ record.courseTitle || '代码练习' }}</span>
                     </div>
                   </td>
-                  <td>45分钟</td>
+                  <td>{{ Math.round(record.studyTime / 60) }}分钟</td>
                   <td>
-                    <div class="progress" style="height:6px;">
-                      <div class="progress-bar bg-success" style="width:100%"></div>
+                    <div class="progress" style="height: 6px;">
+                      <div class="progress-bar" 
+                           :class="record.progress >= 100 ? 'bg-success' : 'bg-warning'"
+                           :style="{ width: record.progress + '%' }"></div>
                     </div>
-                    <small class="text-muted">100%</small>
+                    <small class="text-muted">{{ Math.round(record.progress) }}%</small>
                   </td>
-                  <td>2小时前</td>
+                  <td>{{ formatTimeAgo(record.studyDate) }}</td>
                   <td>
-                    <button class="btn btn-outline-primary btn-sm">继续学习</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <img src="https://picsum.photos/60/40?random=2" class="rounded me-2" width="60" height="40" alt="课程图片">
-                      <div>
-                        <div class="fw-medium">Python进阶实战</div>
-                        <div class="text-muted small">第2章：文件操作</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>30分钟</td>
-                  <td>
-                    <div class="progress" style="height:6px;">
-                      <div class="progress-bar bg-warning" style="width:65%"></div>
-                    </div>
-                    <small class="text-muted">65%</small>
-                  </td>
-                  <td>昨天</td>
-                  <td>
-                    <button class="btn btn-outline-primary btn-sm">继续学习</button>
+                    <button v-if="record.courseId && record.courseId !== 9999" 
+                            class="btn btn-sm btn-outline-primary" 
+                            @click="goToCourse(record.courseId)">
+                      继续学习
+                    </button>
+                    <button v-else 
+                            class="btn btn-sm btn-outline-success" 
+                            @click="goToPractice(record.lessonId)">
+                      查看题目
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -176,10 +170,10 @@
                 <i class="fa fa-clock-o"></i>
               </div>
               <div class="flex-grow-1">
-                <div class="fw-medium">练习题目5道</div>
+                <div class="fw-medium">练习代码题目</div>
                 <div class="text-muted small">预计20分钟</div>
               </div>
-              <span class="badge bg-secondary">待完成</span>
+              <span class="badge bg-secondary">待开始</span>
             </div>
           </div>
         </div>
@@ -191,34 +185,35 @@
             <div class="col-6">
               <div class="text-center p-2 border rounded">
                 <i class="fa fa-trophy text-warning fa-2x mb-2"></i>
-                <div class="fw-medium">连续学习7天</div>
+                <div class="fw-medium">连续学习{{ learningStats.continuousDays || practiceStats.continuousDays }}天</div>
                 <div class="text-muted small">坚持不懈</div>
               </div>
             </div>
             <div class="col-6">
               <div class="text-center p-2 border rounded">
                 <i class="fa fa-star text-warning fa-2x mb-2"></i>
-                <div class="fw-medium">完成3门课程</div>
+                <div class="fw-medium">完成{{ learningStats.completedCourses }}门课程</div>
                 <div class="text-muted small">学习达人</div>
               </div>
             </div>
             <div class="col-6">
               <div class="text-center p-2 border rounded">
                 <i class="fa fa-clock text-info fa-2x mb-2"></i>
-                <div class="fw-medium">学习18.5小时</div>
+                <div class="fw-medium">学习{{ learningStats.totalStudyHours }}小时</div>
                 <div class="text-muted small">时间管理</div>
               </div>
             </div>
             <div class="col-6">
               <div class="text-center p-2 border rounded">
                 <i class="fa fa-check-circle text-success fa-2x mb-2"></i>
-                <div class="fw-medium">完成24题</div>
+                <div class="fw-medium">完成{{ practiceStats.completed }}题</div>
                 <div class="text-muted small">练习高手</div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
   </main>
 </div>
@@ -235,6 +230,14 @@ export default {
         continuousDays: 0,
         login: false
       },
+      practiceStats: {
+        completed: 0,
+        accuracy: 0,
+        practiceTime: 0,
+        totalProblems: 0,
+        continuousDays: 0
+      },
+      recentStudyRecords: [],
       points: [],
       groupedPoints: { 基础: [], 进阶: [] }
     }
@@ -278,6 +281,13 @@ export default {
         进阶: this.points.filter(p => p.stage && p.stage.startsWith('2.'))
       };
     }
+
+    // 并行获取学习与练习统计
+    await Promise.all([
+      this.fetchLearningStatistics(),
+      this.fetchPracticeStatistics(),
+      this.fetchRecentStudyRecords()
+    ]);
   },
   methods: {
     async fetchLearningStatistics() {
@@ -289,8 +299,51 @@ export default {
         this.learningStats = { totalStudyHours: 0, completedCourses: 0, continuousDays: 0, login: false };
       }
     },
+    async fetchPracticeStatistics() {
+      try {
+        const res = await this.$axios.get('/api/user/statistics', { withCredentials: true });
+        this.practiceStats = res.data;
+      } catch (e) {
+        this.practiceStats = { completed: 0, accuracy: 0, practiceTime: 0, totalProblems: 0, continuousDays: 0 };
+      }
+    },
+    async fetchRecentStudyRecords() {
+      try {
+        const res = await this.$axios.get('/api/study-records/recent?limit=5', { withCredentials: true });
+        this.recentStudyRecords = res.data;
+      } catch (e) {
+        this.recentStudyRecords = [];
+      }
+    },
     goToDetail(id) {
       this.$router.push({ name: 'LearnDetial', query: { id } });
+    },
+    goToCourse(courseId) {
+      this.$router.push(`/course/${courseId}`);
+    },
+    goToPractice(lessonId) {
+      this.$router.push(`/problem/P${lessonId}`);
+    },
+    goToLearningRecords() {
+      this.$router.push('/learning-records')
+    },
+    formatTimeAgo(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (minutes < 60) {
+        return `${minutes}分钟前`;
+      } else if (hours < 24) {
+        return `${hours}小时前`;
+      } else if (days < 7) {
+        return `${days}天前`;
+      } else {
+        return date.toLocaleDateString('zh-CN');
+      }
     }
   }
 }
@@ -437,6 +490,45 @@ export default {
 
 .tree-card-link:hover {
   color: #2563eb;
-  text-decoration: underline;
+}
+
+.space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, transform 0.12s ease, background-color 0.25s ease;
+}
+
+.clickable:hover {
+  box-shadow: 0 10px 36px rgba(37,99,235,0.14), 0 3px 10px rgba(0,0,0,0.07);
+  transform: translateY(-2px);
+}
+
+.clickable:active {
+  transform: translateY(0px) scale(0.995);
+}
+
+/* 指标卡片的微动效与边框高亮 */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 0.75rem;
+  box-shadow: inset 0 0 0 0 rgba(37,99,235,0.2);
+  transition: box-shadow 0.25s ease;
+}
+.metric-card:hover::after {
+  box-shadow: inset 0 0 0 2px rgba(37,99,235,0.25);
 }
 </style> 
