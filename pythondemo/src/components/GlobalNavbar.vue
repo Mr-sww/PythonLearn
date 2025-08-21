@@ -30,7 +30,7 @@
           <!-- 用户菜单 -->
           <div class="relative">
             <button @click="showUserMenu = !showUserMenu" class="flex items-center space-x-2 text-white hover:text-blue-200 transition-colors">
-              <img v-if="user?.avatar" :src="user.avatar" alt="头像" class="w-8 h-8 rounded-full">
+              <img v-if="user?.avatar" :src="getAvatarUrl(user.avatar)" alt="头像" class="w-8 h-8 rounded-full">
               <div v-else class="w-8 h-8 bg-blue-300 rounded-full flex items-center justify-center">
                 <i class="fa fa-user text-blue-600"></i>
               </div>
@@ -115,6 +115,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCurrentUser, getCurrentUserRole, isAdmin, isTeacher, isStudent, clearLoginState } from '@/utils/auth'
+import { getAvatarUrl } from '@/utils/avatar'
 
 export default {
   name: 'GlobalNavbar',
@@ -212,7 +213,8 @@ export default {
       isStudent: isStudentUser,
       userRoleDisplay,
       roleIndicatorClass,
-      logout
+      logout,
+      getAvatarUrl
     }
   }
 }
