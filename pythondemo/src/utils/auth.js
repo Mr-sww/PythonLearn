@@ -75,6 +75,7 @@ export function setLoginState(user) {
   const userRole = getRoleByGroupType(user.groupType)
   
   localStorage.setItem('user', JSON.stringify(user))
+  localStorage.setItem('userId', user.userId || user.user_id)
   localStorage.setItem('isLoggedIn', 'true')
   localStorage.setItem('userRole', userRole)
 }
@@ -84,6 +85,7 @@ export function setLoginState(user) {
  */
 export function clearLoginState() {
   localStorage.removeItem('user')
+  localStorage.removeItem('userId')
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('redirectPath')
   localStorage.removeItem('userRole')
@@ -208,6 +210,35 @@ export function hasCompletedMajorSelection() {
 export function hasCompletedLearningDirectionSelection() {
   const user = getCurrentUser()
   return user && user.intestTypes && user.intestTypes.length > 0
+}
+
+/**
+ * 获取当前用户ID
+ * @returns {number|null} 用户ID
+ */
+export function getCurrentUserId() {
+  const userId = localStorage.getItem('userId')
+  if (userId) {
+    return parseInt(userId)
+  }
+  
+  const user = getCurrentUser()
+  return user ? (user.userId || user.user_id) : null
+}
+
+/**
+ * 检查登录状态并重定向
+ * @param {Object} router Vue Router实例
+ * @returns {boolean} 是否已登录
+ */
+export function checkLoginAndRedirect(router) {
+  if (!isLoggedIn()) {
+    // 保存当前路径用于登录后重定向
+    saveRedirectPath(router.currentRoute.value.fullPath)
+    router.push('/auth')
+    return false
+  }
+  return true
 }
 
 

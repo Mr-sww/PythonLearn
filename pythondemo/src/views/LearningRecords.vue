@@ -19,8 +19,8 @@
               <div class="text-primary mb-2">
                 <i class="fa fa-book fa-2x"></i>
               </div>
-              <h4 class="fw-bold text-dark">{{ statistics.totalCourses || 0 }}</h4>
-              <p class="text-muted mb-0">学习课程数</p>
+              <h4 class="fw-bold text-dark">{{ statistics.totalKnowledge || 0 }}</h4>
+              <p class="text-muted mb-0">学习知识点</p>
             </div>
           </div>
         </div>
@@ -30,8 +30,8 @@
               <div class="text-success mb-2">
                 <i class="fa fa-check-circle fa-2x"></i>
               </div>
-              <h4 class="fw-bold text-dark">{{ statistics.completedLessons || 0 }}</h4>
-              <p class="text-muted mb-0">完成课时</p>
+              <h4 class="fw-bold text-dark">{{ statistics.completedKnowledge || 0 }}</h4>
+              <p class="text-muted mb-0">完成知识点</p>
             </div>
           </div>
         </div>
@@ -41,7 +41,7 @@
               <div class="text-info mb-2">
                 <i class="fa fa-clock fa-2x"></i>
               </div>
-              <h4 class="fw-bold text-dark">{{ statistics.totalStudyTime || 0 }}小时</h4>
+              <h4 class="fw-bold text-dark">{{ statistics.totalStudyTime || 0 }}分钟</h4>
               <p class="text-muted mb-0">学习时长</p>
             </div>
           </div>
@@ -79,7 +79,7 @@
               v-model="searchKeyword" 
               type="text" 
               class="form-control" 
-              placeholder="搜索课程..."
+              placeholder="搜索知识点..."
               @input="handleSearch"
             >
             <button class="btn btn-outline-secondary" type="button">
@@ -94,7 +94,7 @@
         <div class="col-12">
           <div class="card border-0 shadow-sm">
             <div class="card-header bg-white">
-              <h5 class="mb-0">学习记录</h5>
+              <h5 class="mb-0">知识点学习记录</h5>
             </div>
             <div class="card-body p-0">
               <div v-if="loading" class="text-center py-5">
@@ -105,6 +105,7 @@
               <div v-else-if="records.length === 0" class="text-center py-5">
                 <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
                 <p class="text-muted">暂无学习记录</p>
+                <p class="text-muted small">开始学习知识点来查看记录</p>
               </div>
               <div v-else class="list-group list-group-flush">
                 <div 
@@ -114,30 +115,28 @@
                 >
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 me-3">
-                      <img 
-                        :src="record.courseImage || '/course_images/default.jpg'" 
-                        alt="课程图片"
-                        class="rounded"
-                        style="width: 60px; height: 60px; object-fit: cover;"
-                      >
+                      <div class="bg-primary rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa fa-book text-white fa-2x"></i>
+                      </div>
                     </div>
                     <div class="flex-grow-1">
-                                             <h6 class="mb-1">{{ record.courseTitle || '代码练习' }}</h6>
-                       <p class="text-muted mb-1 small">{{ record.lessonTitle || `题目 ${record.lessonId}` }}</p>
-                      <div class="d-flex align-items-center">
-                        <small class="text-muted me-3">
-                          <i class="fa fa-clock me-1"></i>{{ formatDate(record.studyDate) }}
-                        </small>
-                        <small class="text-muted me-3">
-                          <i class="fa fa-play me-1"></i>{{ record.duration }}分钟
-                        </small>
-                        <div class="progress flex-grow-1 me-3" style="height: 6px;">
-                          <div 
-                            class="progress-bar" 
-                            :style="{ width: record.progress + '%' }"
-                          ></div>
+                      <h6 class="mb-2">{{ record.knowledgeTitle || '未知知识点' }}</h6>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-3">文字知识点</span>
+                        <small class="text-muted">ID: {{ record.knowledgeId }}</small>
+                      </div>
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                          <small class="text-muted me-4">
+                            <i class="fa fa-clock me-1"></i>{{ formatDate(record.startTime) }}
+                          </small>
+                          <small class="text-muted me-4">
+                            <i class="fa fa-hourglass-half me-1"></i>{{ formatStudyTime(record.studyTime) }}
+                          </small>
                         </div>
-                        <span class="badge bg-success">{{ record.progress }}%</span>
+                        <span class="badge" :class="getStatusBadgeClass(record.status)">
+                          {{ getStatusText(record.status) }}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -152,6 +151,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'LearningRecords',
   data() {
@@ -159,8 +160,8 @@ export default {
       loading: false,
       records: [],
       statistics: {
-        totalCourses: 0,
-        completedLessons: 0,
+        totalKnowledge: 0,
+        completedKnowledge: 0,
         totalStudyTime: 0,
         continuousDays: 0
       },
@@ -181,11 +182,14 @@ export default {
   methods: {
     async loadStatistics() {
       try {
-        const res = await this.$axios.get('/api/study-records/statistics', { withCredentials: true })
+        const res = await axios.get('http://localhost:8080/api/learning/knowledge/stats', { 
+          withCredentials: true 
+        })
+        console.log('统计信息:', res.data);
         this.statistics = {
-          totalCourses: res.data.totalCourses || 0,
-          completedLessons: res.data.completedLessons || 0,
-          totalStudyTime: res.data.totalStudyHours || 0,
+          totalKnowledge: res.data.totalKnowledge || 0,
+          completedKnowledge: res.data.completedKnowledge || 0,
+          totalStudyTime: Math.round((res.data.totalStudyTime || 0) / 60), // 转换为分钟
           continuousDays: res.data.continuousDays || 0
         }
       } catch (error) {
@@ -195,18 +199,12 @@ export default {
     async loadRecords() {
       this.loading = true
       try {
-        const res = await this.$axios.get('/api/study-records', { withCredentials: true })
-                 this.records = res.data.map(record => ({
-           id: record.recordId,
-           courseTitle: record.courseTitle || (record.courseId === 9999 ? '代码练习' : '未知课程'),
-           lessonTitle: record.lessonTitle || (record.courseId === 9999 ? `题目 ${record.lessonId}` : '未知课时'),
-           courseImage: record.courseImage || (record.courseId === 9999 ? '/course_images/code_practice.jpg' : '/course_images/default.jpg'),
-           studyDate: record.studyDate,
-           duration: Math.round(record.studyTime / 60), // 转换为分钟
-           progress: Math.round(record.progress || 0),
-           courseId: record.courseId,
-           lessonId: record.lessonId
-         }))
+        const res = await axios.get('http://localhost:8080/api/learning/knowledge/records', { 
+          withCredentials: true,
+          params: { limit: 50 }
+        })
+        console.log('学习记录:', res.data);
+        this.records = res.data || []
       } catch (error) {
         console.error('加载学习记录失败:', error)
         this.records = []
@@ -226,8 +224,11 @@ export default {
     async loadFilteredRecords(filter) {
       this.loading = true
       try {
-        const res = await this.$axios.get('/api/study-records', { withCredentials: true })
-        let filteredRecords = res.data
+        const res = await axios.get('http://localhost:8080/api/learning/knowledge/records', { 
+          withCredentials: true,
+          params: { limit: 100 }
+        })
+        let filteredRecords = res.data || []
         
         // 根据筛选条件过滤数据
         const now = new Date()
@@ -238,32 +239,22 @@ export default {
         switch (filter) {
           case 'week':
             filteredRecords = filteredRecords.filter(record => 
-              new Date(record.studyDate) >= oneWeekAgo
+              new Date(record.startTime) >= oneWeekAgo
             )
             break
           case 'month':
             filteredRecords = filteredRecords.filter(record => 
-              new Date(record.studyDate) >= oneMonthAgo
+              new Date(record.startTime) >= oneMonthAgo
             )
             break
           case 'quarter':
             filteredRecords = filteredRecords.filter(record => 
-              new Date(record.studyDate) >= threeMonthsAgo
+              new Date(record.startTime) >= threeMonthsAgo
             )
             break
         }
         
-                 this.records = filteredRecords.map(record => ({
-           id: record.recordId,
-           courseTitle: record.courseTitle || (record.courseId === 9999 ? '代码练习' : '未知课程'),
-           lessonTitle: record.lessonTitle || (record.courseId === 9999 ? `题目 ${record.lessonId}` : '未知课时'),
-           courseImage: record.courseImage || (record.courseId === 9999 ? '/course_images/code_practice.jpg' : '/course_images/default.jpg'),
-           studyDate: record.studyDate,
-           duration: Math.round(record.studyTime / 60),
-           progress: Math.round(record.progress || 0),
-           courseId: record.courseId,
-           lessonId: record.lessonId
-         }))
+        this.records = filteredRecords
       } catch (error) {
         console.error('加载筛选记录失败:', error)
         this.records = []
@@ -272,11 +263,10 @@ export default {
       }
     },
     handleSearch() {
-      // 实现搜索逻辑 - 可以过滤课程标题
+      // 实现搜索逻辑 - 可以过滤知识点标题
       if (this.searchKeyword.trim()) {
         this.records = this.records.filter(record => 
-          record.courseTitle.toLowerCase().includes(this.searchKeyword.toLowerCase()) ||
-          record.lessonTitle.toLowerCase().includes(this.searchKeyword.toLowerCase())
+          record.knowledgeTitle.toLowerCase().includes(this.searchKeyword.toLowerCase())
         )
       } else {
         this.loadRecords()
@@ -291,6 +281,34 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
+    },
+    formatStudyTime(seconds) {
+      if (!seconds || seconds === 0) {
+        return '0分钟'
+      }
+      const minutes = Math.floor(seconds / 60)
+      const remainingSeconds = seconds % 60
+      if (minutes > 0) {
+        return remainingSeconds > 0 ? `${minutes}分${remainingSeconds}秒` : `${minutes}分钟`
+      } else {
+        return `${remainingSeconds}秒`
+      }
+    },
+    getStatusText(status) {
+      switch (status) {
+        case 'started': return '已开始'
+        case 'in_progress': return '学习中'
+        case 'completed': return '已完成'
+        default: return '未知'
+      }
+    },
+    getStatusBadgeClass(status) {
+      switch (status) {
+        case 'started': return 'bg-warning'
+        case 'in_progress': return 'bg-info'
+        case 'completed': return 'bg-success'
+        default: return 'bg-secondary'
+      }
     }
   }
 }

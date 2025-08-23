@@ -153,11 +153,25 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody Map<String, String> params, HttpSession session) {
         String account = params.get("account");
         String password = params.get("password");
+        
+        System.out.println("=== 用户登录调试信息 ===");
+        System.out.println("账号: " + account);
+        System.out.println("Session ID: " + session.getId());
+        
         User user = userService.login(account, password);
         if (user != null) {
+            // 同时存储user对象和userId，保持一致性
             session.setAttribute("user", user);
+            session.setAttribute("userId", user.getUserId());
+            
+            System.out.println("用户登录成功:");
+            System.out.println("用户ID: " + user.getUserId());
+            System.out.println("用户名: " + user.getNickname());
+            System.out.println("Session中存储的userId: " + session.getAttribute("userId"));
+            
             return ResponseEntity.ok(user);
         }
+        System.out.println("登录失败: 账号或密码错误");
         return ResponseEntity.status(400).body("账号或密码错误");
     }
 

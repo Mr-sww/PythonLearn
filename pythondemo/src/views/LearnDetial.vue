@@ -84,6 +84,9 @@
 
 <script>
 import axios from 'axios';
+import { learningRecordService } from '@/services/learningRecordService.js';
+import { checkLoginAndRedirect } from '@/utils/auth.js';
+
 export default {
   name: 'LearnDetial',
   data() {
@@ -97,7 +100,11 @@ export default {
       comments: [],
       newComment: '',
       submitting: false,
-      defaultAvatar: '/avatar/default.png'
+      defaultAvatar: '/avatar/default.png',
+      // 学习记录相关
+      studyStartTime: null,
+      studyTimer: null,
+      isStudying: false
     }
   },
   computed: {
@@ -120,9 +127,31 @@ export default {
     }
   },
   mounted() {
+    // 检查登录状态
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    console.log('=== 页面加载时检查登录状态 ===');
+    console.log('localStorage中的用户信息:', user);
+    console.log('用户ID:', user?.userId);
+    console.log('是否登录:', !!user?.userId);
+    
+    if (!user || !user.userId) {
+      console.log('用户未登录，重定向到登录页面');
+      this.$router.push('/login');
+      return;
+    }
+    
     this.fetchCatalog();
     const title = this.$route.query.id;
     if (title) this.selectKnowledgeByTitle(title);
+  },
+  
+  beforeUnmount() {
+    // 清理定时器
+    if (this.studyTimer) {
+      clearInterval(this.studyTimer);
+    }
+    // 完成当前学习记录
+    this.completeCurrentStudy();
   },
   watch: {
     '$route.query.id': {
@@ -143,6 +172,20 @@ export default {
       }
     },
     async selectKnowledge(item) {
+      // 检查登录状态
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      console.log('当前用户信息:', user);
+      console.log('用户ID:', user?.userId);
+      console.log('是否登录:', !!user?.userId);
+      
+      if (!checkLoginAndRedirect(this.$router)) {
+        console.log('用户未登录，已重定向到登录页面');
+        return;
+      }
+      
+      // 完成之前的学习记录
+      await this.completeCurrentStudy();
+      
       this.loading = true;
       try {
         const res = await axios.get(`/api/knowledge/${item.id}/detail`);
@@ -152,6 +195,9 @@ export default {
         this.selectedGroup = this.catalog.find(g => g.children && g.children.some(c => c.id === item.id))?.id;
         // 拉取评论
         await this.fetchComments();
+        
+        // 开始新的学习记录
+        await this.startStudyRecord(item);
       } catch (e) {
         console.error('获取知识点详情失败:', e);
         this.selectedKnowledge = { id: item.id, title: item.title, content: '内容加载失败' };
@@ -213,6 +259,79 @@ export default {
         // 失败回滚
         c._liked = !c._liked;
         c._likes = (c._likes || 0) + (c._liked ? 1 : -1);
+      }
+    },
+    
+    // 学习记录相关方法
+    async startStudyRecord(knowledgeItem) {
+      try {
+        // 开始学习记录
+        await learningRecordService.startKnowledgeStudy(
+          knowledgeItem.id,
+          knowledgeItem.title
+        );
+        
+        this.isStudying = true;
+        this.studyStartTime = new Date();
+        
+        // 启动定时器，每30秒更新一次学习进度
+        this.studyTimer = setInterval(() => {
+          this.updateStudyProgress();
+        }, 30000);
+        
+        console.log('开始学习记录:', knowledgeItem.title);
+      } catch (error) {
+        console.error('开始学习记录失败:', error);
+      }
+    },
+    
+    async updateStudyProgress() {
+      if (!this.isStudying || !this.studyStartTime || !this.selectedKnowledge) {
+        return;
+      }
+      
+      try {
+        const studyTime = Math.floor((new Date() - this.studyStartTime) / 1000);
+        const progress = Math.min(studyTime / 60, 100); // 假设60秒为100%进度
+        
+        await learningRecordService.updateKnowledgeProgress(
+          this.selectedKnowledge.id,
+          studyTime,
+          progress
+        );
+        
+        console.log('更新学习进度:', progress.toFixed(1) + '%');
+      } catch (error) {
+        console.error('更新学习进度失败:', error);
+      }
+    },
+    
+    async completeCurrentStudy() {
+      if (!this.isStudying || !this.selectedKnowledge) {
+        return;
+      }
+      
+      try {
+        // 停止定时器
+        if (this.studyTimer) {
+          clearInterval(this.studyTimer);
+          this.studyTimer = null;
+        }
+        
+        // 计算学习时长
+        const studyTime = this.studyStartTime ? 
+          Math.floor((new Date() - this.studyStartTime) / 1000) : 0;
+        
+        // 完成学习记录
+        await learningRecordService.completeKnowledgeStudy(this.selectedKnowledge.id);
+        
+        console.log('完成学习记录:', this.selectedKnowledge.title, '学习时长:', studyTime + '秒');
+        
+        // 重置状态
+        this.isStudying = false;
+        this.studyStartTime = null;
+      } catch (error) {
+        console.error('完成学习记录失败:', error);
       }
     }
   }
