@@ -15,6 +15,9 @@ import LearningRecords from '../views/LearningRecords.vue'
 import LoginTest from '../views/LoginTest.vue'
 import TestLearningRecord from '../views/TestLearningRecord.vue'
 import SessionTest from '../views/SessionTest.vue'
+import CourseVideo from '../views/CourseVideo.vue'
+import TestVideoRecords from '../views/TestVideoRecords.vue'
+import TestVideoClick from '../views/TestVideoClick.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import TeacherDashboard from '../views/TeacherDashboard.vue'
 import StudentDashboard from '../views/StudentDashboard.vue'
@@ -26,6 +29,8 @@ const routes = [
   { path: '/auth', component: AuthPage },
   { path: '/login-test', component: LoginTest },
   { path: '/test-learning', component: TestLearningRecord },
+  { path: '/test-video', component: TestVideoRecords },
+  { path: '/test-video-click', component: TestVideoClick },
   { path: '/session-test', component: SessionTest },
   { path: '/courses', component: CourseCenter },
   { path: '/learning', component: LearningCenter },
@@ -34,6 +39,7 @@ const routes = [
   { path: '/code-practice', component: CodePractice },
   { path: '/problem/:id', component: CodePractice },
   { path: '/course/:id', component: CourseDetailPage },
+  { path: '/courses/:courseId/videos/:videoId', component: CourseVideo },
   { path: '/profile', component: ProfilePage },
   { path: '/exercise/:id', component: ExerciseDetailPage },
   { path: '/ai', component: AIChatPage },

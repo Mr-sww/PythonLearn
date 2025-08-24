@@ -6,6 +6,7 @@ public class KnowledgePoint {
     private String title;
     private String question;
     private String url;
+    private String contentType;
     private String content;
     private String stage;
     private Date createTime;
@@ -18,6 +19,8 @@ public class KnowledgePoint {
     public void setQuestion(String question) { this.question = question; }
     public String getUrl() { return url; }
     public void setUrl(String url) { this.url = url; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
     public String getStage() { return stage; }

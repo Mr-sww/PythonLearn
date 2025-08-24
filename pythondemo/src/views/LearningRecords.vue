@@ -1,6 +1,6 @@
 <template>
   <div class="learning-records-container">
-    <div class="container-fluid">
+    <div class="container">
       <!-- 页面标题 -->
       <div class="row mb-4">
         <div class="col-12">
@@ -13,29 +13,29 @@
 
       <!-- 统计卡片 -->
       <div class="row mb-4">
-        <div class="col-md-2 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-              <div class="text-primary mb-2">
-                <i class="fa fa-book fa-2x"></i>
+              <div class="text-success mb-2">
+                <i class="fa fa-pencil fa-2x"></i>
               </div>
               <h4 class="fw-bold text-dark">{{ statistics.totalKnowledge || 0 }}</h4>
-              <p class="text-muted mb-0">知识点</p>
+              <p class="text-muted mb-0">文字知识点</p>
             </div>
           </div>
         </div>
-        <div class="col-md-2 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-              <div class="text-info mb-2">
-                <i class="fa fa-video fa-2x"></i>
+              <div class="text-danger mb-2">
+                <i class="fa fa-play-circle fa-2x"></i>
               </div>
               <h4 class="fw-bold text-dark">{{ statistics.totalVideos || 0 }}</h4>
-              <p class="text-muted mb-0">视频</p>
+              <p class="text-muted mb-0">视频课程</p>
             </div>
           </div>
         </div>
-        <div class="col-md-2 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
               <div class="text-success mb-2">
@@ -46,18 +46,18 @@
             </div>
           </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
               <div class="text-warning mb-2">
                 <i class="fa fa-clock fa-2x"></i>
               </div>
-              <h4 class="fw-bold text-dark">{{ statistics.totalStudyTime || 0 }}分钟</h4>
+              <h4 class="h4 fw-bold text-dark">{{ statistics.totalStudyTime || 0 }}分钟</h4>
               <p class="text-muted mb-0">总学习时长</p>
             </div>
           </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
               <div class="text-secondary mb-2">
@@ -72,7 +72,7 @@
 
       <!-- 筛选和搜索 -->
       <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-lg-6 col-md-12 mb-3">
           <div class="btn-group" role="group">
             <button 
               v-for="filter in filters" 
@@ -84,7 +84,7 @@
             </button>
           </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-6 mb-3">
           <div class="btn-group" role="group">
             <button 
               v-for="type in recordTypes" 
@@ -96,7 +96,7 @@
             </button>
           </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-6 mb-3">
           <div class="input-group">
             <input 
               v-model="searchKeyword" 
@@ -202,8 +202,8 @@ export default {
       ],
       recordTypes: [
         { label: '全部', value: 'all' },
-        { label: '知识点', value: 'knowledge' },
-        { label: '视频', value: 'video' }
+        { label: '文字知识点', value: 'knowledge' },
+        { label: '视频课程', value: 'video' }
       ],
       currentFilter: 'all',
       currentRecordType: 'all',
@@ -263,23 +263,43 @@ export default {
   methods: {
     async loadStatistics() {
       try {
-        // 加载知识点统计
-        const knowledgeStats = await learningRecordService.getKnowledgeStats()
-        console.log('知识点统计信息:', knowledgeStats);
+        // 先加载学习记录，然后根据 contentType 计算统计
+        const [knowledgeRes, videoRes] = await Promise.all([
+          learningRecordService.getKnowledgeRecords(100),
+          learningRecordService.getVideoRecords(100)
+        ])
         
-        // 暂时设置视频统计为0，因为视频API可能还没有实现
-        const videoStats = { totalVideos: 0, completedVideos: 0, totalWatchTime: 0, continuousDays: 0 }
-        console.log('视频统计信息（临时）:', videoStats);
+        // 合并所有记录
+        const allRecords = [
+          ...(knowledgeRes || []).map(record => ({
+            ...record,
+            type: record.contentType === 'video' ? 'video' : 'knowledge'
+          })),
+          ...(videoRes || []).map(record => ({
+            ...record,
+            type: 'video'
+          }))
+        ]
+        
+        // 根据类型计算统计
+        const videoRecords = allRecords.filter(record => record.type === 'video')
+        const textRecords = allRecords.filter(record => record.type === 'knowledge')
+        const completedRecords = allRecords.filter(record => record.status === 'completed')
+        
+        // 计算总学习时长（秒）
+        const totalStudyTime = allRecords.reduce((sum, record) => {
+          return sum + (record.studyTime || 0)
+        }, 0)
         
         this.statistics = {
-          totalKnowledge: knowledgeStats.totalKnowledge || 0,
-          totalVideos: videoStats.totalVideos || 0,
-          completedItems: (knowledgeStats.completedKnowledge || 0) + (videoStats.completedVideos || 0),
-          totalStudyTime: Math.round(((knowledgeStats.totalStudyTime || 0) + (videoStats.totalWatchTime || 0)) / 60), // 转换为分钟
-          continuousDays: Math.max(knowledgeStats.continuousDays || 0, videoStats.continuousDays || 0)
+          totalKnowledge: textRecords.length,
+          totalVideos: videoRecords.length,
+          completedItems: completedRecords.length,
+          totalStudyTime: Math.round(totalStudyTime / 60), // 转换为分钟
+          continuousDays: allRecords.length > 0 ? 1 : 0 // 简化计算
         }
         
-        console.log('最终统计信息:', this.statistics);
+        console.log('计算后的统计信息:', this.statistics);
       } catch (error) {
         console.error('加载统计信息失败:', error)
         // 设置默认值
@@ -295,19 +315,25 @@ export default {
     async loadAllRecords() {
       this.loading = true
       try {
-        // 暂时只加载知识点记录，因为视频API可能还没有实现
-        const knowledgeRes = await learningRecordService.getKnowledgeRecords(50)
-        console.log('知识点记录:', knowledgeRes);
+        // 并行加载知识点和视频记录
+        const [knowledgeRes, videoRes] = await Promise.all([
+          learningRecordService.getKnowledgeRecords(50),
+          learningRecordService.getVideoRecords(50)
+        ])
         
-        // 为记录添加类型标识
+        console.log('知识点记录:', knowledgeRes);
+        console.log('视频记录:', videoRes);
+        
+        // 根据后端返回的 contentType 字段来设置类型
         this.knowledgeRecords = (knowledgeRes || []).map(record => ({
           ...record,
-          type: 'knowledge'
+          type: record.contentType === 'video' ? 'video' : 'knowledge'
         }))
         
-        // 暂时设置视频记录为空数组
-        this.videoRecords = []
-        console.log('视频记录（临时）:', this.videoRecords);
+        this.videoRecords = (videoRes || []).map(record => ({
+          ...record,
+          type: 'video'
+        }))
         
       } catch (error) {
         console.error('加载学习记录失败:', error)
@@ -326,27 +352,24 @@ export default {
     },
     // 记录类型相关方法
     getRecordIcon(type) {
-      return type === 'knowledge' ? 'fa fa-book' : 'fa fa-video'
+      return type === 'knowledge' ? 'fa fa-pencil' : 'fa fa-play-circle'
     },
     
     getRecordIconClass(type) {
-      return type === 'knowledge' ? 'bg-primary' : 'bg-info'
+      return type === 'knowledge' ? 'bg-success' : 'bg-danger'
     },
     
     getRecordTitle(record) {
-      if (record.type === 'knowledge') {
-        return record.knowledgeTitle || '未知知识点'
-      } else {
-        return record.videoTitle || '未知视频'
-      }
+      // 视频和知识点都使用 knowledgeTitle 字段
+      return record.knowledgeTitle || '未知标题'
     },
     
     getRecordTypeText(type) {
-      return type === 'knowledge' ? '知识点' : '视频'
+      return type === 'knowledge' ? '文字知识点' : '视频课程'
     },
     
     getRecordTypeBadgeClass(type) {
-      return type === 'knowledge' ? 'bg-primary' : 'bg-info'
+      return type === 'knowledge' ? 'bg-success' : 'bg-danger'
     },
     
     getRecordId(record) {
@@ -412,10 +435,45 @@ export default {
 
 <style scoped>
 .learning-records-container {
-  padding: 20px;
+  padding: 30px 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.container {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.btn-group .btn {
+  border-radius: 6px;
+  margin-right: 5px;
+}
+
+.btn-group .btn:last-child {
+  margin-right: 0;
 }
 
 .progress-bar {
   background-color: #007bff;
+}
+
+@media (max-width: 768px) {
+  .learning-records-container {
+    padding: 20px 10px;
+  }
+  
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
 }
 </style>

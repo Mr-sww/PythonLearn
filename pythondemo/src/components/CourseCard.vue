@@ -141,10 +141,21 @@ export default {
     },
     
     // 查看课程详情
-    handleViewCourse() {
+    async handleViewCourse() {
       this.$emit('view-course', this.course);
+      
+      // 记录视频点击事件（不影响跳转功能）
+      try {
+        const { videoClickService } = await import('@/services/videoClickService.js');
+        await videoClickService.recordVideoClick(this.course.ID || this.course.id);
+        console.log('视频点击记录成功');
+      } catch (error) {
+        console.error('视频点击记录失败:', error);
+        // 不影响跳转，继续执行
+      }
+      
       // 跳转到视频详情页或外链
-      window.open(this.course.url, '_blank');
+      window.open(this.course.URL || this.course.url, '_blank');
     },
     
     // 开始学习

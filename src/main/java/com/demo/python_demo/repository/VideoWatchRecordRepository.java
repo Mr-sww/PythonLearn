@@ -61,6 +61,12 @@ public interface VideoWatchRecordRepository {
      */
     @Select("SELECT COUNT(*) FROM video_watch_record WHERE user_id = #{userId} AND status = 'completed'")
     int countCompletedByUserId(@Param("userId") Integer userId);
+
+    /**
+     * 统计用户的总观看时长（秒）
+     */
+    @Select("SELECT COALESCE(SUM(watch_time), 0) FROM video_watch_record WHERE user_id = #{userId}")
+    Integer sumWatchTimeByUserId(@Param("userId") Integer userId);
 }
 
 

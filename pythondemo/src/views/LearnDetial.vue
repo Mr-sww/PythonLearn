@@ -85,6 +85,7 @@
 <script>
 import axios from 'axios';
 import { learningRecordService } from '@/services/learningRecordService.js';
+import { videoClickService } from '@/services/videoClickService.js';
 import { checkLoginAndRedirect } from '@/utils/auth.js';
 
 export default {
@@ -182,6 +183,10 @@ export default {
         console.log('用户未登录，已重定向到登录页面');
         return;
       }
+      
+      // 处理视频点击事件
+      const isVideo = await videoClickService.handleKnowledgeClick(item);
+      console.log('知识点类型:', isVideo ? '视频' : '文字');
       
       // 完成之前的学习记录
       await this.completeCurrentStudy();

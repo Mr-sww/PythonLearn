@@ -2,7 +2,9 @@ package com.demo.python_demo.controller;
 
 import com.demo.python_demo.entity.KnowledgeStudyRecord;
 import com.demo.python_demo.entity.VideoWatchRecord;
+import com.demo.python_demo.entity.PythonVideo;
 import com.demo.python_demo.service.LearningRecordService;
+import com.demo.python_demo.repository.PythonVideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,9 @@ public class LearningRecordController {
 
     @Autowired
     private LearningRecordService learningRecordService;
+    
+    @Autowired
+    private PythonVideoRepository pythonVideoRepository;
 
     // 知识点学习记录相关接口
 
@@ -58,7 +63,7 @@ public class LearningRecordController {
         }
 
         try {
-            KnowledgeStudyRecord record = learningRecordService.startKnowledgeStudy(userId, knowledgeId, knowledgeTitle);
+            KnowledgeStudyRecord record = learningRecordService.startKnowledgeStudy(userId, knowledgeId, knowledgeTitle, "text");
             System.out.println("学习记录创建成功: " + record);
             return ResponseEntity.ok(record);
         } catch (Exception e) {
@@ -92,6 +97,60 @@ public class LearningRecordController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("进度更新失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 记录视频点击事件
+     */
+    @PostMapping("/video-click")
+    public ResponseEntity<?> recordVideoClick(
+            @RequestParam Integer videoId,
+            HttpSession session) {
+        
+        System.out.println("=== 视频点击记录调试信息 ===");
+        System.out.println("Session ID: " + session.getId());
+        System.out.println("视频ID: " + videoId);
+        
+        Integer userId = (Integer) session.getAttribute("userId");
+        System.out.println("从session获取的userId: " + userId);
+        
+        if (userId == null) {
+            System.out.println("用户未登录，返回错误");
+            return ResponseEntity.badRequest().body("用户未登录");
+        }
+
+        try {
+            // 根据视频ID查询视频课程信息
+            PythonVideo video = pythonVideoRepository.findById(videoId);
+            if (video == null) {
+                System.out.println("未找到视频课程，ID: " + videoId);
+                return ResponseEntity.badRequest().body("未找到视频课程");
+            }
+            
+            System.out.println("找到视频课程: " + video.getTitle());
+            
+            // 创建学习记录，标记为视频类型
+            KnowledgeStudyRecord record = learningRecordService.startKnowledgeStudy(
+                userId, 
+                videoId, 
+                video.getTitle(),
+                "video"
+            );
+            
+            System.out.println("视频点击记录创建成功: " + record);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "视频点击记录成功");
+            response.put("record", record);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.out.println("创建视频点击记录失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("视频点击记录失败: " + e.getMessage());
         }
     }
 
@@ -263,11 +322,22 @@ public class LearningRecordController {
             @RequestParam String videoTitle,
             @RequestParam String videoUrl,
             @RequestParam(defaultValue = "0") Integer totalDuration,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
         
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.badRequest().body("用户未登录");
+            // 尝试从请求头获取用户ID
+            String userIdHeader = request.getHeader("X-User-ID");
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body("用户未登录");
+                }
+            } else {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
         }
 
         try {
@@ -286,11 +356,22 @@ public class LearningRecordController {
             @RequestParam Integer videoId,
             @RequestParam Integer watchTime,
             @RequestParam Double progress,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
         
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.badRequest().body("用户未登录");
+            // 尝试从请求头获取用户ID
+            String userIdHeader = request.getHeader("X-User-ID");
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body("用户未登录");
+                }
+            } else {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
         }
 
         try {
@@ -311,11 +392,22 @@ public class LearningRecordController {
     @PostMapping("/video/complete")
     public ResponseEntity<?> completeVideoWatch(
             @RequestParam Integer videoId,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
         
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.badRequest().body("用户未登录");
+            // 尝试从请求头获取用户ID
+            String userIdHeader = request.getHeader("X-User-ID");
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body("用户未登录");
+                }
+            } else {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
         }
 
         try {
@@ -336,11 +428,22 @@ public class LearningRecordController {
     @GetMapping("/video/records")
     public ResponseEntity<?> getVideoRecords(
             @RequestParam(defaultValue = "10") Integer limit,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
         
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.badRequest().body("用户未登录");
+            // 尝试从请求头获取用户ID
+            String userIdHeader = request.getHeader("X-User-ID");
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body("用户未登录");
+                }
+            } else {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
         }
 
         try {
@@ -355,10 +458,20 @@ public class LearningRecordController {
      * 获取视频观看统计
      */
     @GetMapping("/video/stats")
-    public ResponseEntity<?> getVideoStats(HttpSession session) {
+    public ResponseEntity<?> getVideoStats(HttpSession session, HttpServletRequest request) {
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.badRequest().body("用户未登录");
+            // 尝试从请求头获取用户ID
+            String userIdHeader = request.getHeader("X-User-ID");
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body("用户未登录");
+                }
+            } else {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
         }
 
         try {

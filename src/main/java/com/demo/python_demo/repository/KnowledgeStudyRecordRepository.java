@@ -14,8 +14,8 @@ public interface KnowledgeStudyRecordRepository {
     /**
      * 插入新的学习记录
      */
-    @Insert("INSERT INTO knowledge_study_record (user_id, knowledge_id, knowledge_title, status, progress, study_time, start_time) " +
-            "VALUES (#{userId}, #{knowledgeId}, #{knowledgeTitle}, #{status}, #{progress}, #{studyTime}, NOW())")
+    @Insert("INSERT INTO knowledge_study_record (user_id, knowledge_id, knowledge_title, content_type, status, progress, study_time, start_time) " +
+            "VALUES (#{userId}, #{knowledgeId}, #{knowledgeTitle}, #{contentType}, #{status}, #{progress}, #{studyTime}, NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(KnowledgeStudyRecord record);
 
@@ -26,6 +26,7 @@ public interface KnowledgeStudyRecordRepository {
             "study_time = #{studyTime}, " +
             "progress = #{progress}, " +
             "status = #{status}, " +
+            "content_type = #{contentType}, " +
             "end_time = #{endTime}, " +
             "last_study_time = NOW(), " +
             "updated_at = NOW() " +

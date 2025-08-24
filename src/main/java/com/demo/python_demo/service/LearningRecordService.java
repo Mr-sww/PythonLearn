@@ -15,7 +15,7 @@ public interface LearningRecordService {
     /**
      * 开始知识点学习
      */
-    KnowledgeStudyRecord startKnowledgeStudy(Integer userId, Integer knowledgeId, String knowledgeTitle);
+    KnowledgeStudyRecord startKnowledgeStudy(Integer userId, Integer knowledgeId, String knowledgeTitle, String contentType);
 
     /**
      * 更新知识点学习进度

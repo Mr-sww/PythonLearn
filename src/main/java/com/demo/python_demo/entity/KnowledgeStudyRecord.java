@@ -11,6 +11,7 @@ public class KnowledgeStudyRecord {
     private Integer userId;
     private Integer knowledgeId;
     private String knowledgeTitle;
+    private String contentType;
     private Integer studyTime;
     private BigDecimal progress;
     private String status;
@@ -23,10 +24,11 @@ public class KnowledgeStudyRecord {
     // 构造函数
     public KnowledgeStudyRecord() {}
 
-    public KnowledgeStudyRecord(Integer userId, Integer knowledgeId, String knowledgeTitle) {
+    public KnowledgeStudyRecord(Integer userId, Integer knowledgeId, String knowledgeTitle, String contentType) {
         this.userId = userId;
         this.knowledgeId = knowledgeId;
         this.knowledgeTitle = knowledgeTitle;
+        this.contentType = contentType;
         this.status = "started";
         this.progress = new BigDecimal("0.00");
         this.studyTime = 0;
@@ -63,6 +65,14 @@ public class KnowledgeStudyRecord {
 
     public void setKnowledgeTitle(String knowledgeTitle) {
         this.knowledgeTitle = knowledgeTitle;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public Integer getStudyTime() {
@@ -136,6 +146,7 @@ public class KnowledgeStudyRecord {
                 ", userId=" + userId +
                 ", knowledgeId=" + knowledgeId +
                 ", knowledgeTitle='" + knowledgeTitle + '\'' +
+                ", contentType='" + contentType + '\'' +
                 ", studyTime=" + studyTime +
                 ", progress=" + progress +
                 ", status='" + status + '\'' +

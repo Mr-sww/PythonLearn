@@ -94,9 +94,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="course in recommendCourses.slice(0, 3)" :key="course.id || course.ID" class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
                         <div class="relative">
-                            <a :href="course.url || course.URL" target="_blank">
+                            <div @click="handleCourseClick(course)" class="cursor-pointer">
                                 <img :src="course.imageUrl || course.ImageURL" :alt="course.title || course.Title" class="w-full h-48 object-cover">
-                            </a>
+                            </div>
                             <div class="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
                                 推荐
                             </div>
@@ -113,7 +113,7 @@
                                     <i class="fa fa-users text-muted mr-1"></i>
                                     <span class="text-sm text-muted">{{ course.playCount || course.PlayCount }}人学习</span>
                                 </div>
-                                <a :href="course.url || course.URL" target="_blank" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</a>
+                                <button @click="handleCourseClick(course)" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">开始学习</button>
                             </div>
                         </div>
                     </div>
@@ -1002,6 +1002,22 @@ export default {
         },
         goToKnowledgeDetail(title) {
             this.$router.push({ path: '/learn-detail', query: { id: title } });
+        },
+        
+        // 处理课程点击
+        async handleCourseClick(course) {
+            // 记录视频点击事件（不影响跳转功能）
+            try {
+                const { videoClickService } = await import('@/services/videoClickService.js');
+                await videoClickService.recordVideoClick(course.ID || course.id);
+                console.log('首页课程点击记录成功');
+            } catch (error) {
+                console.error('首页课程点击记录失败:', error);
+                // 不影响跳转，继续执行
+            }
+            
+            // 跳转到外链
+            window.open(course.URL || course.url, '_blank');
         }
     }
 }

@@ -29,7 +29,7 @@ public class LearningRecordServiceImpl implements LearningRecordService {
     // 知识点学习记录相关方法
 
     @Override
-    public KnowledgeStudyRecord startKnowledgeStudy(Integer userId, Integer knowledgeId, String knowledgeTitle) {
+    public KnowledgeStudyRecord startKnowledgeStudy(Integer userId, Integer knowledgeId, String knowledgeTitle, String contentType) {
         // 检查是否已有学习记录
         KnowledgeStudyRecord existingRecord = knowledgeStudyRecordRepository.findByUserIdAndKnowledgeId(userId, knowledgeId);
         
@@ -40,11 +40,12 @@ public class LearningRecordServiceImpl implements LearningRecordService {
             existingRecord.setProgress(new BigDecimal("0.00"));
             existingRecord.setStudyTime(0);
             existingRecord.setEndTime(null); // 清除结束时间
+            existingRecord.setContentType(contentType); // 更新内容类型
             knowledgeStudyRecordRepository.update(existingRecord);
             return existingRecord;
         } else {
             // 创建新的学习记录
-            KnowledgeStudyRecord newRecord = new KnowledgeStudyRecord(userId, knowledgeId, knowledgeTitle);
+            KnowledgeStudyRecord newRecord = new KnowledgeStudyRecord(userId, knowledgeId, knowledgeTitle, contentType);
             knowledgeStudyRecordRepository.insert(newRecord);
             return newRecord;
         }
@@ -161,8 +162,23 @@ public class LearningRecordServiceImpl implements LearningRecordService {
     @Override
     public Object getVideoWatchStats(Integer userId) {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalRecords", videoWatchRecordRepository.countByUserId(userId));
-        stats.put("completedRecords", videoWatchRecordRepository.countCompletedByUserId(userId));
+        
+        // 总视频数
+        int totalVideos = videoWatchRecordRepository.countByUserId(userId);
+        stats.put("totalVideos", totalVideos);
+        
+        // 已完成视频数
+        int completedVideos = videoWatchRecordRepository.countCompletedByUserId(userId);
+        stats.put("completedVideos", completedVideos);
+        
+        // 总观看时长（秒）
+        Integer totalWatchTime = videoWatchRecordRepository.sumWatchTimeByUserId(userId);
+        stats.put("totalWatchTime", totalWatchTime != null ? totalWatchTime : 0);
+        
+        // 连续观看天数（简化实现）
+        int continuousDays = totalVideos > 0 ? 1 : 0;
+        stats.put("continuousDays", continuousDays);
+        
         return stats;
     }
 }
