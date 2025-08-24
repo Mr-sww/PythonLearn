@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,17 +126,65 @@ public class LearningRecordController {
     @GetMapping("/knowledge/records")
     public ResponseEntity<?> getKnowledgeRecords(
             @RequestParam(defaultValue = "10") Integer limit,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
+        
+        // 添加详细的调试信息
+        System.out.println("=== 获取学习记录调试信息 ===");
+        System.out.println("Session ID: " + session.getId());
+        System.out.println("Session创建时间: " + new java.util.Date(session.getCreationTime()));
+        System.out.println("Session最后访问时间: " + new java.util.Date(session.getLastAccessedTime()));
+        
+        // 检查session中的所有属性
+        java.util.Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String name = attributeNames.nextElement();
+            Object value = session.getAttribute(name);
+            System.out.println("Session属性 - " + name + ": " + value);
+        }
         
         Integer userId = (Integer) session.getAttribute("userId");
+        System.out.println("从session获取的userId: " + userId);
+        
         if (userId == null) {
+            System.out.println("Session中没有userId，尝试从请求头获取");
+            // 尝试从请求头获取用户ID（备用方案）
+            String userIdHeader = request.getHeader("X-User-ID");
+            System.out.println("请求头X-User-ID: " + userIdHeader);
+            
+            // 打印所有请求头
+            System.out.println("=== 所有请求头 ===");
+            java.util.Enumeration<String> headerNames = request.getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                String headerValue = request.getHeader(headerName);
+                System.out.println(headerName + ": " + headerValue);
+            }
+            
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                    System.out.println("从请求头获取到userId: " + userId);
+                } catch (NumberFormatException e) {
+                    System.out.println("请求头中的userId格式错误: " + userIdHeader);
+                }
+            } else {
+                System.out.println("请求头中没有X-User-ID或为空");
+            }
+        }
+        
+        if (userId == null) {
+            System.out.println("用户未登录，返回错误");
             return ResponseEntity.badRequest().body("用户未登录");
         }
 
         try {
             List<KnowledgeStudyRecord> records = learningRecordService.getKnowledgeRecords(userId, limit);
+            System.out.println("成功获取学习记录，数量: " + (records != null ? records.size() : 0));
             return ResponseEntity.ok(records);
         } catch (Exception e) {
+            System.out.println("获取学习记录失败: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("获取记录失败: " + e.getMessage());
         }
     }
@@ -144,16 +193,61 @@ public class LearningRecordController {
      * 获取知识点学习统计
      */
     @GetMapping("/knowledge/stats")
-    public ResponseEntity<?> getKnowledgeStats(HttpSession session) {
+    public ResponseEntity<?> getKnowledgeStats(HttpSession session, HttpServletRequest request) {
+        // 添加详细的调试信息
+        System.out.println("=== 获取学习统计调试信息 ===");
+        System.out.println("Session ID: " + session.getId());
+        
+        // 检查session中的所有属性
+        java.util.Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String name = attributeNames.nextElement();
+            Object value = session.getAttribute(name);
+            System.out.println("Session属性 - " + name + ": " + value);
+        }
+        
         Integer userId = (Integer) session.getAttribute("userId");
+        System.out.println("从session获取的userId: " + userId);
+        
         if (userId == null) {
+            System.out.println("Session中没有userId，尝试从请求头获取");
+            // 尝试从请求头获取用户ID（备用方案）
+            String userIdHeader = request.getHeader("X-User-ID");
+            System.out.println("请求头X-User-ID: " + userIdHeader);
+            
+            // 打印所有请求头
+            System.out.println("=== 所有请求头 ===");
+            java.util.Enumeration<String> headerNames = request.getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                String headerValue = request.getHeader(headerName);
+                System.out.println(headerName + ": " + headerValue);
+            }
+            
+            if (userIdHeader != null && !userIdHeader.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdHeader.trim());
+                    System.out.println("从请求头获取到userId: " + userId);
+                } catch (NumberFormatException e) {
+                    System.out.println("请求头中的userId格式错误: " + userIdHeader);
+                }
+            } else {
+                System.out.println("请求头中没有X-User-ID或为空");
+            }
+        }
+        
+        if (userId == null) {
+            System.out.println("用户未登录，返回错误");
             return ResponseEntity.badRequest().body("用户未登录");
         }
 
         try {
             Object stats = learningRecordService.getKnowledgeStudyStats(userId);
+            System.out.println("成功获取学习统计");
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
+            System.out.println("获取学习统计失败: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("获取统计失败: " + e.getMessage());
         }
     }

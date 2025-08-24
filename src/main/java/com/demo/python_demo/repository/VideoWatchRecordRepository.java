@@ -63,3 +63,4 @@ public interface VideoWatchRecordRepository {
     int countCompletedByUserId(@Param("userId") Integer userId);
 }
 
+

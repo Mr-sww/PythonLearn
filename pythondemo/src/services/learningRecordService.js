@@ -1,5 +1,12 @@
 import axios from 'axios';
 
+// 创建axios实例，确保withCredentials设置正确
+const apiClient = axios.create({
+  baseURL: 'http://localhost:8080',
+  withCredentials: true,
+  timeout: 10000
+});
+
 // 配置axios默认设置
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = 'http://localhost:8080';
@@ -23,7 +30,7 @@ export const learningRecordService = {
       
       console.log('开始学习记录，用户ID:', user.userId, '知识点ID:', knowledgeId);
       
-      const response = await axios.post('/api/learning/knowledge/start', null, {
+      const response = await apiClient.post('/api/learning/knowledge/start', null, {
         params: {
           knowledgeId,
           knowledgeTitle
@@ -44,7 +51,7 @@ export const learningRecordService = {
    */
   async updateKnowledgeProgress(knowledgeId, studyTime, progress) {
     try {
-      const response = await axios.put('/api/learning/knowledge/progress', null, {
+      const response = await apiClient.put('/api/learning/knowledge/progress', null, {
         params: {
           knowledgeId,
           studyTime,
@@ -63,7 +70,7 @@ export const learningRecordService = {
    */
   async completeKnowledgeStudy(knowledgeId) {
     try {
-      const response = await axios.post('/api/learning/knowledge/complete', null, {
+      const response = await apiClient.post('/api/learning/knowledge/complete', null, {
         params: {
           knowledgeId
         }
@@ -80,8 +87,21 @@ export const learningRecordService = {
    */
   async getKnowledgeRecords(limit = 10) {
     try {
-      const response = await axios.get('/api/learning/knowledge/records', {
-        params: { limit }
+      // 从localStorage获取用户信息
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const userId = user ? (user.userId || user.user_id) : null;
+      
+      console.log('=== 前端调试信息 ===');
+      console.log('localStorage中的user:', user);
+      console.log('提取的userId:', userId);
+      console.log('localStorage中的userId:', localStorage.getItem('userId'));
+      console.log('localStorage中的isLoggedIn:', localStorage.getItem('isLoggedIn'));
+      
+      const response = await apiClient.get('/api/learning/knowledge/records', {
+        params: { limit },
+        headers: {
+          'X-User-ID': userId
+        }
       });
       return response.data;
     } catch (error) {
@@ -95,7 +115,21 @@ export const learningRecordService = {
    */
   async getKnowledgeStats() {
     try {
-      const response = await axios.get('/api/learning/knowledge/stats');
+      // 从localStorage获取用户信息
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const userId = user ? (user.userId || user.user_id) : null;
+      
+      console.log('=== 前端调试信息（统计） ===');
+      console.log('localStorage中的user:', user);
+      console.log('提取的userId:', userId);
+      console.log('localStorage中的userId:', localStorage.getItem('userId'));
+      console.log('localStorage中的isLoggedIn:', localStorage.getItem('isLoggedIn'));
+      
+      const response = await apiClient.get('/api/learning/knowledge/stats', {
+        headers: {
+          'X-User-ID': userId
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('获取学习统计失败:', error);
@@ -110,7 +144,7 @@ export const learningRecordService = {
    */
   async startVideoWatch(videoId, videoTitle, videoUrl, totalDuration = 0) {
     try {
-      const response = await axios.post('/api/learning/video/start', null, {
+      const response = await apiClient.post('/api/learning/video/start', null, {
         params: {
           videoId,
           videoTitle,
@@ -130,7 +164,7 @@ export const learningRecordService = {
    */
   async updateVideoProgress(videoId, watchTime, progress) {
     try {
-      const response = await axios.put('/api/learning/video/progress', null, {
+      const response = await apiClient.put('/api/learning/video/progress', null, {
         params: {
           videoId,
           watchTime,
@@ -149,7 +183,7 @@ export const learningRecordService = {
    */
   async completeVideoWatch(videoId) {
     try {
-      const response = await axios.post('/api/learning/video/complete', null, {
+      const response = await apiClient.post('/api/learning/video/complete', null, {
         params: {
           videoId
         }
@@ -166,8 +200,19 @@ export const learningRecordService = {
    */
   async getVideoRecords(limit = 10) {
     try {
-      const response = await axios.get('/api/learning/video/records', {
-        params: { limit }
+      // 从localStorage获取用户信息
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const userId = user ? (user.userId || user.user_id) : null;
+      
+      console.log('=== 前端调试信息（视频记录） ===');
+      console.log('localStorage中的user:', user);
+      console.log('提取的userId:', userId);
+      
+      const response = await apiClient.get('/api/learning/video/records', {
+        params: { limit },
+        headers: {
+          'X-User-ID': userId
+        }
       });
       return response.data;
     } catch (error) {
@@ -181,7 +226,19 @@ export const learningRecordService = {
    */
   async getVideoStats() {
     try {
-      const response = await axios.get('/api/learning/video/stats');
+      // 从localStorage获取用户信息
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const userId = user ? (user.userId || user.user_id) : null;
+      
+      console.log('=== 前端调试信息（视频统计） ===');
+      console.log('localStorage中的user:', user);
+      console.log('提取的userId:', userId);
+      
+      const response = await apiClient.get('/api/learning/video/stats', {
+        headers: {
+          'X-User-ID': userId
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('获取观看统计失败:', error);

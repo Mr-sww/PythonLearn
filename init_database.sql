@@ -54,3 +54,4 @@ SHOW TABLES LIKE '%record%';
 DESCRIBE knowledge_study_record;
 DESCRIBE video_watch_record;
 
+

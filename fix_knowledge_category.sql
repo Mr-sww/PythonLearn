@@ -29,3 +29,4 @@ SELECT id, knowledge_title, knowledge_category, study_time, progress, status, st
 FROM knowledge_study_record 
 ORDER BY created_at DESC 
 LIMIT 10;
+

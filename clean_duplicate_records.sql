@@ -47,3 +47,4 @@ SELECT
     progress
 FROM knowledge_study_record 
 ORDER BY user_id, knowledge_id, created_at DESC;
+

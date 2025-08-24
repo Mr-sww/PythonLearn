@@ -14,6 +14,7 @@ import PracticeRecords from '../views/PracticeRecords.vue'
 import LearningRecords from '../views/LearningRecords.vue'
 import LoginTest from '../views/LoginTest.vue'
 import TestLearningRecord from '../views/TestLearningRecord.vue'
+import SessionTest from '../views/SessionTest.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import TeacherDashboard from '../views/TeacherDashboard.vue'
 import StudentDashboard from '../views/StudentDashboard.vue'
@@ -25,6 +26,7 @@ const routes = [
   { path: '/auth', component: AuthPage },
   { path: '/login-test', component: LoginTest },
   { path: '/test-learning', component: TestLearningRecord },
+  { path: '/session-test', component: SessionTest },
   { path: '/courses', component: CourseCenter },
   { path: '/learning', component: LearningCenter },
   { path: '/practice', component: PracticeCenter },

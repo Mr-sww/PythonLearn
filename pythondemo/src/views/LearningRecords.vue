@@ -13,36 +13,36 @@
 
       <!-- 统计卡片 -->
       <div class="row mb-4">
-        <div class="col-md-3 mb-3">
+        <div class="col-md-2 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
               <div class="text-primary mb-2">
                 <i class="fa fa-book fa-2x"></i>
               </div>
               <h4 class="fw-bold text-dark">{{ statistics.totalKnowledge || 0 }}</h4>
-              <p class="text-muted mb-0">学习知识点</p>
+              <p class="text-muted mb-0">知识点</p>
             </div>
           </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-2 mb-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="text-info mb-2">
+                <i class="fa fa-video fa-2x"></i>
+              </div>
+              <h4 class="fw-bold text-dark">{{ statistics.totalVideos || 0 }}</h4>
+              <p class="text-muted mb-0">视频</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 mb-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
               <div class="text-success mb-2">
                 <i class="fa fa-check-circle fa-2x"></i>
               </div>
-              <h4 class="fw-bold text-dark">{{ statistics.completedKnowledge || 0 }}</h4>
-              <p class="text-muted mb-0">完成知识点</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="text-info mb-2">
-                <i class="fa fa-clock fa-2x"></i>
-              </div>
-              <h4 class="fw-bold text-dark">{{ statistics.totalStudyTime || 0 }}分钟</h4>
-              <p class="text-muted mb-0">学习时长</p>
+              <h4 class="fw-bold text-dark">{{ statistics.completedItems || 0 }}</h4>
+              <p class="text-muted mb-0">已完成</p>
             </div>
           </div>
         </div>
@@ -50,6 +50,17 @@
           <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
               <div class="text-warning mb-2">
+                <i class="fa fa-clock fa-2x"></i>
+              </div>
+              <h4 class="fw-bold text-dark">{{ statistics.totalStudyTime || 0 }}分钟</h4>
+              <p class="text-muted mb-0">总学习时长</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="text-secondary mb-2">
                 <i class="fa fa-calendar fa-2x"></i>
               </div>
               <h4 class="fw-bold text-dark">{{ statistics.continuousDays || 0 }}</h4>
@@ -61,7 +72,7 @@
 
       <!-- 筛选和搜索 -->
       <div class="row mb-4">
-        <div class="col-md-8">
+        <div class="col-md-6">
           <div class="btn-group" role="group">
             <button 
               v-for="filter in filters" 
@@ -73,13 +84,25 @@
             </button>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <div class="btn-group" role="group">
+            <button 
+              v-for="type in recordTypes" 
+              :key="type.value"
+              @click="setRecordType(type.value)"
+              :class="['btn', currentRecordType === type.value ? 'btn-success' : 'btn-outline-success']"
+            >
+              {{ type.label }}
+            </button>
+          </div>
+        </div>
+        <div class="col-md-3">
           <div class="input-group">
             <input 
               v-model="searchKeyword" 
               type="text" 
               class="form-control" 
-              placeholder="搜索知识点..."
+              placeholder="搜索学习内容..."
               @input="handleSearch"
             >
             <button class="btn btn-outline-secondary" type="button">
@@ -94,7 +117,7 @@
         <div class="col-12">
           <div class="card border-0 shadow-sm">
             <div class="card-header bg-white">
-              <h5 class="mb-0">知识点学习记录</h5>
+              <h5 class="mb-0">学习记录</h5>
             </div>
             <div class="card-body p-0">
               <div v-if="loading" class="text-center py-5">
@@ -102,28 +125,32 @@
                   <span class="visually-hidden">加载中...</span>
                 </div>
               </div>
-              <div v-else-if="records.length === 0" class="text-center py-5">
+              <div v-else-if="allRecords.length === 0" class="text-center py-5">
                 <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
                 <p class="text-muted">暂无学习记录</p>
-                <p class="text-muted small">开始学习知识点来查看记录</p>
+                <p class="text-muted small">开始学习知识点或观看视频来查看记录</p>
               </div>
               <div v-else class="list-group list-group-flush">
                 <div 
-                  v-for="record in records" 
+                  v-for="record in allRecords" 
                   :key="record.id"
                   class="list-group-item border-0 py-3"
                 >
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 me-3">
-                      <div class="bg-primary rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                        <i class="fa fa-book text-white fa-2x"></i>
+                      <div class="rounded d-flex align-items-center justify-content-center" 
+                           :class="getRecordIconClass(record.type)" 
+                           style="width: 60px; height: 60px;">
+                        <i :class="getRecordIcon(record.type)" class="text-white fa-2x"></i>
                       </div>
                     </div>
                     <div class="flex-grow-1">
-                      <h6 class="mb-2">{{ record.knowledgeTitle || '未知知识点' }}</h6>
+                      <h6 class="mb-2">{{ getRecordTitle(record) }}</h6>
                       <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-info me-3">文字知识点</span>
-                        <small class="text-muted">ID: {{ record.knowledgeId }}</small>
+                        <span class="badge me-3" :class="getRecordTypeBadgeClass(record.type)">
+                          {{ getRecordTypeText(record.type) }}
+                        </span>
+                        <small class="text-muted">ID: {{ getRecordId(record) }}</small>
                       </div>
                       <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center">
@@ -131,7 +158,7 @@
                             <i class="fa fa-clock me-1"></i>{{ formatDate(record.startTime) }}
                           </small>
                           <small class="text-muted me-4">
-                            <i class="fa fa-hourglass-half me-1"></i>{{ formatStudyTime(record.studyTime) }}
+                            <i class="fa fa-hourglass-half me-1"></i>{{ formatStudyTime(getRecordStudyTime(record)) }}
                           </small>
                         </div>
                         <span class="badge" :class="getStatusBadgeClass(record.status)">
@@ -151,17 +178,19 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { learningRecordService } from '@/services/learningRecordService'
 
 export default {
   name: 'LearningRecords',
   data() {
     return {
       loading: false,
-      records: [],
+      knowledgeRecords: [],
+      videoRecords: [],
       statistics: {
         totalKnowledge: 0,
-        completedKnowledge: 0,
+        totalVideos: 0,
+        completedItems: 0,
         totalStudyTime: 0,
         continuousDays: 0
       },
@@ -171,106 +200,173 @@ export default {
         { label: '最近一月', value: 'month' },
         { label: '最近三月', value: 'quarter' }
       ],
+      recordTypes: [
+        { label: '全部', value: 'all' },
+        { label: '知识点', value: 'knowledge' },
+        { label: '视频', value: 'video' }
+      ],
       currentFilter: 'all',
+      currentRecordType: 'all',
       searchKeyword: ''
     }
   },
   mounted() {
     this.loadStatistics()
-    this.loadRecords()
+    this.loadAllRecords()
+  },
+  computed: {
+    allRecords() {
+      let records = [...this.knowledgeRecords, ...this.videoRecords]
+      
+      // 按时间排序（最新的在前）
+      records.sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+      
+      // 根据记录类型筛选
+      if (this.currentRecordType !== 'all') {
+        records = records.filter(record => record.type === this.currentRecordType)
+      }
+      
+      // 根据时间筛选
+      if (this.currentFilter !== 'all') {
+        const now = new Date()
+        let filterDate
+        switch (this.currentFilter) {
+          case 'week':
+            filterDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            break
+          case 'month':
+            filterDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            break
+          case 'quarter':
+            filterDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+            break
+          default:
+            filterDate = null
+        }
+        if (filterDate) {
+          records = records.filter(record => new Date(record.startTime) >= filterDate)
+        }
+      }
+      
+      // 根据关键词搜索
+      if (this.searchKeyword.trim()) {
+        const keyword = this.searchKeyword.toLowerCase()
+        records = records.filter(record => {
+          const title = this.getRecordTitle(record).toLowerCase()
+          return title.includes(keyword)
+        })
+      }
+      
+      return records
+    }
   },
   methods: {
     async loadStatistics() {
       try {
-        const res = await axios.get('http://localhost:8080/api/learning/knowledge/stats', { 
-          withCredentials: true 
-        })
-        console.log('统计信息:', res.data);
+        // 加载知识点统计
+        const knowledgeStats = await learningRecordService.getKnowledgeStats()
+        console.log('知识点统计信息:', knowledgeStats);
+        
+        // 暂时设置视频统计为0，因为视频API可能还没有实现
+        const videoStats = { totalVideos: 0, completedVideos: 0, totalWatchTime: 0, continuousDays: 0 }
+        console.log('视频统计信息（临时）:', videoStats);
+        
         this.statistics = {
-          totalKnowledge: res.data.totalKnowledge || 0,
-          completedKnowledge: res.data.completedKnowledge || 0,
-          totalStudyTime: Math.round((res.data.totalStudyTime || 0) / 60), // 转换为分钟
-          continuousDays: res.data.continuousDays || 0
+          totalKnowledge: knowledgeStats.totalKnowledge || 0,
+          totalVideos: videoStats.totalVideos || 0,
+          completedItems: (knowledgeStats.completedKnowledge || 0) + (videoStats.completedVideos || 0),
+          totalStudyTime: Math.round(((knowledgeStats.totalStudyTime || 0) + (videoStats.totalWatchTime || 0)) / 60), // 转换为分钟
+          continuousDays: Math.max(knowledgeStats.continuousDays || 0, videoStats.continuousDays || 0)
         }
+        
+        console.log('最终统计信息:', this.statistics);
       } catch (error) {
         console.error('加载统计信息失败:', error)
+        // 设置默认值
+        this.statistics = {
+          totalKnowledge: 0,
+          totalVideos: 0,
+          completedItems: 0,
+          totalStudyTime: 0,
+          continuousDays: 0
+        }
       }
     },
-    async loadRecords() {
+    async loadAllRecords() {
       this.loading = true
       try {
-        const res = await axios.get('http://localhost:8080/api/learning/knowledge/records', { 
-          withCredentials: true,
-          params: { limit: 50 }
-        })
-        console.log('学习记录:', res.data);
-        this.records = res.data || []
+        // 暂时只加载知识点记录，因为视频API可能还没有实现
+        const knowledgeRes = await learningRecordService.getKnowledgeRecords(50)
+        console.log('知识点记录:', knowledgeRes);
+        
+        // 为记录添加类型标识
+        this.knowledgeRecords = (knowledgeRes || []).map(record => ({
+          ...record,
+          type: 'knowledge'
+        }))
+        
+        // 暂时设置视频记录为空数组
+        this.videoRecords = []
+        console.log('视频记录（临时）:', this.videoRecords);
+        
       } catch (error) {
         console.error('加载学习记录失败:', error)
-        this.records = []
+        this.knowledgeRecords = []
+        this.videoRecords = []
       } finally {
         this.loading = false
       }
     },
     setFilter(filter) {
       this.currentFilter = filter
-      // 根据筛选条件重新加载数据
-      if (filter === 'all') {
-        this.loadRecords()
+    },
+    
+    setRecordType(type) {
+      this.currentRecordType = type
+    },
+    // 记录类型相关方法
+    getRecordIcon(type) {
+      return type === 'knowledge' ? 'fa fa-book' : 'fa fa-video'
+    },
+    
+    getRecordIconClass(type) {
+      return type === 'knowledge' ? 'bg-primary' : 'bg-info'
+    },
+    
+    getRecordTitle(record) {
+      if (record.type === 'knowledge') {
+        return record.knowledgeTitle || '未知知识点'
       } else {
-        this.loadFilteredRecords(filter)
+        return record.videoTitle || '未知视频'
       }
     },
-    async loadFilteredRecords(filter) {
-      this.loading = true
-      try {
-        const res = await axios.get('http://localhost:8080/api/learning/knowledge/records', { 
-          withCredentials: true,
-          params: { limit: 100 }
-        })
-        let filteredRecords = res.data || []
-        
-        // 根据筛选条件过滤数据
-        const now = new Date()
-        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-        
-        switch (filter) {
-          case 'week':
-            filteredRecords = filteredRecords.filter(record => 
-              new Date(record.startTime) >= oneWeekAgo
-            )
-            break
-          case 'month':
-            filteredRecords = filteredRecords.filter(record => 
-              new Date(record.startTime) >= oneMonthAgo
-            )
-            break
-          case 'quarter':
-            filteredRecords = filteredRecords.filter(record => 
-              new Date(record.startTime) >= threeMonthsAgo
-            )
-            break
-        }
-        
-        this.records = filteredRecords
-      } catch (error) {
-        console.error('加载筛选记录失败:', error)
-        this.records = []
-      } finally {
-        this.loading = false
+    
+    getRecordTypeText(type) {
+      return type === 'knowledge' ? '知识点' : '视频'
+    },
+    
+    getRecordTypeBadgeClass(type) {
+      return type === 'knowledge' ? 'bg-primary' : 'bg-info'
+    },
+    
+    getRecordId(record) {
+      if (record.type === 'knowledge') {
+        return record.knowledgeId
+      } else {
+        return record.videoId
+      }
+    },
+    
+    getRecordStudyTime(record) {
+      if (record.type === 'knowledge') {
+        return record.studyTime
+      } else {
+        return record.watchTime
       }
     },
     handleSearch() {
-      // 实现搜索逻辑 - 可以过滤知识点标题
-      if (this.searchKeyword.trim()) {
-        this.records = this.records.filter(record => 
-          record.knowledgeTitle.toLowerCase().includes(this.searchKeyword.toLowerCase())
-        )
-      } else {
-        this.loadRecords()
-      }
+      // 搜索逻辑现在在computed属性中处理
+      // 这里可以添加额外的搜索逻辑
     },
     formatDate(dateString) {
       const date = new Date(dateString)
