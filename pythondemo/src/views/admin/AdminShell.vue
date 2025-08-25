@@ -3,15 +3,9 @@
     <aside class="sidebar">
       <div class="brand">后台管理</div>
       <nav class="menu">
-        <router-link to="/admin/home" class="item" :class="{ active: isActive('/admin/home') }">
-          <i class="fa fa-home"></i><span>概览</span>
-        </router-link>
         <div class="section">用户与权限</div>
         <router-link to="/admin/users" class="item" :class="{ active: isActive('/admin/users') }">
           <i class="fa fa-user"></i><span>用户管理</span>
-        </router-link>
-        <router-link to="/admin/roles" class="item" :class="{ active: isActive('/admin/roles') }">
-          <i class="fa fa-shield-alt"></i><span>角色权限</span>
         </router-link>
         <div class="section">内容与审核</div>
         <router-link to="/admin/course-approvals" class="item" :class="{ active: isActive('/admin/course-approvals') }">

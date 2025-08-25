@@ -126,7 +126,19 @@ const http = axios.create({ baseURL: 'http://localhost:8080/api', withCredential
 export default {
   name: 'AdminProblems',
   data(){return{q:'',list:[], loading:false, page:1, pageSize:20, debounceTimer:null, showViewModal:false, showEditModal:false, selected:null, editForm:{ title:'', dif:1, description:'', inputFormat:'', outputFormat:'', samples:'', note:'', background:'' }}},
-  async mounted(){ await this.refresh() },
+  async mounted(){ 
+    await this.refresh() 
+    // 检查URL参数，如果有edit参数则打开编辑模态框
+    const urlParams = new URLSearchParams(window.location.search)
+    const editId = urlParams.get('edit')
+    if(editId) {
+      // 查找对应的题目并打开编辑模态框
+      const problem = this.list.find(p => p.id === editId)
+      if(problem) {
+        this.openEdit(problem)
+      }
+    }
+  },
   computed:{
     pages(){ return Math.max(1, Math.ceil(this.list.length / this.pageSize)) },
     paged(){ const s=(this.page-1)*this.pageSize; return this.list.slice(s, s+this.pageSize) },

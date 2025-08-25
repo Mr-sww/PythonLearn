@@ -78,7 +78,17 @@
           <tr v-for="user in filteredUsers" :key="user.userId">
             <td>{{ user.userId }}</td>
             <td>
-              <img :src="user.avatar || '/default-avatar.png'" :alt="user.nickname" class="user-avatar">
+              <div class="avatar-container">
+                <img 
+                  :src="user.avatar || '/default-avatar.png'" 
+                  :alt="user.nickname" 
+                  class="user-avatar"
+                  @error="handleAvatarError"
+                >
+                <div v-if="!user.avatar" class="avatar-fallback">
+                  {{ (user.nickname || user.account || 'U').substring(0, 2).toUpperCase() }}
+                </div>
+              </div>
             </td>
             <td>{{ user.account }}</td>
             <td>{{ user.nickname || '未设置' }}</td>
@@ -96,9 +106,6 @@
             <td>{{ formatDate(user.createTime) }}</td>
             <td>
               <div class="action-buttons">
-                <button class="btn btn-sm btn-outline-primary" @click="editUser(user)">
-                  <i class="fas fa-edit"></i>
-                </button>
                 <button class="btn btn-sm btn-outline-warning" @click="toggleUserStatus(user)">
                   {{ user.status === 'active' ? '禁用' : '启用' }}
                 </button>
@@ -296,6 +303,13 @@ export default {
       }
     }
 
+    const handleAvatarError = (event) => {
+      if (event.target && event.target.nextElementSibling) {
+        event.target.style.display = 'none'
+        event.target.nextElementSibling.style.display = 'flex'
+      }
+    }
+
     const deleteUser = async (user) => {
       if (!confirm(`确定要删除用户 ${user.nickname || user.account} 吗？`)) {
         return
@@ -336,7 +350,8 @@ export default {
       toggleUserStatus,
       changeUserRole,
       confirmChangeRole,
-      deleteUser
+      deleteUser,
+      handleAvatarError
     }
   }
 }
@@ -406,11 +421,35 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
+.avatar-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
 .user-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.avatar-fallback {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  border: 2px solid #e5e7eb;
 }
 
 .action-buttons {
