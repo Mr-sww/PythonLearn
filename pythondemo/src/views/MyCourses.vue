@@ -61,7 +61,13 @@
       <!-- 课程列表 -->
       <div class="bg-white rounded-xl shadow-lg">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">课程列表</h2>
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-semibold text-gray-900">课程列表</h2>
+            <div class="ml-auto flex items-center gap-2">
+              <input v-model.number="joinCourseId" type="number" class="border rounded px-3 py-2 w-48" placeholder="输入课程ID" />
+              <button @click="joinCourse" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">加入课程</button>
+            </div>
+          </div>
         </div>
         
         <div class="p-6">
@@ -120,12 +126,14 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'MyCourses',
   data() {
     return {
       courses: [],
       loading: true,
+      joinCourseId: null,
       courseStats: {
         totalCourses: 0,
         inProgress: 0,
@@ -140,36 +148,20 @@ export default {
   methods: {
     async loadMyCourses() {
       try {
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
-        if (!user || !user.userId) {
-          this.$router.push('/auth');
-          return;
-        }
-        
-        // 这里应该调用后端API获取用户的课程列表
-        // 暂时使用模拟数据
-        this.courses = [
-          {
-            id: 1,
-            title: 'Python基础入门',
-            description: '从零开始学习Python编程语言',
-            image: '/course_images/2169.jpg',
-            teacherName: '张老师',
-            duration: '20小时',
-            rating: 4.8,
-            progress: 65
-          },
-          {
-            id: 2,
-            title: '数据结构与算法',
-            description: '掌握计算机科学的核心概念',
-            image: '/course_images/2170.jpg',
-            teacherName: '李老师',
-            duration: '30小时',
-            rating: 4.9,
-            progress: 30
-          }
-        ];
+        // 从后端获取学生已选课程
+        const resp = await axios.get('http://localhost:8080/api/student/courses', { withCredentials: true })
+        const list = Array.isArray(resp.data) ? resp.data : []
+        // 统一字段到前端展示结构
+        this.courses = list.map(it => ({
+          id: it.courseId || it.ArticleID || it.id,
+          title: it.title || it.Title,
+          description: it.description || it.Content || '',
+          image: it.coverImage || it.CoverImage,
+          teacherName: it.teacherName || '',
+          duration: it.duration || '',
+          rating: it.rating || '',
+          progress: it.progress || 0
+        }))
         
         this.calculateStats();
         this.loading = false;
@@ -192,6 +184,16 @@ export default {
         return `http://localhost:8080${imagePath}`;
       }
       return imagePath;
+    },
+    async joinCourse () {
+      if (!this.joinCourseId) { alert('请输入课程ID'); return }
+      try {
+        await axios.post('http://localhost:8080/api/student/courses/join', { courseId: this.joinCourseId }, { withCredentials: true })
+        this.joinCourseId = null
+        await this.loadMyCourses()
+      } catch (e) {
+        alert(e.response?.data || '加入失败')
+      }
     }
   }
 }

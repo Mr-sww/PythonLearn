@@ -6,7 +6,60 @@
         
         <!-- 左侧：个人信息和编辑 -->
         <div class="lg:col-span-1">
-          <div class="bg-white rounded-3xl shadow-2xl p-8">
+          <!-- 左侧竖向菜单（按角色显示） -->
+          <div class="bg-white rounded-3xl shadow-2xl p-4 mt-6 sticky top-6">
+            <nav class="flex flex-col gap-2">
+              <!-- 通用 -->
+              <router-link to="/profile" class="menu-item" :class="{ active: $route.path === '/profile' }">
+                <i class="fa fa-user"></i>
+                <span>我的资料</span>
+              </router-link>
+              <router-link to="/learning-records" class="menu-item" :class="{ active: $route.path === '/learning-records' }">
+                <i class="fa fa-book"></i>
+                <span>学习记录</span>
+              </router-link>
+              <router-link to="/practice-records" class="menu-item" :class="{ active: $route.path === '/practice-records' }">
+                <i class="fa fa-chart-line"></i>
+                <span>练习统计</span>
+              </router-link>
+
+              <!-- 学生 -->
+              <router-link v-if="isStudent" to="/my-courses" class="menu-item" :class="{ active: $route.path === '/my-courses' }">
+                <i class="fa fa-graduation-cap"></i>
+                <span>我的课程</span>
+              </router-link>
+              <router-link v-if="isStudent" to="/student/my-classes" class="menu-item" :class="{ active: $route.path === '/student/my-classes' }">
+                <i class="fa fa-users"></i>
+                <span>我的班级</span>
+              </router-link>
+
+              <!-- 教师 -->
+              <router-link v-if="isTeacher" to="/teacher/classes" class="menu-item" :class="{ active: $route.path === '/teacher/classes' }">
+                <i class="fa fa-users"></i>
+                <span>我的班级</span>
+              </router-link>
+              <router-link v-if="isTeacher" to="/teacher/course-requests" class="menu-item" :class="{ active: $route.path === '/teacher/course-requests' }">
+                <i class="fa fa-chalkboard-teacher"></i>
+                <span>课程申请</span>
+              </router-link>
+
+              <!-- 管理员 -->
+              <router-link v-if="isAdmin" to="/admin" class="menu-item" :class="{ active: $route.path === '/admin' }">
+                <i class="fa fa-cogs"></i>
+                <span>后台仪表盘</span>
+              </router-link>
+              <router-link v-if="isAdmin" to="/admin/course-approvals" class="menu-item" :class="{ active: $route.path === '/admin/course-approvals' }">
+                <i class="fa fa-clipboard-check"></i>
+                <span>课程审核</span>
+              </router-link>
+            </nav>
+          </div>
+        </div>
+
+        <!-- 右侧：功能区域 -->
+        <div class="lg:col-span-2">
+          <!-- 我的资料（从左侧移动至右侧顶部） -->
+          <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
             <!-- 头像和基本信息 -->
             <div class="text-center mb-6">
               <div class="relative mb-4 group inline-block">
@@ -44,11 +97,9 @@
               <i class="fa fa-edit"></i> 编辑资料
             </button>
           </div>
-        </div>
 
-        <!-- 右侧：功能区域 -->
-        <div class="lg:col-span-2">
-          <!-- 练习统计卡片 -->
+          <!-- 内容分区：练习统计 -->
+          <div class="section-title"><i class="fa fa-chart-pie mr-2"></i>练习统计</div>
           <router-link to="/practice-records" class="bg-white rounded-3xl shadow-2xl p-6 mb-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-primary/20">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-xl font-bold text-dark">
@@ -79,7 +130,8 @@
             </div>
           </router-link>
 
-          <!-- 学习记录卡片 -->
+          <!-- 内容分区：学习记录 -->
+          <div class="section-title"><i class="fa fa-book mr-2"></i>学习记录</div>
           <router-link to="/learning" class="bg-white rounded-3xl shadow-2xl p-6 mb-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-primary/20">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-xl font-bold text-dark">
@@ -588,6 +640,27 @@ export default {
   background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+
+/* 左侧菜单样式美化 */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #1f2937;
+  transition: all .2s;
+}
+.menu-item:hover { background: #f3f4f6; }
+.menu-item.active { background: #eef2ff; color: #2563eb; box-shadow: inset 0 0 0 1px #c7d2fe; }
+
+/* 内容区分标题 */
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 12px 0 8px 4px;
 }
 
 /* 响应式设计 */

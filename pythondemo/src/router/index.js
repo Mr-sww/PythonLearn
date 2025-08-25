@@ -23,6 +23,11 @@ import TeacherDashboard from '../views/TeacherDashboard.vue'
 import StudentDashboard from '../views/StudentDashboard.vue'
 import MyCourses from '../views/MyCourses.vue'
 import TeacherCourses from '../views/TeacherCourses.vue'
+// 新增页面（懒加载占位亦可）
+const TeacherClasses = () => import('@/views/teacher/TeacherClasses.vue')
+const TeacherCourseRequests = () => import('@/views/teacher/TeacherCourseRequests.vue')
+const AdminCourseApprovals = () => import('@/views/admin/AdminCourseApprovals.vue')
+const StudentMyClasses = () => import('@/views/student/MyClasses.vue')
 
 const routes = [
   { path: '/', component: HomePage },
@@ -57,11 +62,15 @@ const routes = [
     component: TeacherDashboard,
     meta: { requiresAuth: true, requiresRole: 'teacher' }
   },
+  { path: '/teacher/classes', component: TeacherClasses, meta: { requiresAuth: true, requiresRole: 'teacher' } },
+  { path: '/teacher/course-requests', component: TeacherCourseRequests, meta: { requiresAuth: true, requiresRole: 'teacher' } },
   { 
     path: '/student', 
     component: StudentDashboard,
     meta: { requiresAuth: true, requiresRole: 'student' }
   },
+  { path: '/student/my-classes', component: StudentMyClasses, meta: { requiresAuth: true, requiresRole: 'student' } },
+  { path: '/admin/course-approvals', component: AdminCourseApprovals, meta: { requiresAuth: true, requiresRole: 'admin' } },
   
   // 课程相关路由
   {
