@@ -116,6 +116,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+const http = axios.create({ baseURL: 'http://localhost:8080/api', withCredentials: true })
 export default {
   name: 'AdminCourses',
   data() {
@@ -141,12 +143,8 @@ export default {
     async loadCourses() {
       this.loading = true
       try {
-        const response = await fetch(`/api/admin/courses?adminId=${this.getCurrentUserId()}`, {
-          credentials: 'include'
-        })
-        if (response.ok) {
-          this.courses = await response.json()
-        }
+        const res = await http.get('/admin/courses')
+        this.courses = Array.isArray(res.data) ? res.data : []
       } catch (error) {
         console.error('加载课程列表失败:', error)
       } finally {
@@ -165,26 +163,11 @@ export default {
     
     async approveCourse(courseId) {
       try {
-        const response = await fetch(`/api/admin/courses/${courseId}/review?adminId=${this.getCurrentUserId()}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({ 
-            status: 'approved',
-            comment: this.reviewComment || '审核通过'
-          })
-        })
-        
-        if (response.ok) {
+        await http.put(`/admin/courses/${courseId}/review`, null, { params: { action: 'approve', comment: this.reviewComment || '审核通过' } })
           this.$message.success('课程审核通过')
           await this.loadCourses()
           this.showReviewModal = false
           this.reviewComment = ''
-        } else {
-          this.$message.error('审核失败')
-        }
       } catch (error) {
         console.error('审核课程失败:', error)
         this.$message.error('操作失败')
@@ -198,26 +181,11 @@ export default {
       }
       
       try {
-        const response = await fetch(`/api/admin/courses/${courseId}/review?adminId=${this.getCurrentUserId()}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({ 
-            status: 'rejected',
-            comment: this.reviewComment
-          })
-        })
-        
-        if (response.ok) {
+        await http.put(`/admin/courses/${courseId}/review`, null, { params: { action: 'reject', comment: this.reviewComment } })
           this.$message.success('课程已拒绝')
           await this.loadCourses()
           this.showReviewModal = false
           this.reviewComment = ''
-        } else {
-          this.$message.error('操作失败')
-        }
       } catch (error) {
         console.error('拒绝课程失败:', error)
         this.$message.error('操作失败')

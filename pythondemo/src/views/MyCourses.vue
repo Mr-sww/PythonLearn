@@ -64,6 +64,7 @@
           <div class="flex items-center gap-3">
             <h2 class="text-lg font-semibold text-gray-900">课程列表</h2>
             <div class="ml-auto flex items-center gap-2">
+              <input v-model="keyword" placeholder="搜索标题" class="border rounded px-3 py-2 w-56" />
               <input v-model.number="joinCourseId" type="number" class="border rounded px-3 py-2 w-48" placeholder="输入课程ID" />
               <button @click="joinCourse" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">加入课程</button>
             </div>
@@ -85,7 +86,7 @@
           </div>
           
           <div v-else class="space-y-4">
-            <div v-for="course in courses" :key="course.id" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div v-for="course in pagedCourses" :key="course.id" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                   <img :src="getCourseImage(course.image)" :alt="course.title" class="w-16 h-16 rounded-lg object-cover">
@@ -119,6 +120,12 @@
               </div>
             </div>
           </div>
+          <!-- 分页 -->
+          <div v-if="totalPages>1" class="flex justify-end items-center gap-2 px-6 pb-4">
+            <button :disabled="page===1" @click="page--" class="px-3 py-1 border rounded disabled:opacity-50">上一页</button>
+            <span class="text-sm text-gray-600">{{ page }} / {{ totalPages }}</span>
+            <button :disabled="page===totalPages" @click="page++" class="px-3 py-1 border rounded disabled:opacity-50">下一页</button>
+          </div>
         </div>
       </div>
     </div>
@@ -134,6 +141,9 @@ export default {
       courses: [],
       loading: true,
       joinCourseId: null,
+      keyword: '',
+      page: 1,
+      pageSize: 5,
       courseStats: {
         totalCourses: 0,
         inProgress: 0,
@@ -162,6 +172,7 @@ export default {
           rating: it.rating || '',
           progress: it.progress || 0
         }))
+        this.page = 1
         
         this.calculateStats();
         this.loading = false;
@@ -194,6 +205,18 @@ export default {
       } catch (e) {
         alert(e.response?.data || '加入失败')
       }
+    }
+  },
+  computed: {
+    filteredCourses () {
+      const kw = (this.keyword || '').trim()
+      if (!kw) return this.courses
+      return this.courses.filter(c => (c.title || '').toLowerCase().includes(kw.toLowerCase()))
+    },
+    totalPages () { return Math.max(1, Math.ceil(this.filteredCourses.length / this.pageSize)) },
+    pagedCourses () {
+      const start = (this.page - 1) * this.pageSize
+      return this.filteredCourses.slice(start, start + this.pageSize)
     }
   }
 }

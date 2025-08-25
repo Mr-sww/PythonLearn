@@ -298,13 +298,16 @@ const visiblePages = computed(() => {
 })
 
 // 方法
+// 统一后端请求实例，避免开发端口导致 404
+const apiClient = axios.create({ baseURL: 'http://localhost:8080', withCredentials: true })
+
 const loadStatistics = async () => {
   try {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
     if (!user) return
     
     const userId = user.userId || user.user_id
-    const response = await axios.get(`/api/user-problem-record/statistics?userId=${userId}`)
+    const response = await apiClient.get(`/api/user-problem-record/statistics`, { params: { userId } })
     statistics.value = response.data.data || {}
   } catch (error) {
     console.error('加载统计信息失败:', error)
@@ -331,7 +334,7 @@ const loadRecords = async () => {
       params.result = currentFilter.value
     }
     
-    const response = await axios.get('/api/user-problem-record/records', { params })
+    const response = await apiClient.get('/api/user-problem-record/records', { params })
     const data = response.data.data
     
     records.value = data.records || []

@@ -46,4 +46,34 @@ public class PythonProblemServiceImpl implements PythonProblemService {
         }
         return pythonProblemRepository.findRecent(limit);
     }
+
+    @Override
+    public boolean updateProblemBasic(String id, String title, Integer dif) {
+        if (id == null) return false;
+        try {
+            return pythonProblemRepository.updateBasic(id, title, dif) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateProblemFull(String id, String title, String description, String inputFormat, String outputFormat, String samples, String note, String background, Integer dif) {
+        if (id == null) return false;
+        try {
+            return pythonProblemRepository.updateFull(id, title, description, inputFormat, outputFormat, samples, note, background, dif) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteProblemById(String id) {
+        if (id == null) return false;
+        try {
+            return pythonProblemRepository.deleteById(id) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

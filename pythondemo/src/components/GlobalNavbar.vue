@@ -41,8 +41,13 @@
             <!-- 用户下拉菜单 -->
             <div v-if="showUserMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
               <router-link to="/profile" class="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100">
-                <i class="fa fa-user-circle mr-2"></i>个人资料
+                <i class="fa fa-user-circle mr-2"></i>个人中心
               </router-link>
+              <div v-if="isAdmin" class="border-t border-gray-100">
+                <router-link to="/admin" class="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100">
+                  <i class="fa fa-cogs mr-2"></i>后台管理
+                </router-link>
+              </div>
               
               <router-link to="/practice-records" class="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100">
                 <i class="fa fa-code mr-2"></i>练习记录

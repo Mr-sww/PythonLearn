@@ -1,10 +1,7 @@
 package com.demo.python_demo.repository;
 
 import com.demo.python_demo.entity.PythonProblem;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.*;
 import java.util.List;
 
 @Mapper
@@ -90,4 +87,21 @@ public interface PythonProblemRepository {
         @Result(property = "dif", column = "dif")
     })
     List<PythonProblem> findRecent(int limit);
+
+    @Update("UPDATE pythonproblems SET Title = #{title}, dif = #{dif} WHERE Id = #{id}")
+    int updateBasic(@Param("id") String id, @Param("title") String title, @Param("dif") Integer dif);
+
+    @Update("UPDATE pythonproblems SET Title = #{title}, Description = #{description}, InputFormat = #{inputFormat}, OutputFormat = #{outputFormat}, Samples = #{samples}, Note = #{note}, Background = #{background}, dif = #{dif} WHERE Id = #{id}")
+    int updateFull(@Param("id") String id,
+                   @Param("title") String title,
+                   @Param("description") String description,
+                   @Param("inputFormat") String inputFormat,
+                   @Param("outputFormat") String outputFormat,
+                   @Param("samples") String samples,
+                   @Param("note") String note,
+                   @Param("background") String background,
+                   @Param("dif") Integer dif);
+
+    @Delete("DELETE FROM pythonproblems WHERE Id = #{id}")
+    int deleteById(@Param("id") String id);
 } 

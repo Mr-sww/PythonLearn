@@ -10,56 +10,48 @@
           <div class="bg-white rounded-3xl shadow-2xl p-4 mt-6 sticky top-6">
             <nav class="flex flex-col gap-2">
               <!-- 通用 -->
-              <router-link to="/profile" class="menu-item" :class="{ active: $route.path === '/profile' }">
+              <button class="menu-item w-full text-left" :class="{ active: activeTab==='profile' }" @click="activeTab='profile'">
                 <i class="fa fa-user"></i>
                 <span>我的资料</span>
-              </router-link>
-              <router-link to="/learning-records" class="menu-item" :class="{ active: $route.path === '/learning-records' }">
+              </button>
+              <button class="menu-item w-full text-left" :class="{ active: activeTab==='learning' }" @click="activeTab='learning'">
                 <i class="fa fa-book"></i>
                 <span>学习记录</span>
-              </router-link>
-              <router-link to="/practice-records" class="menu-item" :class="{ active: $route.path === '/practice-records' }">
+              </button>
+              <button class="menu-item w-full text-left" :class="{ active: activeTab==='practice' }" @click="activeTab='practice'">
                 <i class="fa fa-chart-line"></i>
                 <span>练习统计</span>
-              </router-link>
+              </button>
 
               <!-- 学生 -->
-              <router-link v-if="isStudent" to="/my-courses" class="menu-item" :class="{ active: $route.path === '/my-courses' }">
+              <button v-if="isStudent" class="menu-item w-full text-left" :class="{ active: activeTab==='myCourses' }" @click="activeTab='myCourses'">
                 <i class="fa fa-graduation-cap"></i>
                 <span>我的课程</span>
-              </router-link>
-              <router-link v-if="isStudent" to="/student/my-classes" class="menu-item" :class="{ active: $route.path === '/student/my-classes' }">
+              </button>
+              <button v-if="isStudent" class="menu-item w-full text-left" :class="{ active: activeTab==='studentClasses' }" @click="activeTab='studentClasses'">
                 <i class="fa fa-users"></i>
                 <span>我的班级</span>
-              </router-link>
+              </button>
 
               <!-- 教师 -->
-              <router-link v-if="isTeacher" to="/teacher/classes" class="menu-item" :class="{ active: $route.path === '/teacher/classes' }">
+              <button v-if="isTeacher" class="menu-item w-full text-left" :class="{ active: activeTab==='teacherClasses' }" @click="activeTab='teacherClasses'">
                 <i class="fa fa-users"></i>
                 <span>我的班级</span>
-              </router-link>
-              <router-link v-if="isTeacher" to="/teacher/course-requests" class="menu-item" :class="{ active: $route.path === '/teacher/course-requests' }">
+              </button>
+              <button v-if="isTeacher" class="menu-item w-full text-left" :class="{ active: activeTab==='teacherRequests' }" @click="activeTab='teacherRequests'">
                 <i class="fa fa-chalkboard-teacher"></i>
                 <span>课程申请</span>
-              </router-link>
+              </button>
 
-              <!-- 管理员 -->
-              <router-link v-if="isAdmin" to="/admin" class="menu-item" :class="{ active: $route.path === '/admin' }">
-                <i class="fa fa-cogs"></i>
-                <span>后台仪表盘</span>
-              </router-link>
-              <router-link v-if="isAdmin" to="/admin/course-approvals" class="menu-item" :class="{ active: $route.path === '/admin/course-approvals' }">
-                <i class="fa fa-clipboard-check"></i>
-                <span>课程审核</span>
-              </router-link>
+              <!-- 管理员入口移至头像下拉菜单，这里不再展示 -->
             </nav>
           </div>
         </div>
 
         <!-- 右侧：功能区域 -->
         <div class="lg:col-span-2">
-          <!-- 我的资料（从左侧移动至右侧顶部） -->
-          <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+          <!-- 我的资料（仅在“我的资料”标签下显示） -->
+          <div v-if="activeTab==='profile'" class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
             <!-- 头像和基本信息 -->
             <div class="text-center mb-6">
               <div class="relative mb-4 group inline-block">
@@ -98,71 +90,45 @@
             </button>
           </div>
 
-          <!-- 内容分区：练习统计 -->
-          <div class="section-title"><i class="fa fa-chart-pie mr-2"></i>练习统计</div>
-          <router-link to="/practice-records" class="bg-white rounded-3xl shadow-2xl p-6 mb-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-primary/20">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xl font-bold text-dark">
-                <i class="fa fa-chart-line text-primary me-2"></i>练习统计
-              </h3>
-              <i class="fa fa-arrow-right text-primary text-xl"></i>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
-                <div class="text-3xl font-bold text-blue-600 mb-1">{{ practiceStats.totalSubmissions || 0 }}</div>
-                <div class="text-sm text-blue-700">总提交次数</div>
-              </div>
-              <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
-                <div class="text-3xl font-bold text-green-600 mb-1">{{ practiceStats.accuracy || 0 }}%</div>
-                <div class="text-sm text-green-700">通过率</div>
-              </div>
-              <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl">
-                <div class="text-3xl font-bold text-yellow-600 mb-1">{{ practiceStats.continuousDays || 0 }}</div>
-                <div class="text-sm text-yellow-700">连续刷题天数</div>
-              </div>
-              <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
-                <div class="text-3xl font-bold text-purple-600 mb-1">{{ practiceStats.passedProblems || 0 }}</div>
-                <div class="text-sm text-purple-700">通过题目数</div>
-              </div>
-            </div>
-            <div class="text-center mt-4 text-primary text-sm font-medium">
-              点击查看详细练习记录 →
-            </div>
-          </router-link>
+          <!-- 内容分区：练习记录完整模块 -->
+          <div v-if="activeTab==='practice'" class="section-title"><i class="fa fa-chart-pie mr-2"></i>练习记录</div>
+          <div v-if="activeTab==='practice'" class="mb-6">
+            <PracticeRecords />
+          </div>
 
-          <!-- 内容分区：学习记录 -->
-          <div class="section-title"><i class="fa fa-book mr-2"></i>学习记录</div>
-          <router-link to="/learning" class="bg-white rounded-3xl shadow-2xl p-6 mb-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-primary/20">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xl font-bold text-dark">
-                <i class="fa fa-book text-primary me-2"></i>学习记录
-              </h3>
-              <i class="fa fa-arrow-right text-primary text-xl"></i>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="text-2xl font-bold text-indigo-600">{{ learningStats.totalCourses || 0 }}</div>
-                    <div class="text-sm text-indigo-700">已选课程</div>
-                  </div>
-                  <i class="fa fa-graduation-cap text-3xl text-indigo-400"></i>
-                </div>
-              </div>
-              <div class="p-4 bg-gradient-to-r from-pink-50 to-pink-100 rounded-xl">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="text-2xl font-bold text-pink-600">{{ learningStats.completedLessons || 0 }}</div>
-                    <div class="text-sm text-pink-700">已完成课时</div>
-                  </div>
-                  <i class="fa fa-check-circle text-3xl text-pink-400"></i>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-4 text-primary text-sm font-medium">
-              点击查看详细学习记录 →
-            </div>
-          </router-link>
+          <!-- 内容分区：学习记录完整模块 -->
+          <div v-if="activeTab==='learning'" class="section-title"><i class="fa fa-book mr-2"></i>学习记录</div>
+          <div v-if="activeTab==='learning'" class="mb-6">
+            <LearningRecords />
+          </div>
+
+          <!-- 学生：我的课程、我的班级 内联展示 -->
+          <div v-if="activeTab==='myCourses'" class="section-title"><i class="fa fa-graduation-cap mr-2"></i>我的课程</div>
+          <div v-if="activeTab==='myCourses'" class="mb-6">
+            <MyCourses />
+          </div>
+
+          <div v-if="activeTab==='studentClasses'" class="section-title"><i class="fa fa-users mr-2"></i>我的班级</div>
+          <div v-if="activeTab==='studentClasses'" class="mb-6">
+            <StudentMyClasses />
+          </div>
+
+          <!-- 教师：我的班级 / 课程申请 内联展示 -->
+          <div v-if="activeTab==='teacherClasses'" class="section-title"><i class="fa fa-users mr-2"></i>教师 - 我的班级</div>
+          <div v-if="activeTab==='teacherClasses'" class="mb-6">
+            <TeacherClasses />
+          </div>
+
+          <div v-if="activeTab==='teacherRequests'" class="section-title"><i class="fa fa-chalkboard-teacher mr-2"></i>教师 - 课程申请</div>
+          <div v-if="activeTab==='teacherRequests'" class="mb-6">
+            <TeacherCourseRequests />
+          </div>
+
+          <!-- 管理员：课程审核 内联展示 -->
+          <div v-if="activeTab==='adminApprovals'" class="section-title"><i class="fa fa-clipboard-check mr-2"></i>课程审核</div>
+          <div v-if="activeTab==='adminApprovals'" class="mb-6">
+            <AdminCourseApprovals />
+          </div>
 
           <!-- 快捷功能卡片 -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -307,10 +273,19 @@
 <script>
 import axios from 'axios';
 import { getRoleByGroupType, getMajorName, isStudent, isTeacher, isAdmin } from '@/utils/auth';
+import MyCourses from '@/views/MyCourses.vue'
+import StudentMyClasses from '@/views/student/MyClasses.vue'
+import TeacherClasses from '@/views/teacher/TeacherClasses.vue'
+import TeacherCourseRequests from '@/views/teacher/TeacherCourseRequests.vue'
+import AdminCourseApprovals from '@/views/admin/AdminCourseApprovals.vue'
+import PracticeRecords from '@/views/PracticeRecords.vue'
+import LearningRecords from '@/views/LearningRecords.vue'
 
 export default {
+  components: { MyCourses, StudentMyClasses, TeacherClasses, TeacherCourseRequests, AdminCourseApprovals, PracticeRecords, LearningRecords },
   data() {
     return {
+      activeTab: 'profile',
       user: {
         avatar: null,
         nickname: '',
@@ -409,9 +384,27 @@ export default {
       
       // 加载学习统计信息
       this.loadLearningStats(userId);
+
+      // 根据角色选择默认 Tab（支持通过路由 ?tab=xxx 覆盖）
+      this.applyDefaultTab();
     });
   },
   methods: {
+    applyDefaultTab() {
+      const tabFromQuery = this.$route?.query?.tab;
+      if (tabFromQuery && typeof tabFromQuery === 'string') {
+        this.activeTab = tabFromQuery;
+        return;
+      }
+      const role = getRoleByGroupType(this.user.groupType);
+      if (role === 'admin') {
+        this.activeTab = 'adminApprovals';
+      } else if (role === 'teacher') {
+        this.activeTab = 'teacherClasses';
+      } else {
+        this.activeTab = 'myCourses';
+      }
+    },
     getAvatarUrl(url) {
       if (!url || typeof url !== 'string') {
         return this.defaultAvatar;

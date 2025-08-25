@@ -18,7 +18,12 @@ import SessionTest from '../views/SessionTest.vue'
 import CourseVideo from '../views/CourseVideo.vue'
 import TestVideoRecords from '../views/TestVideoRecords.vue'
 import TestVideoClick from '../views/TestVideoClick.vue'
-import AdminDashboard from '../views/AdminDashboard.vue'
+// import AdminDashboard from '../views/AdminDashboard.vue'
+import AdminShell from '../views/admin/AdminShell.vue'
+import AdminHome from '../views/admin/AdminHome.vue'
+import AdminUsers from '../views/admin/AdminUsers.vue'
+import AdminRoles from '../views/admin/AdminRoles.vue'
+import AdminSystemLogs from '../views/admin/AdminSystemLogs.vue'
 import TeacherDashboard from '../views/TeacherDashboard.vue'
 import StudentDashboard from '../views/StudentDashboard.vue'
 import MyCourses from '../views/MyCourses.vue'
@@ -52,10 +57,21 @@ const routes = [
   { path: '/learning-records', component: LearningRecords },
   
   // 身份管理路由
-  { 
-    path: '/admin', 
-    component: AdminDashboard,
-    meta: { requiresAuth: true, requiresRole: 'admin' }
+  {
+    path: '/admin',
+    component: AdminShell,
+    meta: { requiresAuth: true, requiresRole: 'admin' },
+    children: [
+      { path: '', redirect: '/admin/home' },
+      { path: 'home', component: AdminHome },
+      { path: 'users', component: AdminUsers },
+      { path: 'roles', component: AdminRoles },
+      { path: 'logs', component: AdminSystemLogs },
+      { path: 'course-approvals', component: () => import('@/views/admin/AdminCourseApprovals.vue') },
+      { path: 'courses', component: () => import('@/views/admin/AdminCourses.vue') },
+      { path: 'problems', component: () => import('@/views/admin/AdminProblems.vue') },
+      { path: 'knowledges', component: () => import('@/views/admin/AdminKnowledges.vue') }
+    ]
   },
   { 
     path: '/teacher', 

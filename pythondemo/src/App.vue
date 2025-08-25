@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- 只在非AuthPage路由时显示导航栏 -->
-    <GlobalNavbar v-if="!isAuthPage" />
+    <!-- 只在非AuthPage且非admin路由时显示导航栏 -->
+    <GlobalNavbar v-if="!isAuthPage && !$route.path.startsWith('/admin')" />
     <router-view />
 
     <!-- 登录弹窗 -->
