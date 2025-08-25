@@ -1,6 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+// 可复用：groupType 选项与校验（非侵入式导出）
+export const GROUP_TYPE_OPTIONS = [
+  { value: 1, label: '专业1' },
+  { value: 2, label: '专业2' },
+  { value: 3, label: '专业3' },
+  { value: 4, label: '专业4' },
+  { value: 5, label: '专业5' },
+  { value: 6, label: '专业6' },
+  { value: 7, label: '教师' },
+  { value: 8, label: '管理员' }
+]
+
+export function isValidGroupType (v) {
+  return Number.isInteger(v) && v >= 1 && v <= 8
+}
+
 export const useUserStore = defineStore('user', () => {
   const user = ref({})
 

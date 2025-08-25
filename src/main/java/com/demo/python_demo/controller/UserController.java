@@ -47,6 +47,14 @@ public class UserController {
     @Autowired
     private LearningProgressService learningProgressService;
 
+    // 允许的 groupType 取值：1..8（1-6 专业，7 教师，8 管理员）
+    private static final java.util.Set<Integer> ALLOWED_GROUP_TYPES =
+            java.util.stream.IntStream.rangeClosed(1, 8).boxed().collect(java.util.stream.Collectors.toSet());
+
+    private boolean isValidGroupType(Integer v) {
+        return v != null && ALLOWED_GROUP_TYPES.contains(v);
+    }
+
     /**
      * 获取所有用户
      * @return 用户列表
@@ -101,11 +109,15 @@ public class UserController {
         if (params.containsKey("avatar")) {
             user.setAvatar((String) params.get("avatar"));
         }
-        // 专业大类
+        // 专业大类/角色（校验 1..8）
         if (params.containsKey("groupType")) {
             Object groupTypeObj = params.get("groupType");
             if (groupTypeObj != null) {
-                user.setGroupType(Integer.parseInt(groupTypeObj.toString()));
+                Integer gt = Integer.parseInt(groupTypeObj.toString());
+                if (!isValidGroupType(gt)) {
+                    return ResponseEntity.status(400).body("groupType 无效，必须为 1..8");
+                }
+                user.setGroupType(gt);
             }
         }
         // 兴趣方向（支持数组或字符串）
@@ -193,6 +205,9 @@ public class UserController {
     @PatchMapping("/{id}/groupType")
     public ResponseEntity<?> updateGroupType(@PathVariable Integer id, @RequestBody Map<String, Integer> params) {
         Integer groupType = params.get("groupType");
+        if (!isValidGroupType(groupType)) {
+            return ResponseEntity.status(400).body("groupType 无效，必须为 1..8");
+        }
         int result = userService.updateGroupType(id, groupType);
         if (result > 0) {
             return ResponseEntity.ok().build();
