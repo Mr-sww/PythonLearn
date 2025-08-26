@@ -14,26 +14,63 @@ public interface CourseRepository {
     /**
      * 获取所有课程
      */
-    @Select("SELECT * FROM course ORDER BY CreatedAt DESC")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course ORDER BY CreatedAt DESC")
     List<Course> findAll();
 
     /**
      * 根据ID获取课程
      */
-    @Select("SELECT * FROM course WHERE ArticleID = #{articleId}")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course WHERE ArticleID = #{articleId}")
     Course findById(Integer articleId);
 
     /**
      * 根据分类获取课程
      */
-    @Select("SELECT * FROM course WHERE Category = #{category} ORDER BY CreatedAt DESC")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course WHERE Category = #{category} ORDER BY CreatedAt DESC")
     List<Course> findByCategory(String category);
 
     /**
      * 根据作者获取课程
      */
-    @Select("SELECT * FROM course WHERE Author = #{author} ORDER BY CreatedAt DESC")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course WHERE Author = #{author} ORDER BY CreatedAt DESC")
     List<Course> findByAuthor(String author);
+
+    /**
+     * 根据状态获取课程
+     */
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course WHERE Status = #{status} ORDER BY CreatedAt DESC")
+    List<Course> findByStatus(String status);
+
+    /**
+     * 获取已审核课程（审核历史）
+     */
+    @Select("SELECT * FROM course WHERE Status IN ('approved', 'rejected') AND reviewedBy IS NOT NULL ORDER BY reviewedAt DESC")
+    List<Course> findReviewedCourses();
 
     /**
      * 搜索课程（标题、内容、标签）

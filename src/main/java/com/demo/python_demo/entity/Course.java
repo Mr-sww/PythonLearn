@@ -25,6 +25,11 @@ public class Course {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // 审核相关字段
+    private String reviewComment;
+    private LocalDateTime reviewedAt;
+    private Integer reviewedBy;
 
     // 构造函数
     public Course() {}
@@ -195,6 +200,31 @@ public class Course {
         this.updatedAt = updatedAt;
     }
 
+    // 审核相关字段的getter和setter
+    public String getReviewComment() {
+        return reviewComment;
+    }
+
+    public void setReviewComment(String reviewComment) {
+        this.reviewComment = reviewComment;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public Integer getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(Integer reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+
     @Override
     public String toString() {
         return "Course{" +
@@ -207,8 +237,12 @@ public class Course {
                 ", category='" + category + '\'' +
                 ", tags='" + tags + '\'' +
                 ", views=" + views +
+                ", status='" + status + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", reviewComment='" + reviewComment + '\'' +
+                ", reviewedAt=" + reviewedAt +
+                ", reviewedBy=" + reviewedBy +
                 '}';
     }
 } 

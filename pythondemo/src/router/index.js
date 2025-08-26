@@ -79,7 +79,13 @@ const routes = [
   { path: '/student/my-classes', component: StudentMyClasses, meta: { requiresAuth: true, requiresRole: 'student' } },
   { path: '/admin/course-approvals', component: AdminCourseApprovals, meta: { requiresAuth: true, requiresRole: 'admin' } },
   
-  // 课程相关路由
+
+  {
+    path: '/admin/course-review',
+    name: 'CourseReview',
+    component: () => import('@/views/admin/CourseReview.vue'),
+    meta: { requiresAuth: true, requiresRole: 'admin' }
+  },
   {
     path: '/my-courses',
     name: 'MyCourses',
