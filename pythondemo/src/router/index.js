@@ -22,7 +22,6 @@ import TestVideoClick from '../views/TestVideoClick.vue'
 import AdminShell from '../views/admin/AdminShell.vue'
 import AdminUsers from '../views/admin/AdminUsers.vue'
 import AdminSystemLogs from '../views/admin/AdminSystemLogs.vue'
-import TeacherDashboard from '../views/TeacherDashboard.vue'
 import StudentDashboard from '../views/StudentDashboard.vue'
 import MyCourses from '../views/MyCourses.vue'
 import TeacherCourses from '../views/TeacherCourses.vue'
@@ -69,12 +68,8 @@ const routes = [
       { path: 'knowledges', component: () => import('@/views/admin/AdminKnowledges.vue') }
     ]
   },
-  { 
-    path: '/teacher', 
-    component: TeacherDashboard,
-    meta: { requiresAuth: true, requiresRole: 'teacher' }
-  },
-  { path: '/teacher/classes', component: TeacherClasses, meta: { requiresAuth: true, requiresRole: 'teacher' } },
+
+  { path: '/teacher/courses', component: TeacherClasses, meta: { requiresAuth: true, requiresRole: 'teacher' } },
   { path: '/teacher/course-requests', component: TeacherCourseRequests, meta: { requiresAuth: true, requiresRole: 'teacher' } },
   { 
     path: '/student', 

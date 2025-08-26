@@ -11,6 +11,12 @@ public class CourseClass implements Serializable {
     private String name;
     private String description;
     private Integer teacherId;
+    private String classType;
+    private Integer maxStudents;
+    private Date startDate;
+    private String status;
+    private Integer currentStudents;
+    private String tags;
     private Date createdAt;
     private Date updatedAt;
 
@@ -60,6 +66,54 @@ public class CourseClass implements Serializable {
 
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getClassType() {
+        return classType;
+    }
+
+    public void setClassType(String classType) {
+        this.classType = classType;
+    }
+
+    public Integer getMaxStudents() {
+        return maxStudents;
+    }
+
+    public void setMaxStudents(Integer maxStudents) {
+        this.maxStudents = maxStudents;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getCurrentStudents() {
+        return currentStudents;
+    }
+
+    public void setCurrentStudents(Integer currentStudents) {
+        this.currentStudents = currentStudents;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 }
 

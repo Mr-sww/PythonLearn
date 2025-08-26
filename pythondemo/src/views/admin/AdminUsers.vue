@@ -146,11 +146,10 @@
                 <option value="4">医学类</option>
                 <option value="5">文科类</option>
                 <option value="6">体育类</option>
-                <option value="7">其他</option>
               </optgroup>
               <optgroup label="系统角色">
-                <option value="8">教师</option>
-                <option value="9">管理员</option>
+                <option value="7">教师</option>
+                <option value="8">管理员</option>
               </optgroup>
             </select>
           </div>

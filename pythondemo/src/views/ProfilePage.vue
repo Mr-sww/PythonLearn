@@ -149,22 +149,7 @@
               </div>
             </div>
             
-            <!-- 教师功能：查看创建的课程 -->
-            <div v-if="isTeacher" @click="goToTeacherCourses" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-blue-200">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold text-dark">
-                  <i class="fa fa-chalkboard-teacher text-blue-500 me-2"></i>我创建的课程
-                </h3>
-                <i class="fa fa-arrow-right text-blue-500 text-xl"></i>
-              </div>
-              <div class="text-center">
-                <i class="fa fa-plus-circle text-4xl text-blue-400 mb-3"></i>
-                <div class="text-sm text-gray-600">管理您创建的所有课程</div>
-              </div>
-              <div class="text-center mt-4 text-blue-500 text-sm font-medium">
-                点击进入 →
-              </div>
-            </div>
+
             
             <!-- 管理员功能：进入后台管理系统 -->
             <div v-if="isAdmin" @click="goToAdminPanel" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-red-200">
@@ -183,37 +168,7 @@
               </div>
             </div>
             
-            <router-link to="/favorites" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-red-200">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold text-dark">
-                  <i class="fa fa-heart text-red-500 me-2"></i>我的收藏课程
-                </h3>
-                <i class="fa fa-arrow-right text-red-500 text-xl"></i>
-              </div>
-              <div class="text-center">
-                <i class="fa fa-heart text-4xl text-red-400 mb-3"></i>
-                <div class="text-sm text-gray-600">查看您收藏的所有课程</div>
-              </div>
-              <div class="text-center mt-4 text-red-500 text-sm font-medium">
-                点击进入 →
-              </div>
-            </router-link>
-            
-            <router-link to="/favorite-problems" class="bg-white rounded-3xl shadow-2xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-blue-200">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold text-dark">
-                  <i class="fa fa-star text-blue-500 me-2"></i>我收藏的题目
-                </h3>
-                <i class="fa fa-arrow-right text-blue-500 text-xl"></i>
-              </div>
-              <div class="text-center">
-                <i class="fa fa-star text-4xl text-blue-400 mb-3"></i>
-                <div class="text-sm text-gray-600">查看您收藏的所有题目</div>
-              </div>
-              <div class="text-center mt-4 text-blue-500 text-sm font-medium">
-                点击进入 →
-              </div>
-            </router-link>
+
           </div>
         </div>
       </div>

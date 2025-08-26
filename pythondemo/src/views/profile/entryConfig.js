@@ -36,15 +36,6 @@ export default [
     group: '教学管理',
     entries: [
       {
-        key: 'teacher-dashboard',
-        title: '教学管理',
-        desc: '教学数据概览',
-        icon: 'fas fa-chalkboard-teacher',
-        path: '/teacher/dashboard',
-        roles: ['TEACHER'],
-        color: '#7b1fa2'
-      },
-      {
         key: 'teacher-courses',
         title: '课程管理',
         desc: '创建和管理课程',
@@ -52,15 +43,6 @@ export default [
         path: '/teacher/courses',
         roles: ['TEACHER'],
         color: '#1976d2'
-      },
-      {
-        key: 'teacher-assignments',
-        title: '作业管理',
-        desc: '发布和批改作业',
-        icon: 'fas fa-edit',
-        path: '/teacher/assignments',
-        roles: ['TEACHER'],
-        color: '#388e3c'
       },
       {
         key: 'teacher-students',

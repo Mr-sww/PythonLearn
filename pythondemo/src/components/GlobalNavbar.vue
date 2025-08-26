@@ -65,9 +65,6 @@
               </div>
               
               <div v-if="isTeacher" class="border-t border-gray-100">
-                <router-link to="/teacher" class="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100">
-                  <i class="fa fa-chalkboard-teacher mr-2"></i>教师工作台
-                </router-link>
                 <router-link to="/teacher-courses" class="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100">
                   <i class="fa fa-chalkboard mr-2"></i>我的课程
                 </router-link>

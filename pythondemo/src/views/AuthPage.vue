@@ -97,6 +97,17 @@
 
         <!-- 登录表单 -->
         <form v-if="isLoginMode" @submit.prevent="handleLogin" class="space-y-4">
+          <!-- 错误消息提示 -->
+          <div v-if="showErrorModal" class="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+            <div class="flex items-center">
+              <i class="fa fa-exclamation-triangle text-red-500 mr-2"></i>
+              <span class="text-red-700 text-sm">{{ errorMessage }}</span>
+              <button @click="hideErrorMessage" class="ml-auto text-red-400 hover:text-red-600">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
           <div class="transform hover:scale-[1.02] transition-all duration-200">
             <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
             <input 
@@ -161,6 +172,17 @@
 
         <!-- 注册表单 -->
         <form v-else @submit.prevent="handleRegister" class="space-y-4">
+          <!-- 错误消息提示 -->
+          <div v-if="showErrorModal" class="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+            <div class="flex items-center">
+              <i class="fa fa-exclamation-triangle text-red-500 mr-2"></i>
+              <span class="text-red-700 text-sm">{{ errorMessage }}</span>
+              <button @click="hideErrorMessage" class="ml-auto text-red-400 hover:text-red-600">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
           <div class="grid grid-cols-2 gap-3">
             <div class="transform hover:scale-[1.02] transition-all duration-200">
               <label for="reg-nickname" class="block text-sm font-medium text-gray-700 mb-1">昵称</label>
@@ -262,14 +284,15 @@
               required
               class="w-full px-3 py-3 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base bg-white/70 backdrop-blur-md hover:bg-white/90 focus:bg-white/95"
             >
-              <option value="">请选择您的专业</option>
+              <option value="">请选择您的专业或身份</option>
               <option value="1">计算机类</option>
               <option value="2">工设类</option>
               <option value="3">艺术类</option>
               <option value="4">医学类</option>
               <option value="5">文科类</option>
               <option value="6">体育类</option>
-              <option value="7">其他</option>
+              <option value="7">教师</option>
+              <option value="8">管理员</option>
             </select>
           </div>
 
@@ -314,7 +337,7 @@
       <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform hover:scale-[1.02] transition-all duration-300 border border-white/30">
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-900">选择您的专业大类</h3>
+            <h3 class="text-xl font-bold text-gray-900">选择您的专业或身份</h3>
             <button @click="closeMajorModal" class="text-gray-400 hover:text-gray-600 transition-colors transform hover:scale-110">
               <i class="fa fa-times"></i>
             </button>
@@ -368,6 +391,27 @@
         </div>
       </div>
     </div>
+
+    <!-- 注册成功弹窗 -->
+    <div v-if="showRegisterSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+      <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform hover:scale-[1.02] transition-all duration-300 border border-white/30">
+        <div class="p-6 text-center">
+          <div class="mb-4">
+            <i class="fa fa-check-circle text-6xl text-green-500"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">注册成功！</h3>
+          <p class="text-gray-600 mb-6">您的账号已创建成功，请返回登录页面进行登录。</p>
+          <button 
+            @click="confirmRegisterSuccess" 
+            class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold text-base transition-all hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md hover:shadow-lg transform hover:scale-105 hover:-translate-y-1"
+          >
+            确定
+          </button>
+        </div>
+      </div>
+    </div>
+
+
   </div>
 </template>
 
@@ -384,6 +428,9 @@ export default {
       isLoading: false,
       showMajorModal: false,
       showLearningDirectionModal: false,
+      showRegisterSuccessModal: false,
+      showErrorModal: false,
+      errorMessage: '',
       
       // 鼠标位置
       mouseX: 0,
@@ -425,7 +472,8 @@ export default {
         4: '医学类',
         5: '文科类',
         6: '体育类',
-        7: '其他'
+        7: '教师',
+        8: '管理员'
       },
       
       learningDirectionOptions: {
@@ -560,7 +608,7 @@ export default {
     
     async handleLogin() {
       if (!this.loginForm.username || !this.loginForm.password) {
-        this.$message?.error('请填写完整的登录信息')
+        this.showErrorMessage('请填写完整的登录信息')
         return
       }
       
@@ -571,18 +619,18 @@ export default {
           password: this.loginForm.password
         })
         
-                  const user = response.data
-          console.log('登录响应数据:', user) // 添加调试信息
-          
-          if (user && (user.userId || user.user_id)) {
-            console.log('用户数据:', user) // 添加调试信息
-            console.log('用户groupType:', user.groupType || user.group_type) // 添加调试信息
-            console.log('用户intestTypes:', user.intestTypes || user.intest_types) // 添加调试信息
-            this.user = user
-            this.user.userId = user.userId || user.user_id
-            this.user.groupType = user.groupType || user.group_type
-            this.user.intestTypes = this.parseIntestTypes(user.intestTypes || user.intest_types)
-          
+        const user = response.data
+        console.log('登录响应数据:', user) // 添加调试信息
+        
+        if (user && (user.userId || user.user_id)) {
+          console.log('用户数据:', user) // 添加调试信息
+          console.log('用户groupType:', user.groupType || user.group_type) // 添加调试信息
+          console.log('用户intestTypes:', user.intestTypes || user.intest_types) // 添加调试信息
+          this.user = user
+          this.user.userId = user.userId || user.user_id
+          this.user.groupType = user.groupType || user.group_type
+          this.user.intestTypes = this.parseIntestTypes(user.intestTypes || user.intest_types)
+        
           // 保存用户信息和登录状态
           setLoginState(user)
           console.log('登录状态已保存') // 添加调试信息
@@ -598,7 +646,7 @@ export default {
             // 登录成功，发送登录事件
             console.log('登录成功，准备跳转') // 添加调试信息
             EventBus.emit('user-logged-in')
-            this.$message?.success('登录成功！')
+            this.showSuccessMessage('登录成功！')
             
             // 检查是否有保存的跳转路径
             const redirectPath = getAndClearRedirectPath()
@@ -613,19 +661,33 @@ export default {
           }
         } else {
           console.log('登录失败: 用户数据无效') // 添加调试信息
-          this.$message?.error('登录失败')
+          this.showErrorMessage('登录失败：用户数据无效')
         }
       } catch (error) {
         console.error('登录失败:', error)
         let errorMsg = '登录失败，请检查网络连接'
-        if (error.response?.data?.message) {
-          errorMsg = error.response.data.message
+        
+        if (error.response?.data) {
+          // 处理后端返回的具体错误信息
+          if (typeof error.response.data === 'string') {
+            errorMsg = error.response.data
+          } else if (error.response.data.message) {
+            errorMsg = error.response.data.message
+          } else if (error.response.data.error) {
+            errorMsg = error.response.data.error
+          }
         } else if (error.response?.status === 400) {
           errorMsg = '用户名或密码错误'
+        } else if (error.response?.status === 401) {
+          errorMsg = '用户名或密码错误'
+        } else if (error.response?.status === 404) {
+          errorMsg = '用户不存在'
         } else if (error.response?.status === 500) {
           errorMsg = '服务器错误，请稍后重试'
         }
-        this.$message?.error(errorMsg)
+        
+        // 显示错误信息
+        this.showErrorMessage(errorMsg)
       } finally {
         this.isLoading = false
       }
@@ -650,28 +712,37 @@ export default {
         
         const user = response.data
         if (user && user.userId) {
-          this.$message?.success('注册成功！请登录')
-          this.resetRegisterForm()
-          
-          // 切换到登录模式
-          this.switchToLogin()
+          // 显示注册成功弹窗
+          this.showRegisterSuccessModal = true
         } else if (typeof user === 'string') {
           // 后端返回错误消息字符串
-          this.$message?.error(user)
+          this.showErrorMessage(user)
         } else {
-          this.$message?.error('注册失败')
+          this.showErrorMessage('注册失败：服务器返回数据异常')
         }
       } catch (error) {
         console.error('注册失败:', error)
         let errorMsg = '注册失败，请检查网络连接'
-        if (error.response?.data?.message) {
-          errorMsg = error.response.data.message
+        
+        if (error.response?.data) {
+          // 处理后端返回的具体错误信息
+          if (typeof error.response.data === 'string') {
+            errorMsg = error.response.data
+          } else if (error.response.data.message) {
+            errorMsg = error.response.data.message
+          } else if (error.response.data.error) {
+            errorMsg = error.response.data.error
+          }
         } else if (error.response?.status === 400) {
           errorMsg = '注册信息有误，请检查输入'
+        } else if (error.response?.status === 409) {
+          errorMsg = '用户名或手机号已存在'
         } else if (error.response?.status === 500) {
           errorMsg = '服务器错误，请稍后重试'
         }
-        this.$message?.error(errorMsg)
+        
+        // 显示错误信息
+        this.showErrorMessage(errorMsg)
       } finally {
         this.isLoading = false
       }
@@ -679,22 +750,22 @@ export default {
     
     validateRegisterForm() {
       if (!this.registerForm.nickname || !this.registerForm.username || !this.registerForm.password) {
-        this.$message?.error('请填写完整的注册信息')
+        this.showErrorMessage('请填写完整的注册信息')
         return false
       }
       
       if (this.registerForm.password !== this.registerForm.confirmPassword) {
-        this.$message?.error('两次输入的密码不一致')
+        this.showErrorMessage('两次输入的密码不一致')
         return false
       }
       
       if (!this.registerForm.major) {
-        this.$message?.error('请选择您的专业')
+        this.showErrorMessage('请选择您的专业')
         return false
       }
       
       if (!this.registerForm.agreeTerms) {
-        this.$message?.error('请同意服务条款和隐私政策')
+        this.showErrorMessage('请同意服务条款和隐私政策')
         return false
       }
       
@@ -721,16 +792,16 @@ export default {
         
         this.closeMajorModal()
         this.showLearningDirectionModal = true
-        this.$message?.success('专业设置成功！')
+        this.showSuccessMessage('专业设置成功！')
       } catch (error) {
         console.error('保存专业失败:', error)
-        this.$message?.error('保存专业失败，请稍后重试')
+        this.showErrorMessage('保存专业失败，请稍后重试')
       }
     },
     
     async saveLearningDirections() {
       if (this.user.intestTypes.length === 0) {
-        this.$message?.error('请至少选择一个学习方向')
+        this.showErrorMessage('请至少选择一个学习方向')
         return
       }
       
@@ -741,14 +812,14 @@ export default {
         })
         
         this.closeLearningDirectionModal()
-        this.$message?.success('设置完成！欢迎加入Python学习平台')
+        this.showSuccessMessage('设置完成！欢迎加入Python学习平台')
         
         // 发送用户登录事件
         EventBus.emit('user-logged-in')
         this.$router.push('/')
       } catch (error) {
         console.error('保存学习方向失败:', error)
-        this.$message?.error('保存学习方向失败，请稍后重试')
+        this.showErrorMessage('保存学习方向失败，请稍后重试')
       }
     },
     
@@ -758,6 +829,32 @@ export default {
     
     closeLearningDirectionModal() {
       this.showLearningDirectionModal = false
+    },
+    
+    confirmRegisterSuccess() {
+      this.showRegisterSuccessModal = false
+      this.resetRegisterForm()
+      this.switchToLogin()
+      this.showSuccessMessage('请使用您的账号和密码登录')
+    },
+    
+    showErrorMessage(message) {
+      this.errorMessage = message
+      this.showErrorModal = true
+      // 3秒后自动隐藏
+      setTimeout(() => {
+        this.hideErrorMessage()
+      }, 3000)
+    },
+    
+    hideErrorMessage() {
+      this.showErrorModal = false
+      this.errorMessage = ''
+    },
+    
+    showSuccessMessage(message) {
+      // 使用alert作为简单的成功提示
+      alert(message)
     },
     
     parseIntestTypes(intestTypes) {
