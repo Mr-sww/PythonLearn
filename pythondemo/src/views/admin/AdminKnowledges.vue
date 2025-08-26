@@ -113,24 +113,9 @@
               <span>{{ getQuestionTitle(qid) }} (ID: {{ qid }})</span>
               <button type="button" class="remove-tag-btn" @click="removeQuestion(qid)">×</button>
             </div>
-            <input
-              type="text"
-              v-model="questionSearchQuery"
-              @input="searchProblems"
-              @keydown.enter.prevent="addFirstSearchResult"
-              placeholder="搜索并添加题目 (ID 或 标题)"
-              class="input search-input"
-            />
-            <div v-if="questionSearchResults.length > 0 && questionSearchQuery" class="search-results">
-              <div
-                v-for="p in questionSearchResults"
-                :key="p.id"
-                class="search-result-item"
-                @click="addQuestion(p.id)"
-              >
-                {{ p.title }} (ID: {{ p.id }})
-              </div>
-            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" @click="openAddQuestionsModal">
+              <i class="fas fa-plus"></i> 添加题目
+            </button>
           </div>
           <label>相关链接</label>
           <input class="input" v-model.trim="editForm.url" placeholder="请输入相关链接" />
@@ -141,12 +126,144 @@
         </div>
       </div>
     </div>
+
+    <!-- 添加题目模态框 -->
+    <div v-if="showAddQuestionsModal" class="modal-overlay" @click="closeAddQuestionsModal">
+      <div class="modal-content large" @click.stop>
+        <div class="modal-header">
+          <h3>添加关联题目</h3>
+          <button class="modal-close" @click="closeAddQuestionsModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="search-section">
+            <div class="search-header">
+              <input
+                type="text"
+                v-model="questionSearchQuery"
+                @input="searchProblems"
+                @keydown.enter.prevent="addFirstSearchResult"
+                placeholder="搜索题目 (ID 或 标题)"
+                class="input search-input-full"
+              />
+            </div>
+            
+            <!-- 筛选选项 -->
+            <div class="filter-section">
+              <div class="filter-group">
+                <label>难度筛选:</label>
+                <select v-model="difficultyFilter" @change="applyFilters" class="filter-select">
+                  <option value="">全部难度</option>
+                  <option value="简单">简单</option>
+                  <option value="中等">中等</option>
+                  <option value="困难">困难</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>排序方式:</label>
+                <select v-model="sortBy" @change="applyFilters" class="filter-select">
+                  <option value="id">按ID排序</option>
+                  <option value="title">按标题排序</option>
+                  <option value="difficulty">按难度排序</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 搜索结果或全部题目列表 -->
+            <div v-if="questionSearchQuery && questionSearchResults.length > 0" class="search-results-full">
+              <div class="results-header">
+                <span>搜索结果 ({{ questionSearchResults.length }})</span>
+              </div>
+              <div
+                v-for="p in questionSearchResults"
+                :key="p.id"
+                class="search-result-item-full"
+                :class="{ 'selected': selectedQuestions.some(id => id.toString() === p.id.toString()) }"
+                @click="toggleQuestionSelection(p.id)"
+              >
+                <div class="result-content">
+                  <div class="result-title">{{ p.title }}</div>
+                  <div class="result-meta">
+                    <span class="result-id">ID: {{ p.id }}</span>
+                    <span v-if="p.dif" class="result-difficulty">{{ p.dif }}</span>
+                  </div>
+                </div>
+                <div class="result-checkbox">
+                  <i v-if="selectedQuestions.some(id => id.toString() === p.id.toString())" class="fas fa-check"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- 全部题目列表 -->
+            <div v-else class="all-problems-section">
+              <div class="results-header">
+                <span>全部题目 ({{ filteredProblems.length }})</span>
+                <div class="pagination-controls">
+                  <button 
+                    class="btn btn-sm btn-outline-secondary" 
+                    :disabled="currentPage === 1" 
+                    @click="changePage(-1)"
+                  >
+                    上一页
+                  </button>
+                  <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                  <button 
+                    class="btn btn-sm btn-outline-secondary" 
+                    :disabled="currentPage === totalPages" 
+                    @click="changePage(1)"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
+              <div
+                v-for="p in paginatedProblems"
+                :key="p.id"
+                class="search-result-item-full"
+                :class="{ 'selected': selectedQuestions.some(id => id.toString() === p.id.toString()) }"
+                @click="toggleQuestionSelection(p.id)"
+              >
+                <div class="result-content">
+                  <div class="result-title">{{ p.title }}</div>
+                  <div class="result-meta">
+                    <span class="result-id">ID: {{ p.id }}</span>
+                    <span v-if="p.dif" class="result-difficulty">{{ p.dif }}</span>
+                  </div>
+                </div>
+                <div class="result-checkbox">
+                  <i v-if="selectedQuestions.some(id => id.toString() === p.id.toString())" class="fas fa-check"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="selectedQuestions.length > 0" class="selected-section">
+            <h4>已选择的题目 ({{ selectedQuestions.length }})</h4>
+            <div class="selected-questions">
+              <div v-for="qid in selectedQuestions" :key="qid" class="selected-question-tag">
+                <span>{{ getQuestionTitle(qid) }} (ID: {{ qid }})</span>
+                <button type="button" class="remove-tag-btn" @click="removeFromSelection(qid)">×</button>
+              </div>
+            </div>
+          </div>
+          <div v-else class="selected-section">
+            <h4>已选择的题目 (0)</h4>
+            <div class="no-selection">
+              <span>暂未选择任何题目</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" @click="confirmAddQuestions">确认添加</button>
+          <button class="btn btn-secondary" @click="closeAddQuestionsModal">取消</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
-const http = axios.create({ baseURL: 'http://localhost:8080/api', withCredentials: true })
+import http from '@/utils/http'
+
 export default {
   name: 'AdminKnowledges',
   data(){return{
@@ -164,6 +281,13 @@ export default {
     questionSearchQuery: '', // 关联题目搜索框的查询
     questionSearchResults: [], // 关联题目搜索结果
     problemListCache: [], // 缓存所有题目，用于搜索
+    showAddQuestionsModal: false, // 添加题目模态框
+    selectedQuestions: [], // 在添加模态框中选择的题目
+    showAllProblems: true, // 默认显示全部题目
+    difficultyFilter: '', // 难度筛选
+    sortBy: 'id', // 排序方式
+    currentPage: 1, // 当前页码
+    modalPageSize: 10, // 模态框每页显示数量
     editForm:{
       title:'',
       stage:'',
@@ -186,6 +310,38 @@ export default {
     editFormQuestionIds() {
       if (!this.editForm.question) return []
       return this.editForm.question.split(/[,，\s]+/).filter(id => id.trim())
+    },
+    filteredProblems() {
+      let problems = this.problemListCache
+      
+      // 难度筛选
+      if (this.difficultyFilter) {
+        problems = problems.filter(p => p.dif === this.difficultyFilter)
+      }
+      
+      // 排序
+      problems = [...problems].sort((a, b) => {
+        switch (this.sortBy) {
+          case 'title':
+            return a.title.localeCompare(b.title)
+          case 'difficulty': {
+            const difficultyOrder = { '简单': 1, '中等': 2, '困难': 3 }
+            return (difficultyOrder[a.dif] || 0) - (difficultyOrder[b.dif] || 0)
+          }
+          default: // id
+            return a.id - b.id
+        }
+      })
+      
+      return problems
+    },
+    totalPages() {
+      return Math.ceil(this.filteredProblems.length / this.modalPageSize)
+    },
+    paginatedProblems() {
+      const start = (this.currentPage - 1) * this.modalPageSize
+      const end = start + this.modalPageSize
+      return this.filteredProblems.slice(start, end)
     }
   },
   methods:{
@@ -268,7 +424,12 @@ export default {
     },
     getQuestionTitle(qid){
       // 从缓存中获取题目标题，如果没有则显示ID
-      return this.questionTitles[qid] || qid
+      const id = parseInt(qid)
+      if (isNaN(id)) {
+        // 如果是字符串ID，尝试在缓存中查找
+        return this.questionTitles[qid] || qid
+      }
+      return this.questionTitles[id] || `题目 ${id}`
     },
     async loadQuestionTitles(){
       // 加载所有题目的标题
@@ -278,9 +439,16 @@ export default {
         this.problemListCache = problems // 缓存所有题目
         const titles = {}
         problems.forEach(p => {
+          // 同时保存数字ID和字符串ID的映射
+          const id = parseInt(p.id)
+          if (!isNaN(id)) {
+            titles[id] = p.title || `无标题题目 (ID: ${id})`
+          }
+          // 也保存原始ID的映射
           titles[p.id] = p.title || `无标题题目 (ID: ${p.id})`
         })
         this.questionTitles = titles
+        console.log('加载的题目标题:', titles) // 调试信息
       } catch (e) {
         console.error('加载题目标题失败:', e)
       }
@@ -311,6 +479,68 @@ export default {
     addFirstSearchResult(){
       if (this.questionSearchResults.length > 0) {
         this.addQuestion(this.questionSearchResults[0].id)
+      }
+    },
+    openAddQuestionsModal(){
+      this.showAddQuestionsModal = true
+      // 初始化已选择的题目为当前已关联的题目
+      const currentIds = this.editFormQuestionIds
+      console.log('当前编辑表单的题目ID:', this.editForm.question)
+      console.log('解析后的题目ID:', currentIds)
+      
+      // 尝试将ID转换为数字，如果失败则保持原始字符串
+      this.selectedQuestions = currentIds.map(id => {
+        const numId = parseInt(id)
+        return isNaN(numId) ? id : numId
+      })
+      
+      console.log('初始化选中的题目:', this.selectedQuestions)
+      this.questionSearchQuery = ''
+      this.questionSearchResults = []
+      this.showAllProblems = true
+      this.difficultyFilter = ''
+      this.sortBy = 'id'
+      this.currentPage = 1
+    },
+    closeAddQuestionsModal(){
+      this.showAddQuestionsModal = false
+      this.selectedQuestions = []
+      this.questionSearchQuery = ''
+      this.questionSearchResults = []
+      this.showAllProblems = true
+      this.difficultyFilter = ''
+      this.sortBy = 'id'
+      this.currentPage = 1
+    },
+    toggleQuestionSelection(qid){
+      // 统一ID格式进行比较
+      const qidStr = qid.toString()
+      const index = this.selectedQuestions.findIndex(id => id.toString() === qidStr)
+      if (index > -1) {
+        this.selectedQuestions.splice(index, 1)
+      } else {
+        this.selectedQuestions.push(qid)
+      }
+    },
+    removeFromSelection(qid){
+      const qidStr = qid.toString()
+      const index = this.selectedQuestions.findIndex(id => id.toString() === qidStr)
+      if (index > -1) {
+        this.selectedQuestions.splice(index, 1)
+      }
+    },
+    confirmAddQuestions(){
+      // 直接使用选中的题目更新编辑表单
+      this.editForm.question = this.selectedQuestions.map(id => id.toString()).join(',')
+      this.closeAddQuestionsModal()
+    },
+    applyFilters(){
+      this.currentPage = 1 // 重置到第一页
+    },
+    changePage(delta){
+      const newPage = this.currentPage + delta
+      if (newPage >= 1 && newPage <= this.totalPages) {
+        this.currentPage = newPage
       }
     }
   }
@@ -446,6 +676,173 @@ export default {
 .search-result-item:hover {
   background-color: #f1f5f9;
 }
+
+/* 添加题目模态框样式 */
+.search-header {
+  margin-bottom: 15px;
+}
+
+.search-input-full {
+  width: 100%;
+}
+
+.filter-section {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 14px;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.filter-select {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #334155;
+  background-color: #fff;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.search-results-full {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.search-result-item-full {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s;
+}
+
+.search-result-item-full:last-child {
+  border-bottom: none;
+}
+
+.search-result-item-full:hover {
+  background-color: #f8fafc;
+}
+
+.search-result-item-full.selected {
+  background-color: #e0f2fe;
+  border-left: 3px solid #0ea5e9;
+}
+
+.result-content {
+  flex: 1;
+}
+
+.result-title {
+  font-weight: 500;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.result-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.result-id {
+  font-size: 12px;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.result-difficulty {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.result-checkbox {
+  color: #0ea5e9;
+  font-size: 16px;
+}
+
+.selected-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.selected-section h4 {
+  margin-bottom: 15px;
+  color: #334155;
+  font-size: 16px;
+}
+
+.selected-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selected-question-tag {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.no-selection {
+  padding: 20px;
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
 @media (max-width: 768px) {
   .header{ flex-direction:column; gap:12px; align-items:stretch }
   .actions{ flex-wrap:wrap }

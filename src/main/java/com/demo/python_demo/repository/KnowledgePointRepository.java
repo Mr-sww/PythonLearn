@@ -1,8 +1,7 @@
 package com.demo.python_demo.repository;
 
 import com.demo.python_demo.entity.KnowledgePoint;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
