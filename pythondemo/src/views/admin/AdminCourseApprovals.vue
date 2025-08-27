@@ -54,8 +54,12 @@ export default {
   methods: {
     fetch () {
       this.loading = true
-      axios.get(`http://localhost:8080/api/admin/course-requests?status=${this.status}`, { withCredentials: true })
-        .then(res => { this.list = res.data || [] })
+      axios.get(`http://localhost:8080/api/admin/courses`, { withCredentials: true })
+        .then(res => { 
+          // 筛选对应状态的课程
+          const allCourses = res.data || []
+          this.list = allCourses.filter(course => course.status === this.status)
+        })
         .catch(err => {
           if (err?.response?.status === 403) {
             alert('需要管理员登录后才能访问，请先登录');
@@ -68,7 +72,12 @@ export default {
     },
     review (id, approve) {
       const note = approve ? '同意' : '不符合要求'
-      axios.patch(`http://localhost:8080/api/admin/course-requests/${id}`, { approve, note }, { withCredentials: true })
+      const action = approve ? 'approve' : 'reject'
+      
+      axios.post(`http://localhost:8080/api/admin/courses/${id}/review`, { 
+        action: action, 
+        comment: note 
+      }, { withCredentials: true })
         .then(() => this.fetch())
         .catch(err => {
           if (err?.response?.status === 403) {

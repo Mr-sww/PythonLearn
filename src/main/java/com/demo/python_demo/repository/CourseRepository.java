@@ -18,7 +18,8 @@ public interface CourseRepository {
             "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
             "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
             "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
-            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, FromRequestID as fromRequestId, " +
+            "reviewComment, reviewedAt, reviewedBy " +
             "FROM course ORDER BY CreatedAt DESC")
     List<Course> findAll();
 
@@ -29,7 +30,8 @@ public interface CourseRepository {
             "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
             "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
             "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
-            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, FromRequestID as fromRequestId, " +
+            "reviewComment, reviewedAt, reviewedBy " +
             "FROM course WHERE ArticleID = #{articleId}")
     Course findById(Integer articleId);
 
@@ -62,20 +64,31 @@ public interface CourseRepository {
             "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
             "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
             "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
-            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, FromRequestID as fromRequestId, " +
+            "reviewComment, reviewedAt, reviewedBy " +
             "FROM course WHERE Status = #{status} ORDER BY CreatedAt DESC")
     List<Course> findByStatus(String status);
 
     /**
      * 获取已审核课程（审核历史）
      */
-    @Select("SELECT * FROM course WHERE Status IN ('approved', 'rejected') AND reviewedBy IS NOT NULL ORDER BY reviewedAt DESC")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course WHERE Status IN ('approved', 'rejected') AND reviewedBy IS NOT NULL ORDER BY reviewedAt DESC")
     List<Course> findReviewedCourses();
 
     /**
      * 搜索课程（标题、内容、标签）
      */
-    @Select("SELECT * FROM course WHERE Title LIKE CONCAT('%', #{keyword}, '%') " +
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course WHERE Title LIKE CONCAT('%', #{keyword}, '%') " +
             "OR Content LIKE CONCAT('%', #{keyword}, '%') " +
             "OR Tags LIKE CONCAT('%', #{keyword}, '%') " +
             "ORDER BY CreatedAt DESC")
@@ -84,13 +97,23 @@ public interface CourseRepository {
     /**
      * 获取热门课程（按浏览量排序）
      */
-    @Select("SELECT * FROM course ORDER BY Views DESC LIMIT #{limit}")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course ORDER BY Views DESC LIMIT #{limit}")
     List<Course> findPopularCourses(Integer limit);
 
     /**
      * 获取最新课程
      */
-    @Select("SELECT * FROM course ORDER BY PublicationDate DESC LIMIT #{limit}")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course ORDER BY PublicationDate DESC LIMIT #{limit}")
     List<Course> findLatestCourses(Integer limit);
 
     /**
@@ -132,7 +155,12 @@ public interface CourseRepository {
     /**
      * 分页查询课程
      */
-    @Select("SELECT * FROM course ORDER BY CreatedAt DESC LIMIT #{offset}, #{limit}")
+    @Select("SELECT ArticleID as articleId, Title as title, URL as url, PublicationDate as publicationDate, " +
+            "Content as content, Author as author, Category as category, Tags as tags, Views as views, " +
+            "Rating as rating, Duration as duration, Lessons as lessons, Difficulty as difficulty, " +
+            "CoverImage as coverImage, AuthorAvatar as authorAvatar, Status as status, " +
+            "CreatedAt as createdAt, UpdatedAt as updatedAt, reviewComment, reviewedAt, reviewedBy " +
+            "FROM course ORDER BY CreatedAt DESC LIMIT #{offset}, #{limit}")
     List<Course> findWithPagination(@Param("offset") int offset, @Param("limit") int limit);
 
     /**

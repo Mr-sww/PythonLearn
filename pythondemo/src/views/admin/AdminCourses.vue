@@ -27,21 +27,21 @@
         <p>暂无课程数据</p>
       </div>
       
-      <div v-else v-for="course in filteredCourses" :key="course.courseId" class="course-card">
+      <div v-else v-for="course in filteredCourses" :key="course.articleId" class="course-card">
         <div class="course-header">
-          <h3 class="course-title">{{ course.courseName }}</h3>
+          <h3 class="course-title">{{ course.title }}</h3>
           <span :class="['course-status', course.status]">{{ getStatusText(course.status) }}</span>
         </div>
         <div class="course-content">
-          <p class="course-desc">{{ course.description }}</p>
+          <p class="course-desc">{{ course.content || '暂无描述' }}</p>
           <div class="course-meta">
             <span class="meta-item">
               <i class="fas fa-user"></i>
-              {{ course.teacherName || '未知教师' }}
+              {{ course.author || '未知教师' }}
             </span>
             <span class="meta-item">
               <i class="fas fa-calendar"></i>
-              创建时间：{{ course.createTime || '未知' }}
+              创建时间：{{ formatDate(course.createdAt) || '未知' }}
             </span>
             <span class="meta-item">
               <i class="fas fa-clock"></i>
@@ -50,7 +50,7 @@
           </div>
         </div>
         <div class="course-actions">
-          <button class="btn btn-info" @click="viewCourse(course.courseId)">
+          <button class="btn btn-info" @click="viewCourse(course.articleId)">
             <i class="fas fa-eye"></i>
             查看
           </button>
@@ -62,7 +62,7 @@
             <i class="fas fa-times"></i>
             拒绝
           </button>
-          <button class="btn btn-secondary" @click="editCourse(course.courseId)">
+          <button class="btn btn-secondary" @click="editCourse(course.articleId)">
             <i class="fas fa-edit"></i>
             编辑
           </button>
@@ -81,8 +81,8 @@
         </div>
         <div class="modal-body">
           <div class="course-info">
-            <h4>{{ selectedCourse?.courseName }}</h4>
-            <p>{{ selectedCourse?.description }}</p>
+            <h4>{{ selectedCourse?.title }}</h4>
+            <p>{{ selectedCourse?.content || '暂无描述' }}</p>
           </div>
           <div class="review-form">
             <label>审核意见：</label>
@@ -98,14 +98,14 @@
           <button 
             v-if="selectedCourse?.status === 'pending'"
             class="btn btn-success" 
-            @click="approveCourse(selectedCourse.courseId)"
+            @click="approveCourse(selectedCourse.articleId)"
           >
             通过
           </button>
           <button 
             v-if="selectedCourse?.status === 'pending'"
-            class="btn btn-warning" 
-            @click="rejectCourse(selectedCourse.courseId)"
+            class="button btn-warning" 
+            @click="rejectCourse(selectedCourse.articleId)"
           >
             拒绝
           </button>
@@ -211,12 +211,12 @@ export default {
     generateCSV() {
       const headers = ['课程ID', '课程名称', '描述', '教师', '状态', '创建时间']
       const rows = this.courses.map(course => [
-        course.courseId,
-        course.courseName,
-        course.description,
-        course.teacherName,
+        course.articleId,
+        course.title,
+        course.content || '暂无描述',
+        course.author || '未知教师',
         this.getStatusText(course.status),
-        course.createTime
+        this.formatDate(course.createdAt) || '未知'
       ])
       
       return [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -234,6 +234,11 @@ export default {
     getCurrentUserId() {
       const user = JSON.parse(localStorage.getItem('user') || '{}')
       return user.userId || 1
+    },
+    
+    formatDate(date) {
+      if (!date) return null
+      return new Date(date).toLocaleDateString('zh-CN')
     }
   }
 }

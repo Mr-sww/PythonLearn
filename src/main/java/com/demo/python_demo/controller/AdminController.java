@@ -10,14 +10,19 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.demo.python_demo.entity.User;
+import com.demo.python_demo.service.UserService;
+import com.demo.python_demo.config.CourseConfig;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true")
 public class AdminController {
     
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 获取所有课程（管理员视图）
@@ -35,6 +40,25 @@ public class AdminController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("获取课程列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取待审核课程（专门用于课程审核页面）
+     */
+    @GetMapping("/courses/pending")
+    public ResponseEntity<?> getPendingCourses() {
+        try {
+            List<Course> pendingCourses = courseRepository.findByStatus("pending");
+            // 添加调试信息
+            System.out.println("Pending courses found: " + pendingCourses.size());
+            for (Course course : pendingCourses) {
+                System.out.println("Pending Course: " + course.getTitle() + ", Author: " + course.getAuthor());
+            }
+            return ResponseEntity.ok(pendingCourses);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("获取待审核课程失败: " + e.getMessage());
         }
     }
 
@@ -183,24 +207,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * 获取待审核课程列表（课程审核功能）
-     */
-    @GetMapping("/courses/pending")
-    public ResponseEntity<?> getPendingCourses() {
-        try {
-            List<Course> pendingCourses = courseRepository.findByStatus("pending");
-            // 添加调试信息
-            System.out.println("Pending courses found: " + pendingCourses.size());
-            for (Course course : pendingCourses) {
-                System.out.println("Pending Course: " + course.getTitle() + ", Status: " + course.getStatus());
-            }
-            return ResponseEntity.ok(pendingCourses);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("获取待审核课程失败: " + e.getMessage());
-        }
-    }
+
 
     /**
      * 获取已通过课程列表（课程管理功能）
@@ -379,6 +386,124 @@ public class AdminController {
             return ResponseEntity.ok(courses);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("根据分类搜索课程失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 用户管理接口 ====================
+
+    /**
+     * 获取所有用户（管理员视图）
+     */
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            List<User> users = userService.getAllUsers();
+            
+            // 为状态为NULL的用户设置默认状态
+            for (User user : users) {
+                if (user.getStatus() == null || user.getStatus().trim().isEmpty()) {
+                    user.setStatus("active"); // 默认状态为active
+                }
+            }
+            
+            // 添加调试信息
+            System.out.println("Total users found: " + users.size());
+            for (User user : users) {
+                System.out.println("User: " + user.getAccount() + ", Status: " + user.getStatus() + ", Role: " + CourseConfig.getUserRoleText(user.getGroupType()));
+            }
+            
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("获取用户列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新用户状态
+     */
+    @PutMapping("/users/{userId}/status")
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable Integer userId,
+            @RequestParam String status) {
+        try {
+            User user = userService.getUserById(userId).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // 验证状态值
+            if (!"active".equals(status) && !"inactive".equals(status)) {
+                return ResponseEntity.badRequest().body("状态值无效，必须是 'active' 或 'inactive'");
+            }
+
+            user.setStatus(status);
+            userService.updateUser(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "用户状态更新成功");
+            response.put("userId", userId);
+            response.put("status", status);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("更新用户状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新用户角色
+     */
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<?> updateUserRole(
+            @PathVariable Integer userId,
+            @RequestParam Integer groupType) {
+        try {
+            User user = userService.getUserById(userId).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // 验证角色值 (1-6: 专业学生, 7: 教师, 8: 管理员)
+            if (!CourseConfig.isValidUserRole(groupType)) {
+                return ResponseEntity.badRequest().body("角色值无效，必须是 1-8");
+            }
+
+            user.setGroupType(groupType);
+            userService.updateUser(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "用户角色更新成功");
+            response.put("userId", userId);
+            response.put("groupType", groupType);
+            response.put("roleText", CourseConfig.getUserRoleText(groupType));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("更新用户角色失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除用户
+     */
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
+        try {
+            User user = userService.getUserById(userId).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            userService.deleteUser(userId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "用户删除成功");
+            response.put("userId", userId);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("删除用户失败: " + e.getMessage());
         }
     }
 } 

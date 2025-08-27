@@ -231,28 +231,27 @@ export default {
 
     const getRoleText = (groupType) => {
       switch (groupType) {
-        case 1: return '计算机类学生'
-        case 2: return '工设类学生'
-        case 3: return '艺术类学生'
-        case 4: return '医学类学生'
-        case 5: return '文科类学生'
-        case 6: return '体育类学生'
-        case 7: return '其他专业学生'
-        case 8: return '教师'
-        case 9: return '管理员'
+        case 1: return '计算机类'
+        case 2: return '工设类'
+        case 3: return '艺术类'
+        case 4: return '医学类'
+        case 5: return '文科类'
+        case 6: return '体育类'
+        case 7: return '教师'
+        case 8: return '管理员'
         default: return '未知'
       }
     }
 
     const getRoleBadgeClass = (groupType) => {
-      if (groupType >= 1 && groupType <= 7) {
-        return 'badge badge-primary'
+      if (groupType >= 1 && groupType <= 6) {
+        return 'badge badge-primary'  // 学生角色 - 蓝色
+      } else if (groupType === 7) {
+        return 'badge badge-warning'  // 教师角色 - 黄色
       } else if (groupType === 8) {
-        return 'badge badge-warning'
-      } else if (groupType === 9) {
-        return 'badge badge-danger'
+        return 'badge badge-danger'   // 管理员角色 - 红色
       }
-      return 'badge badge-secondary'
+      return 'badge badge-secondary'  // 默认样式
     }
 
     const getStatusText = (status) => {

@@ -333,9 +333,8 @@ export default {
       }
 
       try {
-        const response = await axios.get(`/api/courses/${courseId}`)
-        this.course = response.data
-        this.loadRelatedCourses()
+        // 暂时使用模拟数据，因为后端还没有实现课程详情接口
+        this.loadMockCourse(courseId)
       } catch (error) {
         console.error('加载课程详情失败:', error)
         // 使用模拟数据
@@ -368,10 +367,8 @@ export default {
     // 加载相关课程
     async loadRelatedCourses() {
       try {
-        const response = await axios.get('/api/courses/recommended', {
-          params: { limit: 4 }
-        })
-        this.relatedCourses = response.data
+        // 暂时使用模拟数据，因为后端还没有实现推荐接口
+        this.loadMockRelatedCourses()
       } catch (error) {
         console.error('加载相关课程失败:', error)
         // 使用模拟数据
@@ -405,6 +402,9 @@ export default {
 
     // 格式化数字
     formatNumber(num) {
+      if (num === null || num === undefined) {
+        return '0'
+      }
       if (num >= 10000) {
         return (num / 10000).toFixed(1) + '万'
       }

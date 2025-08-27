@@ -257,86 +257,32 @@
 
     <!-- 课程管理标签页 -->
     <div v-else-if="activeTab === 'management'">
-      <!-- 筛选和搜索栏 -->
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div class="flex flex-col md:flex-row gap-4 items-center">
-            <select 
-              v-model="managementFilterStatus" 
-              class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="approved">已通过</option>
-              <option value="active">已发布</option>
-              <option value="draft">草稿</option>
-            </select>
-            
-            <input 
-              v-model="managementSearchKeyword" 
-              placeholder="搜索课程标题或教师姓名" 
-              class="border rounded-lg px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-            />
-            
-            <button 
-              @click="refreshManagementData" 
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <i class="fa fa-refresh mr-2"></i>刷新
-            </button>
-          </div>
-          
-          <div class="flex gap-2">
-            <button 
-              @click="showBatchDeleteModal = true" 
-              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
-            >
-              <i class="fa fa-trash mr-2"></i>批量删除
-            </button>
-            <button 
-              @click="exportManagementData" 
-              class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
-            >
-              <i class="fa fa-download mr-2"></i>导出数据
-            </button>
-          </div>
-        </div>
+      <!-- 页面标题 -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">课程管理</h1>
+        <p class="text-gray-600">管理已通过审核的课程</p>
       </div>
 
-      <!-- 课程管理列表 -->
-      <div class="space-y-6">
-        <div v-for="course in managementCourses" :key="course.articleId" class="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-          <div class="p-6">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ course.title }}</h3>
-                <p class="text-gray-600 text-sm mb-2">{{ course.content || '暂无描述' }}</p>
-                <div class="flex items-center gap-4 text-sm text-gray-500">
-                  <span>教师：{{ course.author }}</span>
-                  <span>分类：{{ course.category || '未分类' }}</span>
-                  <span>状态：{{ getStatusText(course.status) }}</span>
-                </div>
-              </div>
-              
-              <div class="flex flex-col gap-2 ml-6">
-                <button 
-                  @click="viewCourse(course)" 
-                  class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  查看详情
-                </button>
-                <button 
-                  @click="editCourse(course)" 
-                  class="px-4 py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-colors"
-                >
-                  编辑
-                </button>
-                <button 
-                  @click="deleteCourse(course)" 
-                  class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  删除
-                </button>
-              </div>
-            </div>
+      <!-- 简单的课程管理界面 -->
+      <div class="bg-white rounded-lg shadow-sm p-8">
+        <div class="text-center">
+          <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mb-6">
+            <i class="fa fa-cogs text-4xl text-blue-600"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">课程管理功能</h3>
+          <p class="text-gray-500 mb-6">这里将用于管理已通过审核的课程</p>
+          
+          <!-- 简单的管理功能按钮 -->
+          <div class="flex flex-wrap justify-center gap-4">
+            <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fa fa-list mr-2"></i>查看所有课程
+            </button>
+            <button class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <i class="fa fa-chart-bar mr-2"></i>课程统计
+            </button>
+            <button class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+              <i class="fa fa-cog mr-2"></i>系统设置
+            </button>
           </div>
         </div>
       </div>
@@ -538,6 +484,7 @@ export default {
       courses: [],
       managementCourses: [],
       loading: false,
+      managementLoading: false,
       filterStatus: 'pending',
       managementFilterStatus: 'approved',
       searchKeyword: '',
@@ -592,6 +539,22 @@ export default {
 
     totalPages() {
       return Math.max(1, Math.ceil(this.filteredCourses.length / this.pageSize))
+    },
+
+    filteredManagementCourses() {
+      let filtered = this.managementCourses
+
+      // 关键词搜索
+      if (this.managementSearchKeyword) {
+        const keyword = this.managementSearchKeyword.toLowerCase()
+        filtered = filtered.filter(c => 
+          c.title.toLowerCase().includes(keyword) ||
+          c.author.toLowerCase().includes(keyword) ||
+          (c.content && c.content.toLowerCase().includes(keyword))
+        )
+      }
+
+      return filtered
     }
   },
 
@@ -605,8 +568,15 @@ export default {
     async fetchCourses() {
       this.loading = true
       try {
+        // 直接获取所有课程，前端筛选待审核的
         const response = await axios.get('http://localhost:8080/api/admin/courses', { withCredentials: true })
         this.courses = response.data || []
+        console.log('Fetched all courses:', this.courses.length)
+        
+        // 筛选待审核的课程
+        const pendingCourses = this.courses.filter(c => c.status === 'pending')
+        console.log('Pending courses found:', pendingCourses.length)
+        
       } catch (err) {
         console.error('Failed to fetch courses:', err)
         this.courses = []
@@ -616,12 +586,18 @@ export default {
     },
 
     async fetchManagementCourses() {
+      this.managementLoading = true
       try {
+        console.log('Fetching management courses with status:', this.managementFilterStatus)
         const response = await axios.get(`http://localhost:8080/api/admin/courses/search/status?status=${this.managementFilterStatus}`, { withCredentials: true })
         this.managementCourses = response.data || []
+        console.log('Management courses fetched:', this.managementCourses.length)
+        console.log('Management courses data:', this.managementCourses)
       } catch (err) {
         console.error('Failed to fetch management courses:', err)
         this.managementCourses = []
+      } finally {
+        this.managementLoading = false
       }
     },
 
@@ -850,6 +826,24 @@ export default {
       if (this.filterStatus === 'rejected') return '当前没有已拒绝的课程'
       if (this.searchKeyword) return `没有找到包含"${this.searchKeyword}"的课程`
       return '当前没有课程数据'
+    },
+
+    // 切换课程发布状态
+    async toggleCourseStatus(course) {
+      try {
+        const newStatus = course.status === 'active' ? 'approved' : 'active'
+        const response = await axios.put(`http://localhost:8080/api/admin/courses/${course.articleId}/status`, {
+          status: newStatus
+        }, { withCredentials: true })
+        
+        if (response.status === 200) {
+          course.status = newStatus
+          this.$toast?.success?.(`课程已${newStatus === 'active' ? '发布' : '暂停发布'}`)
+        }
+      } catch (err) {
+        console.error('Failed to toggle course status:', err)
+        this.$toast?.error?.('操作失败，请重试')
+      }
     }
   }
 }

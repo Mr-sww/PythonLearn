@@ -37,3 +37,4 @@ INSERT INTO user (phone, account, password, nickname, group_type, email) VALUES
 -- 6. 验证插入结果
 SELECT * FROM user;
 
+

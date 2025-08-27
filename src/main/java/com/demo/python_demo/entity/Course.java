@@ -26,6 +26,9 @@ public class Course {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // 新增字段，与数据库表结构匹配
+    private Integer fromRequestId;
+    
     // 审核相关字段
     private String reviewComment;
     private LocalDateTime reviewedAt;
@@ -225,6 +228,15 @@ public class Course {
         this.reviewedBy = reviewedBy;
     }
 
+    // 新增字段的getter和setter
+    public Integer getFromRequestId() {
+        return fromRequestId;
+    }
+
+    public void setFromRequestId(Integer fromRequestId) {
+        this.fromRequestId = fromRequestId;
+    }
+
     @Override
     public String toString() {
         return "Course{" +
@@ -240,6 +252,7 @@ public class Course {
                 ", status='" + status + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", fromRequestId=" + fromRequestId +
                 ", reviewComment='" + reviewComment + '\'' +
                 ", reviewedAt=" + reviewedAt +
                 ", reviewedBy=" + reviewedBy +
