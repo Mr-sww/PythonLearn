@@ -119,9 +119,9 @@ public class AdminController {
                 return ResponseEntity.notFound().build();
             }
 
-            // 状态验证
-            if (!"pending".equals(course.getStatus())) {
-                return ResponseEntity.badRequest().body("只能审核待审核状态的课程");
+            // 状态验证 - 允许重新审核已审核的课程
+            if (!"pending".equals(course.getStatus()) && !"approved".equals(course.getStatus()) && !"rejected".equals(course.getStatus())) {
+                return ResponseEntity.badRequest().body("课程状态无效，无法进行审核操作");
             }
 
             // 拒绝时必须填写理由
@@ -209,9 +209,10 @@ public class AdminController {
                         continue;
                     }
                     
-                    if (!"pending".equals(course.getStatus())) {
+                    // 允许重新审核已审核的课程
+                    if (!"pending".equals(course.getStatus()) && !"approved".equals(course.getStatus()) && !"rejected".equals(course.getStatus())) {
                         failCount++;
-                        failedReasons.add("课程 " + course.getTitle() + " 不是待审核状态");
+                        failedReasons.add("课程 " + course.getTitle() + " 状态无效，无法进行审核操作");
                         continue;
                     }
                     
@@ -635,6 +636,236 @@ public class AdminController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("批量删除失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取所有用户（管理员视图）
+     */
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            List<User> users = userService.getAllUsers();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("获取用户列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户统计信息
+     */
+    @GetMapping("/users/stats")
+    public ResponseEntity<?> getUserStats() {
+        try {
+            List<User> users = userService.getAllUsers();
+            
+            int total = users.size();
+            int active = (int) users.stream().filter(u -> "active".equals(u.getStatus())).count();
+            int inactive = (int) users.stream().filter(u -> "inactive".equals(u.getStatus())).count();
+            int students = (int) users.stream().filter(u -> u.getGroupType() >= 1 && u.getGroupType() <= 6).count();
+            int teachers = (int) users.stream().filter(u -> u.getGroupType() == 7).count();
+            int admins = (int) users.stream().filter(u -> u.getGroupType() == 8).count();
+
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("total", total);
+            stats.put("active", active);
+            stats.put("inactive", inactive);
+            stats.put("students", students);
+            stats.put("teachers", teachers);
+            stats.put("admins", admins);
+
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("获取用户统计信息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 搜索用户
+     */
+    @GetMapping("/users/search")
+    public ResponseEntity<?> searchUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer groupType,
+            @RequestParam(required = false) String status) {
+        try {
+            List<User> users = userService.searchUsers(keyword, groupType, status);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("搜索用户失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新用户状态（封禁/解封）
+     */
+    @PutMapping("/users/{userId}/status")
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable Integer userId,
+            @RequestBody Map<String, Object> requestBody) {
+        try {
+            if (userId == null) {
+                return ResponseEntity.badRequest().body("用户ID不能为空");
+            }
+            
+            String status = (String) requestBody.get("status");
+            if (status == null || (!"active".equals(status) && !"inactive".equals(status))) {
+                return ResponseEntity.badRequest().body("状态值无效，必须是 'active' 或 'inactive'");
+            }
+            
+            boolean success = userService.updateUserStatus(userId, status);
+            if (success) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "用户状态更新成功");
+                response.put("userId", userId);
+                response.put("newStatus", status);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("用户状态更新失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("更新用户状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新用户角色
+     */
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<?> updateUserRole(
+            @PathVariable Integer userId,
+            @RequestBody Map<String, Object> requestBody) {
+        try {
+            if (userId == null) {
+                return ResponseEntity.badRequest().body("用户ID不能为空");
+            }
+            
+            Object groupTypeObj = requestBody.get("groupType");
+            if (groupTypeObj == null) {
+                return ResponseEntity.badRequest().body("角色类型不能为空");
+            }
+            
+            Integer groupType;
+            try {
+                groupType = Integer.parseInt(groupTypeObj.toString());
+            } catch (NumberFormatException e) {
+                return ResponseEntity.badRequest().body("角色类型必须是数字");
+            }
+            
+            if (groupType < 1 || groupType > 8) {
+                return ResponseEntity.badRequest().body("角色类型无效，必须在 1-8 范围内");
+            }
+            
+            boolean success = userService.updateUserGroupType(userId, groupType);
+            if (success) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "用户角色更新成功");
+                response.put("userId", userId);
+                response.put("newGroupType", groupType);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("用户角色更新失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("更新用户角色失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除用户
+     */
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
+        try {
+            if (userId == null) {
+                return ResponseEntity.badRequest().body("用户ID不能为空");
+            }
+            
+            boolean success = userService.deleteUser(userId);
+            if (success) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "用户删除成功");
+                response.put("userId", userId);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("用户删除失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("删除用户失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 添加新用户
+     */
+    @PostMapping("/users")
+    public ResponseEntity<?> addUser(@RequestBody User user) {
+        try {
+            if (user.getAccount() == null || user.getAccount().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("账号不能为空");
+            }
+            
+            if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("密码不能为空");
+            }
+            
+            if (user.getGroupType() == null || user.getGroupType() < 1 || user.getGroupType() > 8) {
+                return ResponseEntity.badRequest().body("角色类型无效，必须在 1-8 范围内");
+            }
+            
+            // 设置默认值
+            if (user.getStatus() == null) {
+                user.setStatus("active");
+            }
+            
+            User newUser = userService.createUser(user);
+            if (newUser != null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "用户添加成功");
+                response.put("user", newUser);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("用户添加失败，可能是账号已存在");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("添加用户失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取单个用户详情
+     */
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<?> getUserDetail(@PathVariable Integer userId) {
+        try {
+            if (userId == null) {
+                return ResponseEntity.badRequest().body("用户ID不能为空");
+            }
+            
+            User user = userService.getUserById(userId).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("user", user);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("获取用户详情失败: " + e.getMessage());
         }
     }
 } 

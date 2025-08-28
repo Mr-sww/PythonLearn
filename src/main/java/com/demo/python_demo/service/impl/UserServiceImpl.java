@@ -73,8 +73,47 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        // TODO: 实现用户创建逻辑
-        return null;
+        try {
+            // 检查账号是否已存在
+            User existingUser = userRepository.findByAccount(user.getAccount());
+            if (existingUser != null) {
+                return null; // 账号已存在
+            }
+            
+            // 检查手机号是否已存在（如果提供了手机号）
+            if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+                User existingPhoneUser = userRepository.findByPhone(user.getPhone());
+                if (existingPhoneUser != null) {
+                    return null; // 手机号已存在
+                }
+            }
+            
+            // 设置默认值
+            if (user.getStatus() == null) {
+                user.setStatus("active");
+            }
+            
+            if (user.getGroupType() == null) {
+                user.setGroupType(1); // 默认为学生
+            }
+            
+            // 加密密码
+            if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+            
+            // 插入用户
+            int result = userRepository.insert(user);
+            if (result > 0) {
+                // 返回创建成功的用户（包含生成的ID）
+                return user;
+            }
+            
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
