@@ -130,7 +130,9 @@ public interface CourseRepository {
     @Update("UPDATE course SET Title = #{title}, PublicationDate = #{publicationDate}, " +
             "Content = #{content}, Author = #{author}, Category = #{category}, Tags = #{tags}, " +
             "Views = #{views}, Rating = #{rating}, Duration = #{duration}, Lessons = #{lessons}, " +
-            "Difficulty = #{difficulty}, CoverImage = #{coverImage}, UpdatedAt = CURRENT_TIMESTAMP " +
+            "Difficulty = #{difficulty}, CoverImage = #{coverImage}, Status = #{status}, " +
+            "reviewComment = #{reviewComment}, reviewedAt = #{reviewedAt}, reviewedBy = #{reviewedBy}, " +
+            "UpdatedAt = #{updatedAt} " +
             "WHERE ArticleID = #{articleId}")
     int update(Course course);
 

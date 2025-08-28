@@ -3,7 +3,7 @@
     <!-- 页面标题 -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-2">课程审核管理</h1>
-      <p class="text-gray-600">管理待审核的课程申请和已通过的课程</p>
+      <p class="text-gray-600">管理待审核的课程申请</p>
     </div>
 
     <!-- 统计卡片 -->
@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <!-- 功能切换标签 -->
+    <!-- 功能标签（仅保留课程审核） -->
     <div class="bg-white rounded-lg shadow-sm mb-6">
       <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8 px-6">
@@ -65,23 +65,10 @@
             @click="activeTab = 'review'" 
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm',
-              activeTab === 'review' 
-                ? 'border-blue-500 text-blue-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              'border-blue-500 text-blue-600'
             ]"
           >
             课程审核
-          </button>
-          <button 
-            @click="activeTab = 'management'" 
-            :class="[
-              'py-4 px-1 border-b-2 font-medium text-sm',
-              activeTab === 'management' 
-                ? 'border-blue-500 text-blue-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            ]"
-          >
-            课程管理
           </button>
         </nav>
       </div>
@@ -255,38 +242,7 @@
       </div>
     </div>
 
-    <!-- 课程管理标签页 -->
-    <div v-else-if="activeTab === 'management'">
-      <!-- 页面标题 -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">课程管理</h1>
-        <p class="text-gray-600">管理已通过审核的课程</p>
-      </div>
-
-      <!-- 简单的课程管理界面 -->
-      <div class="bg-white rounded-lg shadow-sm p-8">
-        <div class="text-center">
-          <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mb-6">
-            <i class="fa fa-cogs text-4xl text-blue-600"></i>
-          </div>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">课程管理功能</h3>
-          <p class="text-gray-500 mb-6">这里将用于管理已通过审核的课程</p>
-          
-          <!-- 简单的管理功能按钮 -->
-          <div class="flex flex-wrap justify-center gap-4">
-            <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              <i class="fa fa-list mr-2"></i>查看所有课程
-            </button>
-            <button class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              <i class="fa fa-chart-bar mr-2"></i>课程统计
-            </button>
-            <button class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
-              <i class="fa fa-cog mr-2"></i>系统设置
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- 课程管理标签页已移除 -->
 
     <!-- 分页 -->
     <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-8">
@@ -318,8 +274,8 @@
       <div class="p-6">
         <div class="mb-4">
           <h4 class="font-medium text-gray-700 mb-2">课程信息</h4>
-          <p class="text-sm text-gray-600">{{ selectedCourse?.title }}</p>
-          <p class="text-sm text-gray-600">教师：{{ selectedCourse?.author }}</p>
+          <p class="text-sm text-gray-600">{{ selectedCourse && selectedCourse.title }}</p>
+          <p class="text-sm text-gray-600">教师：{{ selectedCourse && selectedCourse.author }}</p>
         </div>
         
         <div class="mb-4">
@@ -482,13 +438,9 @@ export default {
     return {
       activeTab: 'review',
       courses: [],
-      managementCourses: [],
       loading: false,
-      managementLoading: false,
       filterStatus: 'pending',
-      managementFilterStatus: 'approved',
       searchKeyword: '',
-      managementSearchKeyword: '',
       currentPage: 1,
       pageSize: 10,
       stats: {
@@ -539,29 +491,12 @@ export default {
 
     totalPages() {
       return Math.max(1, Math.ceil(this.filteredCourses.length / this.pageSize))
-    },
-
-    filteredManagementCourses() {
-      let filtered = this.managementCourses
-
-      // 关键词搜索
-      if (this.managementSearchKeyword) {
-        const keyword = this.managementSearchKeyword.toLowerCase()
-        filtered = filtered.filter(c => 
-          c.title.toLowerCase().includes(keyword) ||
-          c.author.toLowerCase().includes(keyword) ||
-          (c.content && c.content.toLowerCase().includes(keyword))
-        )
-      }
-
-      return filtered
     }
   },
 
   mounted() {
     this.fetchCourses()
     this.fetchStats()
-    this.fetchManagementCourses()
   },
 
   methods: {
@@ -582,22 +517,6 @@ export default {
         this.courses = []
       } finally {
         this.loading = false
-      }
-    },
-
-    async fetchManagementCourses() {
-      this.managementLoading = true
-      try {
-        console.log('Fetching management courses with status:', this.managementFilterStatus)
-        const response = await axios.get(`http://localhost:8080/api/admin/courses/search/status?status=${this.managementFilterStatus}`, { withCredentials: true })
-        this.managementCourses = response.data || []
-        console.log('Management courses fetched:', this.managementCourses.length)
-        console.log('Management courses data:', this.managementCourses)
-      } catch (err) {
-        console.error('Failed to fetch management courses:', err)
-        this.managementCourses = []
-      } finally {
-        this.managementLoading = false
       }
     },
 
@@ -626,10 +545,6 @@ export default {
       this.currentPage = 1
     },
 
-    refreshManagementData() {
-      this.fetchManagementCourses()
-    },
-
     exportData() {
       const data = this.filteredCourses.map(c => ({
         标题: c.title,
@@ -649,23 +564,6 @@ export default {
       link.click()
     },
 
-    exportManagementData() {
-      const data = this.managementCourses.map(c => ({
-        标题: c.title,
-        教师: c.author,
-        分类: c.category,
-        状态: this.getStatusText(c.status),
-        创建时间: this.formatDate(c.createdAt),
-        更新时间: this.formatDate(c.updatedAt)
-      }))
-
-      const csv = this.convertToCSV(data)
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = `课程管理数据_${new Date().toISOString().split('T')[0]}.csv`
-      link.click()
-    },
 
     convertToCSV(data) {
       if (data.length === 0) return ''
@@ -720,7 +618,7 @@ export default {
         this.showReviewModal = false
         this.refreshData()
       } catch (err) {
-        alert('审核操作失败：' + (err.response?.data || err.message))
+        alert('审核操作失败：' + ((err.response && err.response.data) || err.message))
       }
     },
 
@@ -751,23 +649,10 @@ export default {
         this.showBatchReviewModal = false
         this.refreshData()
       } catch (err) {
-        alert('批量审核失败：' + (err.response?.data || err.message))
+        alert('批量审核失败：' + ((err.response && err.response.data) || err.message))
       }
     },
 
-    async deleteCourse(course) {
-      if (!confirm(`确定要删除课程"${course.title}"吗？`)) {
-        return
-      }
-
-      try {
-        await axios.delete(`http://localhost:8080/api/admin/courses/${course.articleId}`, { withCredentials: true })
-        alert('课程删除成功！')
-        this.refreshManagementData()
-      } catch (err) {
-        alert('删除失败：' + (err.response?.data || err.message))
-      }
-    },
 
     getStatusText(status) {
       const statusMap = {
@@ -826,24 +711,6 @@ export default {
       if (this.filterStatus === 'rejected') return '当前没有已拒绝的课程'
       if (this.searchKeyword) return `没有找到包含"${this.searchKeyword}"的课程`
       return '当前没有课程数据'
-    },
-
-    // 切换课程发布状态
-    async toggleCourseStatus(course) {
-      try {
-        const newStatus = course.status === 'active' ? 'approved' : 'active'
-        const response = await axios.put(`http://localhost:8080/api/admin/courses/${course.articleId}/status`, {
-          status: newStatus
-        }, { withCredentials: true })
-        
-        if (response.status === 200) {
-          course.status = newStatus
-          this.$toast?.success?.(`课程已${newStatus === 'active' ? '发布' : '暂停发布'}`)
-        }
-      } catch (err) {
-        console.error('Failed to toggle course status:', err)
-        this.$toast?.error?.('操作失败，请重试')
-      }
     }
   }
 }

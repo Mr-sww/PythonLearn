@@ -1,7 +1,7 @@
 <template>
   <div class="admin-courses">
     <div class="page-header">
-      <h1 class="page-title">课程审核</h1>
+      <h1 class="page-title">课程管理</h1>
       <div class="header-actions">
         <select v-model="filterStatus" class="filter-select">
           <option value="">全部状态</option>
@@ -81,8 +81,8 @@
         </div>
         <div class="modal-body">
           <div class="course-info">
-            <h4>{{ selectedCourse?.title }}</h4>
-            <p>{{ selectedCourse?.content || '暂无描述' }}</p>
+            <h4>{{ selectedCourse && selectedCourse.title }}</h4>
+            <p>{{ (selectedCourse && selectedCourse.content) || '暂无描述' }}</p>
           </div>
           <div class="review-form">
             <label>审核意见：</label>
@@ -96,14 +96,14 @@
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="showReviewModal = false">取消</button>
           <button 
-            v-if="selectedCourse?.status === 'pending'"
+            v-if="selectedCourse && selectedCourse.status === 'pending'"
             class="btn btn-success" 
             @click="approveCourse(selectedCourse.articleId)"
           >
             通过
           </button>
           <button 
-            v-if="selectedCourse?.status === 'pending'"
+            v-if="selectedCourse && selectedCourse.status === 'pending'"
             class="button btn-warning" 
             @click="rejectCourse(selectedCourse.articleId)"
           >
@@ -122,7 +122,7 @@ export default {
   name: 'AdminCourses',
   data() {
     return {
-      filterStatus: '',
+      filterStatus: 'approved',
       courses: [],
       loading: false,
       showReviewModal: false,

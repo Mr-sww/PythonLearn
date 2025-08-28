@@ -38,3 +38,4 @@ INSERT INTO user (phone, account, password, nickname, group_type, email) VALUES
 SELECT * FROM user;
 
 
+
